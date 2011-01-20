@@ -1,4 +1,4 @@
-//FILE:          NodesTable.java
+//FILE:          TrajsTable.java
 //PROJECT:       Octane
 //-----------------------------------------------------------------------------
 //
