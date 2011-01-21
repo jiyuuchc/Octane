@@ -1,4 +1,4 @@
-//FILE:          AnimationWindow.java
+//FILE:          Animator.java
 //PROJECT:       Octane
 //-----------------------------------------------------------------------------
 //
@@ -18,7 +18,6 @@
 package edu.uchc.octane;
 
 import ij.ImagePlus;
-import ij.gui.PointRoi;
 import ij.gui.Roi;
 
 import java.util.Timer;
@@ -30,7 +29,8 @@ public class Animator {
 	private boolean loop_;
 	private Timer animateTimer_;
 	private ImagePlus imp_;
-
+	private int increment_ = 1; 
+	
 	public Animator(ImagePlus imp) {
 		imp_ = imp;
 	}
@@ -53,13 +53,18 @@ public class Animator {
 		
 		@Override
 		public void run() {
+			if (curFrame_ < firstFrame_){
+				stopAnimation();
+				return;
+			}
 			if (curFrame_ > lastFrame_) {
 				if (!loop_) {
 					stopAnimation();
 					return;
 				} else {
-					curFrame_ = firstFrame_;
-					curIndex_ = 0;
+					increment_ = -1;
+					curFrame_ = lastFrame_;
+					curIndex_ = lastFrame_ - firstFrame_;
 				}
 			}
 
@@ -71,17 +76,13 @@ public class Animator {
 				int x = (int) trajectory_.getX(curIndex_);
 				int y = (int) trajectory_.getY(curIndex_);
 				if (trajectory_.getFrame(curIndex_) == curFrame_) {
-					if (Prefs.pointIndicator_) {
-						imp_.setRoi(new PointRoi(x, y));
-					} else {
-						imp_.setRoi(new Roi(x - 3, y - 3, 7, 7));
-					}
-					curIndex_++;
+					imp_.setRoi(new Roi(x - 5, y - 5, 11, 11));
+					curIndex_ += increment_;
 				} else {
 					imp_.killRoi();
 				}
 			}
-			curFrame_++;
+			curFrame_ += increment_;
 		}		
 	}
 
@@ -91,8 +92,7 @@ public class Animator {
 
 	public void animate(Trajectory traj) {
 		stopAnimation();
-
-		// roi_ = imp_.getRoi();
+		increment_ = 1;
 		animateTimer_ = new Timer();
 		animateTimer_.schedule(new AnimateTimerTask(traj), ANIMATIONDELAY_, ANIMATIONDELAY_);
 	}
@@ -101,7 +101,6 @@ public class Animator {
 		if (animateTimer_ != null) {
 			animateTimer_.cancel();
 			animateTimer_ = null;
-			// imp_.setRoi(roi_);
 		}
 	}
 }

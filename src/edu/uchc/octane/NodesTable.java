@@ -17,9 +17,14 @@
 //
 package edu.uchc.octane;
 
+import ij.ImagePlus;
+import ij.gui.Roi;
+import java.lang.Math;
 import java.awt.Font;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 
@@ -27,9 +32,10 @@ public class NodesTable extends JTable{
 	private static final long serialVersionUID = 1691643945428279661L;
 
 	private static String[] ColumnNames_ = { "Frame", "X", "Y", "Q"};
-	private static Class<?> [] ColumnClasses_ = {Integer.class, Double.class, Double.class,Double.class};
+	private static Class<?> [] ColumnClasses_ = {Integer.class, Double.class, Double.class, Double.class};
 	
-	private Trajectory traj_;
+	private Trajectory traj_ = null;
+	private ImagePlus imp_ = null;
 
 	public NodesTable(Trajectory traj) {
 		super();
@@ -45,14 +51,39 @@ public class NodesTable extends JTable{
 		getColumnModel().getColumn(0).setPreferredWidth(100);
 		getColumnModel().getColumn(1).setPreferredWidth(100);
 		getColumnModel().getColumn(2).setPreferredWidth(100);
+		
+		getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+			@Override
+			public void valueChanged(ListSelectionEvent e) {
+				if (imp_ != null && traj_ != null) {
+					drawBox();
+				}
+			}
+		} );
+				
 	}
 
-
-	public void setData(Trajectory traj) {
-		traj_ = traj;
-		repaint();
+	public void drawBox() {
+		int row = getSelectedRow();
+		if (row >=0) {
+			int index = convertRowIndexToModel(row);
+			int x = (int) Math.round(traj_.getX(index));
+			int y = (int) Math.round(traj_.getY(index));
+			int f = traj_.getFrame(index);
+			imp_.setSlice(f);
+			imp_.setRoi(new Roi(x - 5, y - 5, 11, 11));
+		}				
 	}
 	
+	public void setData(Trajectory traj) {
+		traj_ = traj;
+		resizeAndRepaint();
+	}
+	
+	public void SetImp(ImagePlus imp) {
+		imp_ = imp;
+	}
+
 	class CellRenderer extends DefaultTableCellRenderer {
 		private static final long serialVersionUID = 1539239439156768797L;
 
@@ -71,7 +102,11 @@ public class NodesTable extends JTable{
 
 		@Override
 		public int getRowCount() {
-			return traj_.size();
+			if (traj_ != null) {
+				return traj_.size();
+			} else {
+				return 0;
+			}
 		}
 
 		@Override
@@ -85,7 +120,7 @@ public class NodesTable extends JTable{
 			case 2:
 				return node.y;
 			case 3:
-				return (int)node.quality;
+				return node.quality;
 			}
 			return null;
 		}

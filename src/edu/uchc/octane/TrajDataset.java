@@ -44,6 +44,11 @@ public class TrajDataset {
 		trajs_ = new Vector<Trajectory>();
 	}
 
+	public TrajDataset(String path) {
+		path_ = path;
+		trajs_ = new Vector<Trajectory>();
+	}
+	
 	public void posToTracks(File outfile) throws IOException{
 		File file = new File(path_ + File.separator + "analysis" + File.separator + "positions");
 		
