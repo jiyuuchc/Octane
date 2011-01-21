@@ -18,8 +18,10 @@
 package edu.uchc.octane;
 
 import ij.ImagePlus;
-import ij.gui.Roi;
-
+import ij.gui.Overlay;
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.geom.GeneralPath;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -30,7 +32,8 @@ public class Animator {
 	private Timer animateTimer_;
 	private ImagePlus imp_;
 	private int increment_ = 1; 
-	
+	private Overlay overlay_;
+
 	public Animator(ImagePlus imp) {
 		imp_ = imp;
 	}
@@ -54,6 +57,7 @@ public class Animator {
 		@Override
 		public void run() {
 			if (curFrame_ < firstFrame_){
+				imp_.setOverlay(overlay_);
 				stopAnimation();
 				return;
 			}
@@ -62,28 +66,28 @@ public class Animator {
 					stopAnimation();
 					return;
 				} else {
+					overlay_ = imp_.getOverlay();
 					increment_ = -1;
 					curFrame_ = lastFrame_;
-					curIndex_ = lastFrame_ - firstFrame_;
+					curIndex_ = trajectory_.size()-1;
 				}
 			}
 
 			synchronized (imp_) {
 				imp_.setSlice(curFrame_);
 			}
-				
-			if (Prefs.showIndicator_) {
-				int x = (int) trajectory_.getX(curIndex_);
-				int y = (int) trajectory_.getY(curIndex_);
-				if (trajectory_.getFrame(curIndex_) == curFrame_) {
-					imp_.setRoi(new Roi(x - 5, y - 5, 11, 11));
-					curIndex_ += increment_;
-				} else {
-					imp_.killRoi();
+
+			if (trajectory_.get(curIndex_).frame == curFrame_) {
+				GeneralPath path = new GeneralPath();
+				path.moveTo(trajectory_.getX(0),trajectory_.getY(0));
+				for (int i = 1; i <curIndex_; i++) {
+					path.lineTo(trajectory_.getX(i), trajectory_.getY(i));
 				}
+				imp_.setOverlay(path, Color.yellow, new BasicStroke(1f));
+				curIndex_ += increment_;
 			}
 			curFrame_ += increment_;
-		}		
+		}
 	}
 
 	void setLoop(boolean loop) {
@@ -102,5 +106,6 @@ public class Animator {
 			animateTimer_.cancel();
 			animateTimer_ = null;
 		}
+		
 	}
 }

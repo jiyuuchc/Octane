@@ -36,12 +36,13 @@ public class NodesTable extends JTable{
 	
 	private Trajectory traj_ = null;
 	private ImagePlus imp_ = null;
-
+	private Model model_;
 	public NodesTable(Trajectory traj) {
 		super();
 
 		traj_ = traj;
-		setModel(new Model());
+		model_ = new Model(); 
+		setModel(model_);
 		setColumnSelectionAllowed(false);
 		setFont(new Font("", Font.PLAIN, 10));
 		setRowSelectionAllowed(true);
@@ -77,7 +78,8 @@ public class NodesTable extends JTable{
 	
 	public void setData(Trajectory traj) {
 		traj_ = traj;
-		resizeAndRepaint();
+		model_.fireTableDataChanged();
+		setRowSelectionInterval(0,0);
 	}
 	
 	public void SetImp(ImagePlus imp) {

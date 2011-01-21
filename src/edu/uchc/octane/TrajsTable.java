@@ -22,42 +22,48 @@ import ij.ImagePlus;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.geom.GeneralPath;
 import java.util.Vector;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
-import javax.swing.RowFilter;
 import javax.swing.table.AbstractTableModel;
-import javax.swing.table.TableRowSorter;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 public class TrajsTable extends JTable {
 	private static final long serialVersionUID = 8080339334223890218L;
 
-	private static String[] ColumnNames_ = { "Frame", "Len"};
-	private static Class<?> [] ColumnClasses_ = {Integer.class, Integer.class};
+	private static String[] ColumnNames_ = { "Frame", "Len", "Marked","Notes"};
+	private static Class<?> [] ColumnClasses_ = {Integer.class, Integer.class, Boolean.class, String.class};
 	
 	private Vector<Trajectory> data_ = null;
-	private boolean isFirstTable_;
 	private NodesTable nodesTable_ = null;
-	private TableRowSorter<Model> sorter_;
 	private ImagePlus imp_ = null;
-	
-	public TrajsTable(Vector<Trajectory> data, boolean isFirstTable) {
+	private Model model_;
+	private Animator animator_ = null;
+
+	public TrajsTable(Vector<Trajectory> data) {
 		super();
-		
+
 		data_=data;
-		isFirstTable_ = isFirstTable;
-		setModel(new Model());
+		model_ = new Model();
+		setModel(model_);
 		setColumnSelectionAllowed(false);
 		setFont(new Font("", Font.PLAIN, 10));
 		setRowSelectionAllowed(true);
 		setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-		sorter_ = new TableRowSorter<Model>((Model) getModel());
-		sorter_.setRowFilter(new Filter());
-		setRowSorter(sorter_);
+		setAutoCreateRowSorter(true);
 		getColumnModel().getColumn(0).setPreferredWidth(50);
+		
+		addMouseListener(new MouseAdapter() {
+			public void mouseClicked(MouseEvent e) {
+				if (e.getClickCount() == 2 && imp_ != null) {
+					animate();
+				}
+			}
+		});
 		
 		getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 			@Override
@@ -77,6 +83,12 @@ public class TrajsTable extends JTable {
 		nodesTable_ = nodesTable;
 	}
 
+	public void SetImp(ImagePlus imp) {
+		if (imp_ == null) {
+			imp_ = imp;
+		} 
+	}
+
 	public void populateNodesTable() {
 		int row = getSelectedRow();
 		if (row >=0) {
@@ -85,6 +97,27 @@ public class TrajsTable extends JTable {
 		}		
 	}
 	
+	public void reverseMarkOfSelected() {
+		boolean acted = false;
+		int [] rows = getSelectedRows();
+		for (int i = 0; i < rows.length; i++) {
+			rows[i] = convertRowIndexToModel(rows[i]);
+		}
+		for (int i = 0; i < rows.length; i++) {		
+			Trajectory v = data_.get(rows[i]);
+			if (v.isMarked() == false) {
+				v.mark(true);
+				acted = true;
+			}
+		}
+		if (!acted) {
+			for (int i = 0; i < rows.length; i++) {
+				data_.get(rows[i]).mark(false);
+			}
+		}
+		model_.fireTableRowsUpdated(0,model_.getRowCount()-1);
+	}
+
 	public void drawOverlay() {
 		GeneralPath path = new GeneralPath();
 		int [] rows = getSelectedRows();
@@ -100,17 +133,23 @@ public class TrajsTable extends JTable {
 				path.lineTo(v.getX(j), v.getY(j));
 			}
 		}
-		imp_.setOverlay(path, Color.yellow, new BasicStroke(1.5f));			
+		imp_.setOverlay(path, Color.yellow, new BasicStroke(1f));			
 	}
 	
-	public void reSort() {
-		sorter_.sort();
+	public void animate() {
+		if (animator_ == null) {
+			animator_ = new Animator(imp_);
+			animator_.setLoop(true);
+		}
+		
+		int row = getSelectedRow();
+		if (row >=0) {
+			int index = convertRowIndexToModel(row);
+			animator_.animate(data_.get(index));
+		}
+		
 	}
-
-	public void SetImp(ImagePlus imp) {
-		imp_ = imp;
-	}
-
+	
 	class Model extends AbstractTableModel {
 		private static final long serialVersionUID = -1936221743708539850L;
 
@@ -129,9 +168,13 @@ public class TrajsTable extends JTable {
 			Trajectory traj = data_.get(rowIndex);
 			switch (colIndex) {
 			case 0:
-				return traj.getFrame(0);
+				return traj.get(0).frame;
 			case 1:
 				return traj.size();
+			case 2:
+				return traj.marked;
+			case 3:
+				return traj.note;
 			}
 			return null;
 		}
@@ -145,14 +188,23 @@ public class TrajsTable extends JTable {
 		public Class<?> getColumnClass(int columnIndex) {
 			return ColumnClasses_[columnIndex];
 		}
-	}
-
-	class Filter extends RowFilter<Model, Integer> {
+		
+		@Override
+		public boolean isCellEditable(int row, int col) {
+			if (col == 2 || col == 3) {
+				return true;
+			} else {
+				return false;
+			}
+		}
 
 		@Override
-		public boolean include(javax.swing.RowFilter.Entry<? extends TrajsTable.Model, ? extends Integer> entry) {
-			int index = entry.getIdentifier();
-			return data_.get(index).isDisabled() != isFirstTable_;
+		public void setValueAt(Object value, int row, int col) {
+			if (col == 3) {
+				data_.get(row).note = (String) value;
+			} else if (col == 2) {
+				data_.get(row).marked = (Boolean)value;
+			}
 		}
 
 	}

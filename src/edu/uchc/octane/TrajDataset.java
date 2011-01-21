@@ -18,49 +18,27 @@
 package edu.uchc.octane;
 
 import ij.IJ;
-import ij.ImagePlus;
-import ij.io.FileInfo;
-
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.Vector;
 
-public class TrajDataset {
-
+public class TrajDataset implements Serializable{
+	private static final long serialVersionUID = 6338384578049557975L;
 	private Vector<Trajectory> trajs_;
 	private String path_;
 	
-	public TrajDataset(ImagePlus imp) {
-		FileInfo fi = imp.getOriginalFileInfo();
-		if (fi != null) {
-			path_ = fi.directory; 
-		} else {
-			IJ.showMessage("Can't find trajectories location");
-		}
-		trajs_ = new Vector<Trajectory>();
-	}
-
-	public TrajDataset(String path) {
-		path_ = path;
+	public TrajDataset() {
 		trajs_ = new Vector<Trajectory>();
 	}
 	
-	public void posToTracks(File outfile) throws IOException{
-		File file = new File(path_ + File.separator + "analysis" + File.separator + "positions");
-		
-		Tracker tracker = new Tracker(file, Prefs.trackerMaxDsp_, Prefs.trackerMaxBlinking_);
-		tracker.doTracking();
-		tracker.toDisk(outfile);
-		trajs_ = tracker.getTrajs();
-		
-		file = new File(path_ + File.separator + "analysis" + File.separator + "notes");
-		if (file.exists()) {
-			file.delete();
-		}
+	public void buildDataset(String path) throws IOException {
+		path_ = path;
+		readTrajs();
 	}
 	
 	public Vector<Trajectory> getTrajectories() {
@@ -78,6 +56,16 @@ public class TrajDataset {
 		}
 		else
 			return null;
+	}
+
+	
+	public void posToTracks(File outfile) throws IOException{
+		File file = new File(path_ + File.separator + "analysis" + File.separator + "positions");
+		
+		Tracker tracker = new Tracker(file, Prefs.trackerMaxDsp_, Prefs.trackerMaxBlinking_);
+		tracker.doTracking();
+		tracker.toDisk(outfile);
+		trajs_ = tracker.getTrajs();		
 	}
 
 	void readTrajs() throws IOException {
@@ -108,76 +96,22 @@ public class TrajDataset {
 
 		br.close();
 		assert (trajs_.size() > 0);
-		
-		loadNotes();
-
 		//IJ.showMessage("Number of trajs read from disk:" + trajs_.size());
 	}
 
-	public void reloadTrajectories() {
-		trajs_ = null;
+	public void saveDataset() {
+		ObjectOutputStream out;
+		FileOutputStream fs;
 		try {
-			readTrajs();
-		} catch (Exception e) {
-			IJ.showMessage(e.toString() + "\n" + e.getMessage());
-		}
-	}
-	
-	public void rebuildTracks() {
-		try {
-			File file = new File(path_ + File.separator + "analysis" + File.separator + "trajs");
-			posToTracks(file); 
-		} catch (Exception e) {
-			IJ.showMessage(e.toString() + "\n" + e.getMessage());
-		}
-
-		//reloadTrajectories();
-	}
-	
-	public void loadNotes() {
-		if (trajs_ == null) {
-			return;
-		}
-		try {
-			File file = new File(path_ + File.separator + "analysis" + File.separator + "notes");
-			if (! file.exists()) {
-				return;
-			}
-			
-			BufferedReader br = new BufferedReader(new FileReader(file));
-			String line;
-			while (null != (line = br.readLine())) {
-				int c = line.indexOf(',');
-				int cnt = Integer.parseInt(line.substring(0, c).trim());
-				if (cnt < trajs_.size()) {
-					trajs_.get(cnt).setNote(line.substring(c+1));
-				}
-			}
-
-			br.close();
+			fs = new FileOutputStream(path_ + File.separator + "analysis" + File.separator + "dataset");
+			out = new ObjectOutputStream(fs);
+			out.writeObject(this);
 		} catch (IOException e) {
 			IJ.showMessage(e.toString() + "\n" + e.getMessage());
-		}		
-	}
-	
-	public void saveNotes() {
-		if (trajs_ == null) {
 			return;
+		} catch (Exception e) {
+			e.printStackTrace(); 
+			System.exit(1); 
 		}
-		try {
-			File file = new File(path_ + File.separator + "analysis" + File.separator + "notes"); 
-			BufferedWriter bw = new BufferedWriter(new FileWriter(file));
-			
-			for ( int i = 0; i < trajs_.size(); i ++ ) {
-				String s = trajs_.get(i).getNote() ; 
-				if (s != null && s.trim().length()>0) {
-					bw.write("" + i + "," + s + "\n");
-				}
-			}
-			bw.close();
-		} catch (IOException e) {
-			IJ.showMessage(e.toString() + "\n" + e.getMessage());
-		}
-		
 	}
 }

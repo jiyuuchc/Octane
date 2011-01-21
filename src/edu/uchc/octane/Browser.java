@@ -23,135 +23,209 @@ import java.awt.GridBagConstraints;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import java.awt.Dimension;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+
+import ij.IJ;
 import ij.ImagePlus;
+import ij.gui.ImageCanvas;
+import ij.gui.Roi;
+import ij.io.FileInfo;
 
 public class Browser extends JFrame{
 	private static final long serialVersionUID = -967387866057692460L;
 	
 	private ImagePlus imp_ = null;
 	private TrajDataset dataset_ = null;
-	TrajsTable trajsTable1_, trajsTable2_;
-	NodesTable nodesTable1_;
-	JButton button_l_, button_r_;
+	TrajsTable trajsTable_;
+	NodesTable nodesTable_;
+	JButton buttonRoi_,buttonMark_, buttonExport_;
 	
 	private void Layout(){
 		final GridBagLayout layout = new GridBagLayout();
 		setLayout(layout);
 		
-		final JScrollPane trajsPane1 = new JScrollPane();
-		final JScrollPane trajsPane2 = new JScrollPane();
-		final JScrollPane nodesPane1 = new JScrollPane();
+		final JScrollPane trajsPane = new JScrollPane();
+		final JScrollPane nodesPane = new JScrollPane();
 		final JPanel panel = new JPanel();
-		button_l_ = new JButton("<-");
-		button_r_ = new JButton("->");
+		trajsTable_ = new TrajsTable(dataset_.getTrajectories());
+		trajsPane.setViewportView(trajsTable_);
+		nodesTable_ = new NodesTable(null);
+		nodesPane.setViewportView(nodesTable_);
 		
-		panel.setLayout(new BoxLayout(panel,BoxLayout.PAGE_AXIS));
-		panel.add(button_l_);
-		panel.add(Box.createRigidArea(new Dimension(0,10)));
-		panel.add(button_r_);
-		panel.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
-		button_l_.setAlignmentX(CENTER_ALIGNMENT);
-		button_r_.setAlignmentX(CENTER_ALIGNMENT);
+		buttonRoi_ = new JButton("SelectRoi");
+		buttonMark_ = new JButton("Mark");
+		buttonExport_ = new JButton("Export");
+		panel.setLayout(new BoxLayout(panel,BoxLayout.LINE_AXIS));
+		panel.setBorder(BorderFactory.createEmptyBorder(0,10,5,5));
+		panel.add(Box.createHorizontalGlue());
+		panel.add(buttonMark_);
+		panel.add(Box.createRigidArea(new Dimension(10,0)));
+		panel.add(buttonExport_);
 
 		GridBagConstraints constraints;
-		
 		constraints = new GridBagConstraints();
-
-		constraints.insets = new Insets(5,5,5,5);
-		constraints.gridx = 1;
-		constraints.gridy = 0;
-		constraints.weightx = 0;
-		constraints.weighty = 0.7;		
-		add(panel, constraints);
-
-		constraints.fill = GridBagConstraints.BOTH;
-		constraints.ipadx = 10;
-		constraints.ipady = 10;
-		constraints.gridx = 0;
-		constraints.gridy = 0;
-		constraints.weightx = 1.0;
-		constraints.weighty = 0.7;
-		add(trajsPane1, constraints);
-		trajsTable1_ = new TrajsTable(dataset_.getTrajectories(), true);
-		trajsPane1.setViewportView(trajsTable1_);
 		
-		constraints.gridx = 2;
+		constraints.anchor = GridBagConstraints.WEST;
+		constraints.gridx = 0; 
 		constraints.gridy = 0;
-		constraints.weightx = 1.0;
-		constraints.weighty = 0.7;		
-		add(trajsPane2, constraints);
-		trajsTable2_ = new TrajsTable(dataset_.getTrajectories(), false);
-		trajsPane2.setViewportView(trajsTable2_);
+		constraints.weightx =0;
+		constraints.weighty = 0;
+		add(new JLabel("List of Traces:"), constraints);
 
+		constraints.gridx = 1; 
+		constraints.gridy = 0;
+		constraints.weightx =0;
+		constraints.weighty = 0;
+		add(new JLabel("Current Trace:"), constraints);
+				
+		constraints.fill = GridBagConstraints.BOTH;
+		constraints.insets = new Insets(5,5,5,5);		
 		constraints.gridx = 0;
 		constraints.gridy = 1;
-		constraints.gridwidth = 3;
-		constraints.weightx = 1.0;
-		constraints.weighty = 0.3;
-		add(nodesPane1, constraints);
-		nodesTable1_ = new NodesTable(null);
-		nodesPane1.setViewportView(nodesTable1_);
+		constraints.weightx = 0.5;
+		constraints.weighty = 1.0;
+		add(trajsPane, constraints);
+		
+		constraints.gridx = 1;
+		constraints.gridy = 1;
+		constraints.weightx = 0.5;
+		constraints.weighty = 1.0;
+		add(nodesPane, constraints);
+
+		constraints.gridx = 0;
+		constraints.gridy = 2;
+		constraints.weightx = 0.5;
+		constraints.weighty = 0;		
+		add(panel, constraints);
 		
 		setBounds(100, 100, 460, 595);
 		if (imp_ != null) {
 			setTitle(imp_.getTitle() + " Trajectories");
-			trajsTable1_.SetImp(imp_);
-			trajsTable2_.SetImp(imp_);
-			nodesTable1_.SetImp(imp_);
+			trajsTable_.SetImp(imp_);
+			nodesTable_.SetImp(imp_);
 		} else {
 			setTitle("Trajectories");
 		}
 	}
 	
 	private void ConnectSignals() {
-		trajsTable1_.setNodesTable(nodesTable1_);
-		trajsTable2_.setNodesTable(nodesTable1_);
+		trajsTable_.setNodesTable(nodesTable_);
 		
-		button_r_.addActionListener(new ActionListener() {
+		buttonRoi_.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				int [] rows = trajsTable1_.getSelectedRows();
-				for (int i = 0; i < rows.length; i++) {
-					int index = trajsTable1_.convertRowIndexToModel(rows[i]);
-					Trajectory v = dataset_.getTrajectories().get(index);
-					v.setEnable(false);
+				if (imp_ != null) {
+					selectRoi();
 				}
-				trajsTable1_.clearSelection();
-				trajsTable1_.reSort();
-				trajsTable2_.reSort();
 			}
 		});
 		
-		button_l_.addActionListener(new ActionListener() {
+		buttonMark_.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				int [] rows = trajsTable2_.getSelectedRows();
-				for (int i = 0; i < rows.length; i++) {
-					int index = trajsTable2_.convertRowIndexToModel(rows[i]);
-					Trajectory v = dataset_.getTrajectories().get(index);
-					v.setEnable(true);
-				}
-				trajsTable2_.clearSelection();
-				trajsTable1_.reSort();
-				trajsTable2_.reSort();
+				trajsTable_.reverseMarkOfSelected();
 			}
 		});
-
+		
+		imp_.getCanvas().addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if (e.getClickCount() == 2 && imp_ != null) {
+					findMolecule();
+				}
+				
+			}
+		});	
 	}
 
 	private void SetupWindow() {
 		Layout();
 		ConnectSignals();
+		
+		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+	}
+	
+	private void selectRoi() {
+		Roi roi = imp_.getRoi();
+		if (roi == null) {
+			return;
+		}
+		trajsTable_.clearSelection();
+		int firstSel = -1;
+		for (int i = 0; i < dataset_.getTrajectories().size(); i++) {
+			Trajectory t = dataset_.getTrajectories().get(i);
+			boolean select = true;
+			for (int j = 0; j< t.size(); j++) {
+				if (! roi.contains( (int)t.getX(j), (int)t.getY(j) )) {
+					select = false;
+					break;
+				}
+			}
+			if (select) {
+				int l = trajsTable_.convertColumnIndexToView(i);
+				trajsTable_.addRowSelectionInterval(l,l);
+				if (firstSel < 0) {
+					firstSel = l;
+				}
+			}
+		}
+		
+		if (firstSel >=0) {
+			Rectangle r = trajsTable_.getCellRect(firstSel, 0, true);
+			trajsTable_.scrollRectToVisible(r);
+		}
+	}
+
+	private void findMolecule() {
+		ImageCanvas canvas = imp_.getCanvas();
+		Point p = canvas.getCursorLoc();
+		int frame = imp_.getSlice();
+		
+		int index = 0;
+		boolean found = false;
+		int lastIndex = dataset_.getTrajectories().size();
+		while (!found && index < lastIndex) {
+			Trajectory t = dataset_.getTrajectories().get(index);
+			if (t.getFrame(0) <= frame && t.getFrame(t.size()-1) >= frame) {
+				int fi = frame - t.getFrame(0);
+				if (fi >= t.size()) { 
+					fi = t.size() - 1;
+				}
+				while (t.getFrame(fi) > frame) {
+					fi --;
+				}
+				if (t.getFrame(fi) == frame) {
+					if ( Math.abs(t.getX(fi) - p.x) < 2.5 && Math.abs(t.getY(fi) - p.y) < 2.5) {
+						found = true;
+					}
+				}
+			}
+			index ++;
+		}
+		if (found) {
+			index = trajsTable_.convertRowIndexToView(index-1);
+			trajsTable_.setRowSelectionInterval(index,index);
+			Rectangle r = trajsTable_.getCellRect(index, 0, true);
+			trajsTable_.scrollRectToVisible(r);
+		}
 	}
 	
 	public Browser(TrajDataset data) {
@@ -163,8 +237,40 @@ public class Browser extends JFrame{
 	public Browser(ImagePlus imp) {
 		super();
 		imp_ = imp;
-		dataset_ = new TrajDataset(imp);
+		String path;
+		FileInfo fi = imp.getOriginalFileInfo();
+		if (fi != null) {
+			path = fi.directory; 
+		} else {
+			IJ.showMessage("Can't find trajectories location");
+			return;
+		}		
+		ObjectInputStream in;
+		FileInputStream fs;
+		try {
+			fs = new FileInputStream(path + File.separator + "analysis" + File.separator + "dataset");
+			in = new ObjectInputStream(fs);
+			dataset_ = (TrajDataset) in.readObject();
+		} catch (IOException e) {
+			IJ.showMessage(e.toString() + "\n" + e.getMessage());
+			dataset_ = new TrajDataset();
+			try {
+				dataset_.buildDataset(path);
+			} catch (IOException e2) {
+				IJ.showMessage(e.toString() + "\n" + e.getMessage());
+				return;
+			}
+		} catch (Exception e) {
+			IJ.showMessage("Can't recover analysis results. Data corrupt?");
+			return;
+		}
 		SetupWindow();
 	}
-	
+
+	@Override
+	public void dispose() {
+		dataset_.saveDataset();
+		super.dispose();
+	}
+
 }

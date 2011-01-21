@@ -16,25 +16,28 @@
 //               INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES./**
 //
 
+import java.io.File;
+
 import ij.IJ;
 import ij.ImageListener;
 import ij.ImagePlus;
 import ij.WindowManager;
+import ij.io.FileInfo;
 import ij.plugin.PlugIn;
 
 import javax.swing.UIManager;
 
+import edu.uchc.octane.Browser;
 import edu.uchc.octane.OptionDlg;
 import edu.uchc.octane.PeakFinderDialog;
 import edu.uchc.octane.Prefs;
-import edu.uchc.octane.TrajsBrowser;
 
 
 public class OctanePlugin implements PlugIn, ImageListener {
 
 	ImagePlus imp_;
 	String cmd_;
-	TrajsBrowser trajwin_;
+	Browser browser_;
 	PeakFinderDialog finderDlg_;
 
 	public OctanePlugin() {
@@ -50,9 +53,9 @@ public class OctanePlugin implements PlugIn, ImageListener {
 	@Override
 	public void imageClosed(ImagePlus imp) {
 		if (imp == imp_) {
-			if (trajwin_ != null) {
-				trajwin_.dispose();
-				trajwin_ = null;
+			if (browser_ != null) {
+				browser_.dispose();
+				browser_ = null;
 			}
 			if (finderDlg_ != null) {
 				finderDlg_.dispose();
@@ -82,16 +85,26 @@ public class OctanePlugin implements PlugIn, ImageListener {
 		}
 		
 		imp_ = WindowManager.getCurrentImage();
+		String path;
 		if (imp_ == null || imp_.getStack().getSize() < 2) {
 			IJ.showMessage("No open image stack");
 			return;
 		}
-		if (cmd.equals("findpeaks")) {
-			finderDlg_ = new PeakFinderDialog(imp_);
-			finderDlg_.showDialog();			
+		FileInfo fi = imp_.getOriginalFileInfo();
+		if (fi != null) {
+			path = fi.directory; 
 		} else {
-			trajwin_ = new TrajsBrowser(imp_);
-			trajwin_.setVisible(true);
+			IJ.showMessage("Can't find image's disk location. You must save the data under a unique folder.");
+			return;
+		}		
+		
+		File file = new File(path + File.separator + "analysis" + File.separator + "positions");
+		if (! file.exists()) {
+			finderDlg_ = new PeakFinderDialog(imp_);
+			finderDlg_.showDialog();
+		} else {
+			browser_ = new Browser(imp_);
+			browser_.setVisible(true);
 		}	
 	}
 }
