@@ -49,9 +49,9 @@ public class NodesTable extends JTable{
 		setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		setDefaultRenderer(Double.class, new CellRenderer());
 
-		getColumnModel().getColumn(0).setPreferredWidth(100);
-		getColumnModel().getColumn(1).setPreferredWidth(100);
-		getColumnModel().getColumn(2).setPreferredWidth(100);
+		//getColumnModel().getColumn(0).setPreferredWidth(70);
+		//getColumnModel().getColumn(1).setPreferredWidth(70);
+		//getColumnModel().getColumn(2).setPreferredWidth(70);
 		
 		getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 			@Override

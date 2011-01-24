@@ -106,6 +106,8 @@ public class TrajDataset implements Serializable{
 			fs = new FileOutputStream(path_ + File.separator + "analysis" + File.separator + "dataset");
 			out = new ObjectOutputStream(fs);
 			out.writeObject(this);
+			out.close();
+			fs.close();
 		} catch (IOException e) {
 			IJ.showMessage(e.toString() + "\n" + e.getMessage());
 			return;

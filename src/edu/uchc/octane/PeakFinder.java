@@ -68,7 +68,7 @@ public class PeakFinder {
 	}
 
 	public PeakFinder() {
-		tol_ = 200;
+		tol_ = 2000;
 	}
 
 	public void setImageProcessor(ImageProcessor ip) {

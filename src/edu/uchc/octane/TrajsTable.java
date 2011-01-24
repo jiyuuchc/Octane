@@ -55,8 +55,9 @@ public class TrajsTable extends JTable {
 		setRowSelectionAllowed(true);
 		setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		setAutoCreateRowSorter(true);
-		getColumnModel().getColumn(0).setPreferredWidth(50);
-		
+		getColumnModel().getColumn(0).setPreferredWidth(30);
+		getColumnModel().getColumn(1).setPreferredWidth(30);
+		getColumnModel().getColumn(2).setPreferredWidth(30);
 		addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
 				if (e.getClickCount() == 2 && imp_ != null) {
