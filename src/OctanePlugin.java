@@ -109,32 +109,44 @@ public class OctanePlugin implements PlugIn, ImageListener, WindowListener {
 			return;
 		}
 		
-		D d = new D();
-		d.browser = null;
-		d.finderDlg = null;
-		dict_.put(imp, d);
-		imp.getWindow().addWindowListener(this);
-		File file = new File(path + File.separator + "analysis" + File.separator + "dataset");
-		if (! file.exists()) {
-			d.finderDlg = new PeakFinderDialog(imp);
-			d.finderDlg.addWindowListener(new WindowAdapter() {
-				@Override
-				public void windowClosed(WindowEvent e) {
-					PeakFinderDialog dlg = (PeakFinderDialog) e.getSource();
-					dlg.removeWindowListener(this);
-					if (dlg.wasOKed()) {
-						D d = dict_.get(dlg.getImp());
-						d.finderDlg = null;
-						d.browser = new Browser(dlg.getImp());
-						d.browser.setVisible(true);
-					}
-					super.windowClosed(e);
-				}							
-			});
-			d.finderDlg.showDialog();
-		} else {
-			d.browser = new Browser(imp);
-			d.browser.setVisible(true);
+		D d;
+		d = dict_.get(imp);
+		if (d == null && cmd.equals("browser")) {
+			d = new D();
+			d.browser = null;
+			d.finderDlg = null;
+			dict_.put(imp, d);
+			imp.getWindow().addWindowListener(this);
+			File file = new File(path + File.separator + "analysis" + File.separator + "dataset");
+			if (! file.exists()) {
+				d.finderDlg = new PeakFinderDialog(imp);
+				d.finderDlg.addWindowListener(new WindowAdapter() {
+					@Override
+					public void windowClosed(WindowEvent e) {
+						PeakFinderDialog dlg = (PeakFinderDialog) e.getSource();
+						dlg.removeWindowListener(this);
+						if (dlg.wasOKed()) {
+							D d = dict_.get(dlg.getImp());
+							d.finderDlg = null;
+							d.browser = new Browser(dlg.getImp());
+							d.browser.setVisible(true);
+						}
+						super.windowClosed(e);
+					}							
+				});
+				d.finderDlg.showDialog();
+			} else {
+				d.browser = new Browser(imp);
+				d.browser.setVisible(true);
+			}
+		} else if (d != null && d.browser != null  ) {
+			if (cmd.equals("flowmap")) {
+				d.browser.constructFlowMap();
+			} else if (cmd.equals("palm")) {
+				d.browser.constructPalm();
+			} else if (cmd.equals("mobilitymap")) {
+				d.browser.constructMobilityMap();
+			}
 		}
 	}
 

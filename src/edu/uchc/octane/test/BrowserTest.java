@@ -21,6 +21,7 @@ public class BrowserTest {
 		if (file.exists()) {
 			Browser b = new Browser(imp);
 			b.setVisible(true);
+			b.constructMobilityMap();
 		} else {
 			PeakFinderDialog finderDlg_ = new PeakFinderDialog(imp);
 			finderDlg_.showDialog();
@@ -38,12 +39,5 @@ public class BrowserTest {
 		
 			});
 		}
-//		Browser b = new Browser(imp);
-//		b.addWindowListener(new WindowAdapter() {
-//			public void windowClosing(WindowEvent e) {
-//				System.exit(0);
-//			}
-//		});
-//		b.setVisible(true);
 	}
 }
