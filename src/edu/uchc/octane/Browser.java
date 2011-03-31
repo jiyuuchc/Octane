@@ -50,12 +50,12 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import ij.IJ;
 import ij.ImagePlus;
+import ij.ImageStack;
 import ij.gui.ImageCanvas;
 import ij.gui.Roi;
 import ij.io.FileInfo;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
-import ij.process.ShortProcessor;
 
 public class Browser extends JFrame implements ClipboardOwner{
 	private static final long serialVersionUID = -967387866057692460L;
@@ -259,33 +259,77 @@ public class Browser extends JFrame implements ClipboardOwner{
 			trajsTable_.scrollRectToVisible(r);
 		}
 	}
-	
+
 	private int[] getSelectedRows() {
 		int [] selected = trajsTable_.getSelectedRows();
-		if (selected.length == 0) {
+		if (selected.length <= 1) {
 			selected = new int[trajsTable_.getRowCount()];
 			for (int i = 0; i < selected.length; i++) {
 				selected[i] = i;
 			}
 		} else {
 			for (int i = 0; i < selected.length; i++) {
-				selected[i] = trajsTable_.convertColumnIndexToModel(selected[i]);
+				selected[i] = trajsTable_.convertRowIndexToModel(selected[i]);
 			}
 		}
 		return selected;
 	}
 	
-	public void constructPalm() {
+/*	private FloatProcessor gaussianImage(ImageProcessor img) {
+		int width = img.getWidth();
+		int height = img.getHeight();
+		double psdWidth = Prefs.palmPSDWidth_ * Prefs.palmRatio_;
+		FloatProcessor ip = new FloatProcessor(width, height);
+		for (int x = 0; x < width; x ++) {
+			for (int y = 0; y < height; y++) {
+				double v = Math.exp( -((x*2-width) * (x*2-width) + (y*2-height)*(y*2-height))/(8.0*psdWidth*psdWidth) );
+				ip.setf(x, y, (float)v);
+			}
+		}
+
+		return ip;
+	}*/
+
+	public void constructIFS() {
 		Rectangle rect;
+		imp_.killRoi();
 		rect = imp_.getProcessor().getRoi();
 
-		FloatProcessor ip = new FloatProcessor((int) (rect.width * Prefs.palmRatio_) + 1, (int) (rect.height * Prefs.palmRatio_) + 1);
+		ImageStack is =  new ImageStack(rect.width, rect.height);
+		for (int i = 0; i < imp_.getNSlices(); i++) {
+			is.addSlice(""+i, new FloatProcessor(rect.width, rect.height));
+		}
+		ImagePlus img = new ImagePlus("IFS", is);
+		double psdWidth = 0.85;
+
+		int [] selected = getSelectedRows();
+		for ( int i = 0; i < selected.length; i ++) {
+			Trajectory traj = dataset_.getTrajectories().get(selected[i]);
+			for (int j = 0; j < traj.size(); j++ ) {
+				double xs = (traj.getX(j) - rect.x);
+				double ys = (traj.getY(j)- rect.y);
+				//IJ.log(String.format("%5d%6d%6d", rowIndex, x, y));
+				for (int x = Math.max(0, (int)(xs - 3*psdWidth)); x < Math.min(rect.width, (int)(xs + 3*psdWidth)); x ++) {
+					for (int y = Math.max(0, (int)(ys - 3*psdWidth)); y < Math.min(rect.height, (int)(ys + 3*psdWidth)); y++) {
+						double v = Math.exp( -((x-xs) * (x-xs) + (y-ys)*(y-ys))/(2.0*psdWidth*psdWidth) );
+						FloatProcessor ip = (FloatProcessor) is.getProcessor(traj.getFrame(j));
+						ip.setf(x, y, (float)v + ip.getf(x,y));
+					}
+				}
+			} 
+		}
+		img.show();
+		
+	}
+	
+	public void constructPalm() {
+		FloatProcessor ip = new FloatProcessor((int) (imp_.getProcessor().getWidth() * Prefs.palmRatio_) + 1, (int) (imp_.getProcessor().getHeight() * Prefs.palmRatio_) + 1);
 		double psdWidth = Prefs.palmPSDWidth_ * Prefs.palmRatio_;
 		int nPlotted = 0;
 		int nSkipped = 0;
 		int [] selected = getSelectedRows();
 		for ( int i = 0; i < selected.length; i ++) {
-			Trajectory traj = dataset_.getTrajectories().get(i);
+			Trajectory traj = dataset_.getTrajectories().get(selected[i]);
 			double xx = traj.getX(0);
 			double yy = traj.getY(0);
 			boolean converge = true;
@@ -300,9 +344,9 @@ public class Browser extends JFrame implements ClipboardOwner{
 			if (converge) {
 				xx /= traj.size();
 				yy /= traj.size();
-				double xs = (xx - rect.x) * Prefs.palmRatio_;
-				double ys = (yy - rect.y) * Prefs.palmRatio_;
-				//IJ.log(String.format("%5d%6d%6d", rowIndex, x, y));
+				double xs = xx * Prefs.palmRatio_;
+				double ys = yy * Prefs.palmRatio_;
+
 				for (int x = Math.max(0, (int)(xs - 3*psdWidth)); x < Math.min(ip.getWidth(), (int)(xs + 3*psdWidth)); x ++) {
 					for (int y = Math.max(0, (int)(ys - 3*psdWidth)); y < Math.min(ip.getHeight(), (int)(ys + 3*psdWidth)); y++) {
 						double v = Math.exp( -((x-xs) * (x-xs) + (y-ys)*(y-ys))/(2.0*psdWidth*psdWidth) );
@@ -319,23 +363,9 @@ public class Browser extends JFrame implements ClipboardOwner{
 		IJ.log(String.format("Plotted %d molecules, skipped %d molecules.", nPlotted, nSkipped));
 	}
 
-	public FloatProcessor gaussianImage(ImageProcessor img) {
-		int width = img.getWidth();
-		int height = img.getHeight();
-		double psdWidth = Prefs.palmPSDWidth_ * Prefs.palmRatio_;
-		FloatProcessor ip = new FloatProcessor(width, height);
-		for (int x = 0; x < width; x ++) {
-			for (int y = 0; y < height; y++) {
-				double v = Math.exp( -((x*2-width) * (x*2-width) + (y*2-height)*(y*2-height))/(8.0*psdWidth*psdWidth) );
-				ip.setf(x, y, (float)v);
-			}
-		}
-
-		return ip;
-	}
-
 	public void constructMobilityMap() {
 		Rectangle rect;
+		imp_.killRoi();
 		rect = imp_.getProcessor().getRoi();
 
 		float [][] m = new float[rect.width][rect.height];
@@ -343,7 +373,7 @@ public class Browser extends JFrame implements ClipboardOwner{
 		int [] selected = getSelectedRows();
 		int i,j;
 		for (i =0; i < selected.length; i++) {
-			Trajectory t = dataset_.getTrajectories().get(i);
+			Trajectory t = dataset_.getTrajectories().get(selected[i]);
 			for (j = 1; j < t.size(); j++) {
 				if ( rect.contains(t.getX(j-1), t.getY(j-1))) {
 					int x = (int) t.getX(j-1) - rect.x + 1;
@@ -374,6 +404,7 @@ public class Browser extends JFrame implements ClipboardOwner{
 	
 	public void constructFlowMap() {
 		Rectangle rect;
+		imp_.killRoi();
 		rect = imp_.getProcessor().getRoi();
 
 		float [][] dxs = new float[rect.width][rect.height];
@@ -382,7 +413,7 @@ public class Browser extends JFrame implements ClipboardOwner{
 		int [] selected = getSelectedRows();
 		int i,j;
 		for (i =0; i < selected.length; i++) {
-			Trajectory t = dataset_.getTrajectories().get(i);
+			Trajectory t = dataset_.getTrajectories().get(selected[i]);
 			for (j = 1; j < t.size(); j++) {
 				if ( rect.contains(t.getX(j-1), t.getY(j-1))) {
 					int x = (int) t.getX(j-1) - rect.x + 1;
@@ -431,11 +462,15 @@ public class Browser extends JFrame implements ClipboardOwner{
 		
 	}
 
+	public ImagePlus getImp() {
+		return imp_;
+	}
+	
 	public void selectMarked(boolean b) {
 		trajsTable_.clearSelection();
 		for (int i = 0; i < dataset_.getTrajectories().size(); i++) {
 			if (dataset_.getTrajectories().get(i).marked == b) {
-				int row = trajsTable_.convertColumnIndexToView(i);
+				int row = trajsTable_.convertRowIndexToView(i);
 				trajsTable_.addRowSelectionInterval(row, row);
 			}
 		}

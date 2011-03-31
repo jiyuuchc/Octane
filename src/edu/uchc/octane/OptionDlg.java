@@ -52,52 +52,50 @@ public class OptionDlg extends JDialog {
 
 	public OptionDlg() {
 		super();
-
 		setTitle("Options");
-
+		
 		Container pane = new Panel() {
 			private static final long serialVersionUID = -5807122858559364680L;
-
 			public Insets getInsets() {
 				return new Insets(10, 10, 10, 10);
 			}
 		};
 
-		getContentPane().add(pane, BorderLayout.NORTH);
-		// Panel panel = new Panel();
 		BoxLayout layout = new BoxLayout(pane, BoxLayout.Y_AXIS);
 		pane.setLayout(layout);
-		ctlPointIndicator_ = new JRadioButton("Point Indicator");
-		ctlAreaIndicator_ = new JRadioButton("Squre indicator");
-		pane.add(ctlPointIndicator_);
-		pane.add(ctlAreaIndicator_);
-		ButtonGroup bg = new ButtonGroup();
-		bg.add(ctlPointIndicator_);
-		bg.add(ctlAreaIndicator_);
-		ctlPointIndicator_.setSelected(Prefs.pointIndicator_);
-		ctlAreaIndicator_.setSelected(!Prefs.pointIndicator_);
-		ctlPointIndicator_.setAlignmentX(0);
-		ctlAreaIndicator_.setAlignmentX(0);
+		getContentPane().add(pane, BorderLayout.NORTH);
 
-		ctlShowIndicator_ = new JCheckBox("Show Indicator");
-		pane.add(ctlShowIndicator_);
-		ctlShowIndicator_.setSelected(Prefs.showIndicator_);
-		ctlShowIndicator_.setAlignmentX(0);
+//		ctlPointIndicator_ = new JRadioButton("Point Indicator");
+//		ctlAreaIndicator_ = new JRadioButton("Squre indicator");
+//		pane.add(ctlPointIndicator_);
+//		pane.add(ctlAreaIndicator_);
+//		ButtonGroup bg = new ButtonGroup();
+//		bg.add(ctlPointIndicator_);
+//		bg.add(ctlAreaIndicator_);
+//		ctlPointIndicator_.setSelected(Prefs.pointIndicator_);
+//		ctlAreaIndicator_.setSelected(!Prefs.pointIndicator_);
+//		ctlPointIndicator_.setAlignmentX(0);
+//		ctlAreaIndicator_.setAlignmentX(0);
+//
+//		ctlShowIndicator_ = new JCheckBox("Show Indicator");
+//		pane.add(ctlShowIndicator_);
+//		ctlShowIndicator_.setSelected(Prefs.showIndicator_);
+//		ctlShowIndicator_.setAlignmentX(0);
 
 		//ctlUseVirtualStack_ = new JCheckBox("Use Virtual Stack");
 		//pane.add(ctlUseVirtualStack_);
 		//ctlUseVirtualStack_.setSelected(Prefs.virtualStack_);
 		//ctlUseVirtualStack_.setAlignmentX(0);
 
-		ctlRefinePeak_ = new JCheckBox("Refine Peak Position");
-		pane.add(ctlRefinePeak_);
-		ctlRefinePeak_.setSelected(Prefs.refinePeak_);
-		ctlRefinePeak_.setAlignmentX(0);
+//		ctlRefinePeak_ = new JCheckBox("Refine Peak Position");
+//		pane.add(ctlRefinePeak_);
+//		ctlRefinePeak_.setSelected(Prefs.refinePeak_);
+//		ctlRefinePeak_.setAlignmentX(0);
 
-		ctlOmitSingleFrameTraj_ = new JCheckBox("Omit Single Frame Trajectories");
-		pane.add(ctlOmitSingleFrameTraj_);
-		ctlOmitSingleFrameTraj_.setSelected(Prefs.omitSingleFrameTrajs_);
-		ctlOmitSingleFrameTraj_.setAlignmentX(0);
+//		ctlOmitSingleFrameTraj_ = new JCheckBox("Omit Single Frame Trajectories");
+//		pane.add(ctlOmitSingleFrameTraj_);
+//		ctlOmitSingleFrameTraj_.setSelected(Prefs.omitSingleFrameTrajs_);
+//		ctlOmitSingleFrameTraj_.setAlignmentX(0);
 
 		JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEADING));
 		JLabel label = new JLabel("PALM Ratio");
@@ -155,11 +153,11 @@ public class OptionDlg extends JDialog {
 		JButton cancelButton = new JButton("Cancel");
 		okButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				Prefs.pointIndicator_ = ctlPointIndicator_.isSelected();
-				Prefs.showIndicator_ = ctlShowIndicator_.isSelected();
+				//Prefs.pointIndicator_ = ctlPointIndicator_.isSelected();
+				//Prefs.showIndicator_ = ctlShowIndicator_.isSelected();
 				//Prefs.virtualStack_ = ctlUseVirtualStack_.isSelected();
-				Prefs.refinePeak_ = ctlRefinePeak_.isSelected();
-				Prefs.omitSingleFrameTrajs_ = ctlOmitSingleFrameTraj_.isSelected();
+				//Prefs.refinePeak_ = ctlRefinePeak_.isSelected();
+				//Prefs.omitSingleFrameTrajs_ = ctlOmitSingleFrameTraj_.isSelected();
 				Prefs.palmRatio_ = (Double) ctlPalmRatio_.getValue();
 				Prefs.palmPSDWidth_ = (Double) ctlPalmPSDWidth_.getValue();
 				Prefs.palmThreshold_ = (Double) ctlPalmThreshold_.getValue();
@@ -174,6 +172,7 @@ public class OptionDlg extends JDialog {
 				dispose();
 			}
 		});
+
 		panel.add(okButton);
 		panel.add(cancelButton);
 

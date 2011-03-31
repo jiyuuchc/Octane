@@ -33,7 +33,7 @@ import ij.plugin.PlugIn;
 import javax.swing.UIManager;
 
 import edu.uchc.octane.Browser;
-import edu.uchc.octane.OptionDlg;
+import edu.uchc.octane.PrefDialog;
 import edu.uchc.octane.PeakFinderDialog;
 import edu.uchc.octane.Prefs;
 
@@ -47,7 +47,19 @@ public class OctanePlugin implements PlugIn, ImageListener, WindowListener {
 		public Browser browser;
 	}
 
-	HashMap<ImagePlus, D> dict_;
+	static HashMap<String, D> dict_ = new HashMap<String,D>();
+	
+	class BrowserWindowAdapter extends WindowAdapter{
+		ImagePlus imp_;
+		public BrowserWindowAdapter(ImagePlus imp) {
+			imp = imp_;
+		}
+		@Override
+		public void windowClosed(WindowEvent e) {
+			dict_.remove(imp_.getTitle());
+			super.windowClosed(e);
+		}									
+	}
 	
 	public OctanePlugin() {
 		try {
@@ -57,12 +69,45 @@ public class OctanePlugin implements PlugIn, ImageListener, WindowListener {
 			e.printStackTrace();
 		}
 		ImagePlus.addImageListener(this);
-		dict_ = new HashMap<ImagePlus,D>();
+		//dict_ = new HashMap<String,D>();
+	}
+
+	public void openBrowser(ImagePlus imp) {
+		D d = dict_.get(imp.getTitle());
+		d.finderDlg = null;
+		d.browser = new Browser(imp);
+		d.browser.setVisible(true);
+		d.browser.addWindowListener(new WindowAdapter(){
+			@Override
+			public void windowClosed(WindowEvent e) {
+				Browser browser = (Browser) e.getSource();
+				dict_.remove(browser.getImp().getTitle());
+			}										
+		});
+	}
+	
+	public void openPeakFinder(ImagePlus imp) {
+		D d = dict_.get(imp.getTitle());
+		d.finderDlg = new PeakFinderDialog(imp);
+		d.finderDlg.addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosed(WindowEvent e) {
+				PeakFinderDialog dlg = (PeakFinderDialog) e.getSource();
+				dlg.removeWindowListener(this);
+				if (dlg.wasOKed()) {
+					openBrowser(dlg.getImp());
+				} else {
+					dict_.remove(dlg.getImp().getTitle());
+				}
+				super.windowClosed(e);
+			}							
+		});
+		d.finderDlg.showDialog();		
 	}
 
 	@Override
 	public void imageClosed(ImagePlus imp) {
-		D d = dict_.get(imp);		
+		D d = dict_.get(imp.getTitle());		
 		if (d != null) {
 			if (d.browser != null) {
 				d.browser.dispose();
@@ -70,7 +115,7 @@ public class OctanePlugin implements PlugIn, ImageListener, WindowListener {
 			if (d.finderDlg != null) {
 				d.finderDlg.dispose();
 			}
-			dict_.remove(imp);
+			dict_.remove(imp.getTitle());
 		}
 	}
 
@@ -79,7 +124,7 @@ public class OctanePlugin implements PlugIn, ImageListener, WindowListener {
 
 	@Override
 	public void imageUpdated(ImagePlus imp) {
-		D d = dict_.get(imp);
+		D d = dict_.get(imp.getTitle());
 		if (d != null) {
 			if (d.finderDlg != null) {
 				d.finderDlg.setImageProcessor(imp.getProcessor());
@@ -89,16 +134,15 @@ public class OctanePlugin implements PlugIn, ImageListener, WindowListener {
 
 	@Override
 	public void run(String cmd) {
+		ImagePlus imp;
+		String path;		
 		if (cmd.equals("options")) {
-			OptionDlg dlg = new OptionDlg();
-			dlg.setVisible(true);
+			PrefDialog.openDialog();
 			return;
 		}
-		
-		ImagePlus imp = WindowManager.getCurrentImage();
-		String path;
+		imp = WindowManager.getCurrentImage();
 		if (imp == null || imp.getStack().getSize() < 2) {
-			IJ.showMessage("No open image stack");
+			IJ.showMessage("This only works on a stack");
 			return;
 		}
 		FileInfo fi = imp.getOriginalFileInfo();
@@ -110,42 +154,28 @@ public class OctanePlugin implements PlugIn, ImageListener, WindowListener {
 		}
 		
 		D d;
-		d = dict_.get(imp);
+		d = dict_.get(imp.getTitle());
 		if (d == null && cmd.equals("browser")) {
 			d = new D();
 			d.browser = null;
 			d.finderDlg = null;
-			dict_.put(imp, d);
+			dict_.put(imp.getTitle(), d);
 			imp.getWindow().addWindowListener(this);
 			File file = new File(path + File.separator + "analysis" + File.separator + "dataset");
 			if (! file.exists()) {
-				d.finderDlg = new PeakFinderDialog(imp);
-				d.finderDlg.addWindowListener(new WindowAdapter() {
-					@Override
-					public void windowClosed(WindowEvent e) {
-						PeakFinderDialog dlg = (PeakFinderDialog) e.getSource();
-						dlg.removeWindowListener(this);
-						if (dlg.wasOKed()) {
-							D d = dict_.get(dlg.getImp());
-							d.finderDlg = null;
-							d.browser = new Browser(dlg.getImp());
-							d.browser.setVisible(true);
-						}
-						super.windowClosed(e);
-					}							
-				});
-				d.finderDlg.showDialog();
+				openPeakFinder(imp);
 			} else {
-				d.browser = new Browser(imp);
-				d.browser.setVisible(true);
+				openBrowser(imp);
 			}
-		} else if (d != null && d.browser != null  ) {
+		} else if (d!=null && d.browser != null  ) {
 			if (cmd.equals("flowmap")) {
 				d.browser.constructFlowMap();
 			} else if (cmd.equals("palm")) {
 				d.browser.constructPalm();
 			} else if (cmd.equals("mobilitymap")) {
 				d.browser.constructMobilityMap();
+			} else if (cmd.equals("ifs")){
+				d.browser.constructIFS();
 			}
 		}
 	}
@@ -171,7 +201,7 @@ public class OctanePlugin implements PlugIn, ImageListener, WindowListener {
 		ImageWindow iw = (ImageWindow) e.getSource();
 		ImagePlus imp = iw.getImagePlus();
 		
-		D d=dict_.get(imp);
+		D d=dict_.get(imp.getTitle());
 		if (d!= null) {
 			if (d.browser != null) {
 				d.browser.setVisible(true);
@@ -187,7 +217,7 @@ public class OctanePlugin implements PlugIn, ImageListener, WindowListener {
 		ImageWindow iw = (ImageWindow) e.getSource();
 		ImagePlus imp = iw.getImagePlus();
 		
-		D d=dict_.get(imp);
+		D d=dict_.get(imp.getTitle());
 		if (d!= null) {
 			if (d.browser != null) {
 				d.browser.setVisible(false);

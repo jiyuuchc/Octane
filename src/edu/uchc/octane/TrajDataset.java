@@ -18,6 +18,8 @@
 package edu.uchc.octane;
 
 import ij.IJ;
+
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -101,9 +103,9 @@ public class TrajDataset implements Serializable{
 
 	public void saveDataset() {
 		ObjectOutputStream out;
-		FileOutputStream fs;
+		BufferedOutputStream fs;
 		try {
-			fs = new FileOutputStream(path_ + File.separator + "analysis" + File.separator + "dataset");
+			fs = new BufferedOutputStream(new FileOutputStream(path_ + File.separator + "analysis" + File.separator + "dataset"));
 			out = new ObjectOutputStream(fs);
 			out.writeObject(this);
 			out.close();

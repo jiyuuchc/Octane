@@ -22,6 +22,7 @@ import java.util.prefs.Preferences;
 public class Prefs {
 
 	final static String LAST_WORKING_DIR_KEY = "LastWorkingDir";
+
 	final static String VIRTUAL_STACK_KEY = "VirtualStack";
 	final static String DIC_XOFFSET_KEY = "DicXOffset";
 	final static String DIC_YOFFSET_KEY = "DicYOffset";
@@ -39,6 +40,7 @@ public class Prefs {
 	
 	static String lastWorkingDir;
 	static boolean initialized = false;
+
 	static boolean virtualStack_ = true;
 	static int dicXOffset_ = -9;
 	static int dicYOffset_ = 0;
@@ -51,7 +53,7 @@ public class Prefs {
 	static int maxPeakArea_ = 300;
 	static double trackerMaxDsp_ = 1;
 	static int trackerMaxBlinking_ = 2;
-	static double palmThreshold_ = 0.5; 
+	static double palmThreshold_ = 100; 
 	static boolean refinePeak_ = true;
 	
 	static Preferences pref_;
@@ -61,11 +63,10 @@ public class Prefs {
 			return;
 
 		Preferences pref = Preferences.userNodeForPackage(Preferences.class);
-		//pref = pref.node(pref.absolutePath());
-		lastWorkingDir = pref.get(LAST_WORKING_DIR_KEY, null);
+		pref = pref.node(pref.absolutePath());
+		//lastWorkingDir = pref.get(LAST_WORKING_DIR_KEY, null);
+
 		virtualStack_ = pref.getBoolean(VIRTUAL_STACK_KEY, virtualStack_);
-		//dicXOffset_ = pref.getInt(DIC_XOFFSET_KEY, dicXOffset_);
-		//dicYOffset_ = pref.getInt(DIC_YOFFSET_KEY, dicYOffset_);
 		ballRadius_ = pref.getInt(BALL_RADIUS_KEY, ballRadius_);
 		pointIndicator_ = pref.getBoolean(POINT_INDICATOR_KEY, pointIndicator_);
 		showIndicator_ = pref.getBoolean(SHOW_INDICATOR_KEY, showIndicator_);
@@ -83,7 +84,8 @@ public class Prefs {
 	}
 
 	public static void savePrefs() {
-		pref_.put(LAST_WORKING_DIR_KEY, lastWorkingDir);
+		//pref_.put(LAST_WORKING_DIR_KEY, lastWorkingDir);
+
 		pref_.putBoolean(VIRTUAL_STACK_KEY, virtualStack_);
 		pref_.putInt(DIC_XOFFSET_KEY, dicXOffset_);
 		pref_.putInt(DIC_YOFFSET_KEY, dicYOffset_);
