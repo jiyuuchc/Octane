@@ -34,8 +34,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 public class PeakFinderDialog extends GenericDialog {
-
-	//private static final long serialVersionUID = 1L;
 	private static final long serialVersionUID = -572636108979646529L;
 	private PeakFinder finder_ = null;
 	private ImagePlus imp_ = null;
@@ -138,9 +136,9 @@ public class PeakFinderDialog extends GenericDialog {
 			updateMaximum();
 		}
 	}
-	
+
 	public ImagePlus getImp(){
 		return imp_;
 	}
-	
+
 }

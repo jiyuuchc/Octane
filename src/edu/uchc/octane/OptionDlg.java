@@ -37,7 +37,6 @@ import javax.swing.JRadioButton;
 
 public class OptionDlg extends JDialog {
 
-	private static final long serialVersionUID = 8082293900073714561L;
 	JRadioButton ctlPointIndicator_;
 	JRadioButton ctlAreaIndicator_;
 	JCheckBox ctlShowIndicator_;

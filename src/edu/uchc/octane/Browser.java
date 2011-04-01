@@ -25,7 +25,6 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -42,12 +41,15 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.geom.GeneralPath;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.ObjectInputStream;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
@@ -55,10 +57,8 @@ import ij.gui.ImageCanvas;
 import ij.gui.Roi;
 import ij.io.FileInfo;
 import ij.process.FloatProcessor;
-import ij.process.ImageProcessor;
 
 public class Browser extends JFrame implements ClipboardOwner{
-	private static final long serialVersionUID = -967387866057692460L;
 	
 	private ImagePlus imp_ = null;
 	private TrajDataset dataset_ = null;
@@ -180,6 +180,25 @@ public class Browser extends JFrame implements ClipboardOwner{
 		ConnectSignals();
 		
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+		
+		if (imp_ != null ) {
+			imp_.getWindow().addWindowListener(new WindowAdapter() {
+				@Override
+				public void windowIconified(WindowEvent e) {
+					setVisible(false);
+				}
+				
+				@Override
+				public void windowDeiconified(WindowEvent e) {
+					setVisible(true);
+				}
+				
+				@Override
+				public void windowClosed(WindowEvent e) {
+					dispose();
+				}
+			});
+		}
 	}
 	
 	private void selectRoi() {
@@ -498,11 +517,11 @@ public class Browser extends JFrame implements ClipboardOwner{
 		File file = new File(path + File.separator + "analysis" + File.separator + "dataset");
 		if (file.exists()) {
 			try {
-			fs = new FileInputStream(path + File.separator + "analysis" + File.separator + "dataset");
-			in = new ObjectInputStream(fs);
-			dataset_ = (TrajDataset) in.readObject();
-			in.close();
-			fs.close();
+				fs = new FileInputStream(path + File.separator + "analysis" + File.separator + "dataset");
+				in = new ObjectInputStream(fs);
+				dataset_ = (TrajDataset) in.readObject();
+				in.close();
+				fs.close();
 			} catch (Exception e) {
 				IJ.showMessage("Can't recover analysis results. Data corrupt?");
 				IJ.showMessage(e.toString() + "\n" + e.getMessage());
@@ -529,8 +548,7 @@ public class Browser extends JFrame implements ClipboardOwner{
 
 	@Override
 	public void lostOwnership(Clipboard arg0, Transferable arg1) {
-		// who cares
-		
+		// who cares		
 	}
 }
 

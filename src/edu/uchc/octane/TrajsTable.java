@@ -33,7 +33,6 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 public class TrajsTable extends JTable {
-	private static final long serialVersionUID = 8080339334223890218L;
 
 	private static String[] ColumnNames_ = { "Frame", "Len", "Marked","Notes"};
 	private static Class<?> [] ColumnClasses_ = {Integer.class, Integer.class, Boolean.class, String.class};

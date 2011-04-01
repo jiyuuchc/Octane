@@ -30,7 +30,8 @@ import java.io.Serializable;
 import java.util.Vector;
 
 public class TrajDataset implements Serializable{
-	private static final long serialVersionUID = 6338384578049557975L;
+	private static final long serialVersionUID = 1L;
+
 	private Vector<Trajectory> trajs_;
 	private String path_;
 	

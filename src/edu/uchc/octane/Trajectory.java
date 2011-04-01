@@ -20,7 +20,7 @@ package edu.uchc.octane;
 import java.util.Vector;
 
 public class Trajectory extends Vector<SmNode> {
-   private static final long serialVersionUID = 8399421969489786849L;
+
    public boolean marked = false; 
    public String note = null;
 

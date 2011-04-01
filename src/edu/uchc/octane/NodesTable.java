@@ -29,7 +29,6 @@ import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 
 public class NodesTable extends JTable{
-	private static final long serialVersionUID = 1691643945428279661L;
 
 	private static String[] ColumnNames_ = { "Frame", "X", "Y", "Q"};
 	private static Class<?> [] ColumnClasses_ = {Integer.class, Double.class, Double.class, Double.class};

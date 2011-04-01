@@ -21,7 +21,6 @@ package edu.uchc.octane;
 import java.io.Serializable;
 
 public class SmNode implements Serializable {
-	private static final long serialVersionUID = 4784457159470706657L;
 	double x;
 	double y;
 	int frame;

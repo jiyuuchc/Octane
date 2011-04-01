@@ -18,48 +18,26 @@
 
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
 import java.io.File;
 import java.util.HashMap;
+import javax.swing.UIManager;
 
 import ij.IJ;
-import ij.ImageListener;
 import ij.ImagePlus;
 import ij.WindowManager;
-import ij.gui.ImageWindow;
 import ij.io.FileInfo;
 import ij.plugin.PlugIn;
 
-import javax.swing.UIManager;
-
 import edu.uchc.octane.Browser;
 import edu.uchc.octane.PrefDialog;
-import edu.uchc.octane.PeakFinderDialog;
 import edu.uchc.octane.Prefs;
+import edu.uchc.octane.ThresholdDialog;
 
 
-public class OctanePlugin implements PlugIn, ImageListener, WindowListener {
+public class OctanePlugin implements PlugIn{
 
-	String cmd_;
-
-	class D {
-		public PeakFinderDialog finderDlg;
-		public Browser browser;
-	}
-
-	static HashMap<String, D> dict_ = new HashMap<String,D>();
-	
-	class BrowserWindowAdapter extends WindowAdapter{
-		ImagePlus imp_;
-		public BrowserWindowAdapter(ImagePlus imp) {
-			imp = imp_;
-		}
-		@Override
-		public void windowClosed(WindowEvent e) {
-			dict_.remove(imp_.getTitle());
-			super.windowClosed(e);
-		}									
-	}
+	ImagePlus imp_;
+	static HashMap<String, Browser> dict_ = new HashMap<String,Browser>();
 	
 	public OctanePlugin() {
 		try {
@@ -68,166 +46,73 @@ public class OctanePlugin implements PlugIn, ImageListener, WindowListener {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		ImagePlus.addImageListener(this);
-		//dict_ = new HashMap<String,D>();
 	}
 
-	public void openBrowser(ImagePlus imp) {
-		D d = dict_.get(imp.getTitle());
-		d.finderDlg = null;
-		d.browser = new Browser(imp);
-		d.browser.setVisible(true);
-		d.browser.addWindowListener(new WindowAdapter(){
+	public void openBrowser() {
+		Browser browser = new Browser(imp_);
+		browser.setVisible(true);
+		dict_.put(imp_.getTitle(), browser);
+		browser.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosed(WindowEvent e) {
-				Browser browser = (Browser) e.getSource();
-				dict_.remove(browser.getImp().getTitle());
-			}										
+				dict_.remove(imp_.getTitle());
+			}
 		});
 	}
 	
-	public void openPeakFinder(ImagePlus imp) {
-		D d = dict_.get(imp.getTitle());
-		d.finderDlg = new PeakFinderDialog(imp);
-		d.finderDlg.addWindowListener(new WindowAdapter() {
-			@Override
-			public void windowClosed(WindowEvent e) {
-				PeakFinderDialog dlg = (PeakFinderDialog) e.getSource();
-				dlg.removeWindowListener(this);
-				if (dlg.wasOKed()) {
-					openBrowser(dlg.getImp());
-				} else {
-					dict_.remove(dlg.getImp().getTitle());
-				}
-				super.windowClosed(e);
-			}							
-		});
-		d.finderDlg.showDialog();		
-	}
-
-	@Override
-	public void imageClosed(ImagePlus imp) {
-		D d = dict_.get(imp.getTitle());		
-		if (d != null) {
-			if (d.browser != null) {
-				d.browser.dispose();
-			}
-			if (d.finderDlg != null) {
-				d.finderDlg.dispose();
-			}
-			dict_.remove(imp.getTitle());
-		}
-	}
-
-	@Override
-	public void imageOpened(ImagePlus arg0) {}
-
-	@Override
-	public void imageUpdated(ImagePlus imp) {
-		D d = dict_.get(imp.getTitle());
-		if (d != null) {
-			if (d.finderDlg != null) {
-				d.finderDlg.setImageProcessor(imp.getProcessor());
-			}
+	public void openPeakFinder() {
+		ThresholdDialog finderDlg = new ThresholdDialog(imp_);
+		if (finderDlg.openDialog() == true) {
+			openBrowser();		
+		} else {
+			dict_.remove(imp_.getTitle());
 		}
 	}
 
 	@Override
 	public void run(String cmd) {
-		ImagePlus imp;
 		String path;		
 		if (cmd.equals("options")) {
 			PrefDialog.openDialog();
 			return;
 		}
-		imp = WindowManager.getCurrentImage();
-		if (imp == null || imp.getStack().getSize() < 2) {
+		imp_ = WindowManager.getCurrentImage();
+		if (imp_ == null || imp_.getStack().getSize() < 2) {
 			IJ.showMessage("This only works on a stack");
 			return;
 		}
-		FileInfo fi = imp.getOriginalFileInfo();
+		FileInfo fi = imp_.getOriginalFileInfo();
 		if (fi != null) {
 			path = fi.directory; 
 		} else {
 			IJ.showMessage("Can't find image's disk location. You must save the data under a unique folder.");
 			return;
 		}
-		
-		D d;
-		d = dict_.get(imp.getTitle());
-		if (d == null && cmd.equals("browser")) {
-			d = new D();
-			d.browser = null;
-			d.finderDlg = null;
-			dict_.put(imp.getTitle(), d);
-			imp.getWindow().addWindowListener(this);
-			File file = new File(path + File.separator + "analysis" + File.separator + "dataset");
-			if (! file.exists()) {
-				openPeakFinder(imp);
-			} else {
-				openBrowser(imp);
+
+		if (! dict_.containsKey(imp_.getTitle())) {
+			if (cmd.equals("browser")) {
+				dict_.put(imp_.getTitle(), null);
+				
+				File file = new File(path + File.separator + "analysis" + File.separator + "positions");
+				if (! file.exists()) {
+					openPeakFinder();
+				} else {
+					openBrowser();
+				}
 			}
-		} else if (d!=null && d.browser != null  ) {
-			if (cmd.equals("flowmap")) {
-				d.browser.constructFlowMap();
-			} else if (cmd.equals("palm")) {
-				d.browser.constructPalm();
-			} else if (cmd.equals("mobilitymap")) {
-				d.browser.constructMobilityMap();
-			} else if (cmd.equals("ifs")){
-				d.browser.constructIFS();
+		} else {
+			Browser d = dict_.get(imp_.getTitle());
+			if (d != null && d.isVisible()) {
+				if (cmd.equals("flowmap")) {
+					d.constructFlowMap();
+				} else if (cmd.equals("palm")) {
+					d.constructPalm();
+				} else if (cmd.equals("mobilitymap")) {
+					d.constructMobilityMap();
+				} else if (cmd.equals("ifs")){
+					d.constructIFS();
+				}
 			}
 		}
 	}
-
-	@Override
-	public void windowActivated(WindowEvent e) {}
-
-	@Override
-	public void windowClosed(WindowEvent e) {
-		ImageWindow iw = (ImageWindow) e.getSource();
-		ImagePlus imp = iw.getImagePlus();
-		imageClosed(imp);		
-	}
-
-	@Override
-	public void windowClosing(WindowEvent e) {}
-
-	@Override
-	public void windowDeactivated(WindowEvent e) {}
-
-	@Override
-	public void windowDeiconified(WindowEvent e) {
-		ImageWindow iw = (ImageWindow) e.getSource();
-		ImagePlus imp = iw.getImagePlus();
-		
-		D d=dict_.get(imp.getTitle());
-		if (d!= null) {
-			if (d.browser != null) {
-				d.browser.setVisible(true);
-			}
-			if (d.finderDlg != null) {
-				d.finderDlg.setVisible(true);
-			}
-		}		
-	}
-
-	@Override
-	public void windowIconified(WindowEvent e) {
-		ImageWindow iw = (ImageWindow) e.getSource();
-		ImagePlus imp = iw.getImagePlus();
-		
-		D d=dict_.get(imp.getTitle());
-		if (d!= null) {
-			if (d.browser != null) {
-				d.browser.setVisible(false);
-			}
-			if (d.finderDlg != null) {
-				d.finderDlg.setVisible(false);
-			}
-		}		
-	}
-
-	@Override
-	public void windowOpened(WindowEvent arg0) {}
 }
