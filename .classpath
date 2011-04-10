@@ -4,5 +4,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="C:/Users/Ji-Yu/workspace/mtj.jar"/>
 	<classpathentry kind="lib" path="/ImageJec/build" sourcepath="/ImageJec/imagej"/>
+	<classpathentry kind="lib" path="C:/Users/Ji-Yu/workspace/jpop.0.7.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

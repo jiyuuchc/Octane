@@ -83,7 +83,11 @@ public class PeakFinder {
 		height_ = ip_.getHeight();
 		makeDirectionOffsets();
 
-		refiner_ = new SubPixelRefiner(ip_);
+		if (Prefs.refiner_ == 0) {
+			refiner_ = new PfgwRefiner(ip_);
+		} else {
+			refiner_ = new GaussianRefiner(ip_);
+		}
 	}
 
 	public double getTolerance() {
@@ -237,14 +241,15 @@ public class PeakFinder {
 		maximaQuality_ = new double[nMaxima_];
 		if (nMaxima_ > 0 && Prefs.refinePeak_ ) {
 			for (int i = 0; i < nMaxima_; i++) {
-				try {
-					refiner_.refine(xArray_[i], yArray_[i]);
+				int rtmp;
+				rtmp = refiner_.refine(xArray_[i], yArray_[i]);
+				if (rtmp >= 0) {
 					xArray_[nNewMaxima] = refiner_.getXOut();
 					yArray_[nNewMaxima] = refiner_.getYOut();
 					maximaQuality_[nNewMaxima] = refiner_.getQuality();
 					peakSize_[nNewMaxima] = peakSize_[i];
 					nNewMaxima++;
-				} catch (Exception e) {
+				}else {
 					nMissed++;
 				}
 			}

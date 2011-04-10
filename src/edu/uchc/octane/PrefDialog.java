@@ -26,7 +26,11 @@ public class PrefDialog {
 		dlg.addNumericField("Max Blinking", (double)Prefs.trackerMaxBlinking_, 0);
 		dlg.addNumericField("PALM Ratio", Prefs.palmRatio_, 1);
 		dlg.addNumericField("PALM PSD", Prefs.palmPSDWidth_, 3);
+		
+		String [] choices = {"Polyfit Gaussian Weight","Gaussian Fit"};
 		dlg.addNumericField("PALM Threshold", Prefs.palmThreshold_, 1);
+		
+		dlg.addChoice("SubPixel Fitting Algrithm", choices, choices[Prefs.refiner_]);
 		dlg.showDialog();
 		if (dlg.wasCanceled())
 			return;
@@ -35,6 +39,7 @@ public class PrefDialog {
 		Prefs.palmRatio_ = dlg.getNextNumber();
 		Prefs.palmPSDWidth_ = dlg.getNextNumber();
 		Prefs.palmThreshold_ = dlg.getNextNumber();
+		Prefs.refiner_ = dlg.getNextChoiceIndex();
 		
 		Prefs.savePrefs();
 	}

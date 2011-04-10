@@ -37,6 +37,7 @@ public class Prefs {
 	final static String TRACKER_MAX_DISPLACEMENT = "trackerMaxDsp";
 	final static String PALM_THRESHOLD = "palmThreshold";
 	final static String REFINE_PEAK_KEY = "refinePeak";
+	final static String REFINER_KEY = "refiner";
 	
 	static String lastWorkingDir;
 	static boolean initialized = false;
@@ -55,6 +56,7 @@ public class Prefs {
 	static int trackerMaxBlinking_ = 2;
 	static double palmThreshold_ = 100; 
 	static boolean refinePeak_ = true;
+	static int refiner_ = 1;
 	
 	static Preferences pref_;
 
@@ -78,7 +80,8 @@ public class Prefs {
 		trackerMaxDsp_ = pref.getDouble(TRACKER_MAX_DISPLACEMENT, trackerMaxDsp_ );
 		palmThreshold_ = pref.getDouble(PALM_THRESHOLD, palmThreshold_);
 		refinePeak_ = pref.getBoolean(REFINE_PEAK_KEY, refinePeak_);
-		
+		refiner_ = pref.getInt(REFINER_KEY, refiner_);
+
 		pref_ = pref;
 		initialized = true;
 	}
@@ -100,6 +103,7 @@ public class Prefs {
 		pref_.putDouble(TRACKER_MAX_DISPLACEMENT, trackerMaxDsp_);
 		pref_.putDouble(PALM_THRESHOLD, palmThreshold_);
 		pref_.putBoolean(REFINE_PEAK_KEY, refinePeak_);
+		pref_.putInt(REFINER_KEY, refiner_);
 	}
 
 }
