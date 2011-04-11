@@ -119,11 +119,12 @@ public class Browser extends JFrame implements ClipboardOwner{
 		editMenu.setMnemonic(KeyEvent.VK_E);
 		JMenu viewMenu = new JMenu("View");
 		editMenu.setMnemonic(KeyEvent.VK_V);
-
+		JMenu processMenu = new JMenu("Process");
 		menuBar.add(fileMenu);
 		menuBar.add(editMenu);
 		menuBar.add(viewMenu);
-		
+		menuBar.add(processMenu);
+
 		JMenuItem item; 
 		
 		item = new JMenuItem("Save");
@@ -191,6 +192,42 @@ public class Browser extends JFrame implements ClipboardOwner{
 			public void actionPerformed(ActionEvent e){
 				JCheckBoxMenuItem cb = (JCheckBoxMenuItem) e.getSource();
 				Prefs.showOverlay_ = cb.getState();
+			}
+		});
+
+		item = new JMenuItem("Flow Map");
+		processMenu.add(item);
+		item.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e){
+				constructFlowMap();
+			}
+		});
+		
+		item = new JMenuItem("Mobility Map");
+		processMenu.add(item);
+		item.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e){
+				constructMobilityMap();
+			}
+		});
+
+		item = new JMenuItem("PALM");
+		processMenu.add(item);
+		item.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e){
+				constructPalm();
+			}
+		});
+
+		item = new JMenuItem("IFS");
+		processMenu.add(item);
+		item.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e){
+				constructIFS();
 			}
 		});
 

@@ -89,7 +89,7 @@ public class OctanePlugin implements PlugIn{
 			return;
 		}
 
-		if (! dict_.containsKey(imp_.getTitle())) {
+		if (! dict_.containsKey(imp_.getTitle())) { // do not open multiple window for the same image
 			if (cmd.equals("browser")) {
 				dict_.put(imp_.getTitle(), null);
 				
@@ -100,19 +100,6 @@ public class OctanePlugin implements PlugIn{
 					openBrowser();
 				}
 			}
-		} else {
-			Browser d = dict_.get(imp_.getTitle());
-			if (d != null && d.isVisible()) {
-				if (cmd.equals("flowmap")) {
-					d.constructFlowMap();
-				} else if (cmd.equals("palm")) {
-					d.constructPalm();
-				} else if (cmd.equals("mobilitymap")) {
-					d.constructMobilityMap();
-				} else if (cmd.equals("ifs")){
-					d.constructIFS();
-				}
-			}
-		}
+		} 
 	}
 }
