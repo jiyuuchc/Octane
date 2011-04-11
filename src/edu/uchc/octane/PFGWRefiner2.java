@@ -25,6 +25,7 @@ import org.apache.commons.math.linear.ArrayRealVector;
 import org.apache.commons.math.linear.QRDecompositionImpl;
 import org.apache.commons.math.linear.RealVector;
 
+
 public class PFGWRefiner2 implements SubPixelRefiner {
 
 	   ImageProcessor frame_;
