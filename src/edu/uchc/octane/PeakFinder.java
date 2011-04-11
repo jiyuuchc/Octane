@@ -22,8 +22,8 @@ import ij.gui.PointRoi;
 import ij.gui.Roi;
 import ij.process.ImageProcessor;
 import java.awt.Rectangle;
-import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.Writer;
 import java.util.Arrays;
 
 public class PeakFinder {
@@ -69,6 +69,7 @@ public class PeakFinder {
 
 	public PeakFinder() {
 		tol_ = 2000;
+		refiner_ = null;
 	}
 
 	public void setImageProcessor(ImageProcessor ip) {
@@ -82,12 +83,6 @@ public class PeakFinder {
 		width_ = ip_.getWidth();
 		height_ = ip_.getHeight();
 		makeDirectionOffsets();
-
-		if (Prefs.refiner_ == 0) {
-			refiner_ = new PfgwRefiner(ip_);
-		} else {
-			refiner_ = new GaussianRefiner(ip_);
-		}
 	}
 
 	public double getTolerance() {
@@ -100,6 +95,10 @@ public class PeakFinder {
 
 	public void setThreshold(double threshold) {
 		threshold_ = threshold;
+	}
+	
+	public void setRefiner(SubPixelRefiner refiner) {
+		refiner_ = refiner;
 	}
 
 	// The followings are copied form ImageJ
@@ -236,6 +235,14 @@ public class PeakFinder {
 	}
 
 	public short refineMaxima() {
+		if (refiner_ == null ) {
+			if (Prefs.refiner_ == 0) {
+				refiner_ = new PFGWRefiner2(ip_);
+			} else {
+				refiner_ = new GaussianRefiner(ip_);
+			}
+		}
+
 		short nMissed = 0;
 		short nNewMaxima = 0;
 		maximaQuality_ = new double[nMaxima_];
@@ -266,20 +273,19 @@ public class PeakFinder {
 			int[] xpoints = new int[nMaxima_];
 			int[] ypoints = new int[nMaxima_];
 			for (int i = 0; i < nMaxima_; i++) {
-				xpoints[i] = (int) (xArray_[i] + 0.5);
-				ypoints[i] = (int) (yArray_[i] + 0.5);
+				xpoints[i] = (int) Math.round(xArray_[i]);
+				ypoints[i] = (int) Math.round(yArray_[i]);
 			}
 			imp.setRoi(new PointRoi(xpoints, ypoints, nMaxima_));
 		}
 	}
 
-	public void saveMaxima(BufferedWriter writer, int frame) throws IOException {
+	public void saveMaxima(Writer writer, int frame) throws IOException {
 		if (nMaxima_ > 0) {
 			for (int i = 0; i < nMaxima_; i++) {
 				double x = xArray_[i];
 				double y = yArray_[i];
-				writer.write(x + ", " + y +  ", " + frame + "," + peakSize_[i]);
-				writer.newLine();
+				writer.write(x + ", " + y +  ", " + frame + "," + peakSize_[i] + '\n');
 			}
 		}
 	}

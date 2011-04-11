@@ -79,7 +79,7 @@ public class Tracker2{
 					int cnt = frameLength_.get(frame);
 					data_[frame][cnt][0] = traj.getX(j);
 					data_[frame][cnt][1] = traj.getY(j);
-					data_[frame][cnt][2] = traj.get(j).quality;
+					data_[frame][cnt][2] = traj.get(j).reserved;
 					frameLength_.set(frame, frameLength_.get(frame) + 1);
 				}
 			}

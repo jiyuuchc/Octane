@@ -21,12 +21,16 @@ import ij.IJ;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Vector;
 
 public class TrajDataset implements Serializable{
@@ -67,24 +71,40 @@ public class TrajDataset implements Serializable{
 		
 		Tracker tracker = new Tracker(file, Prefs.trackerMaxDsp_, Prefs.trackerMaxBlinking_);
 		tracker.doTracking();
-		tracker.toDisk(outfile);
-		trajs_ = tracker.getTrajs();		
+		//tracker.toDisk(outfile);
+		trajs_ = tracker.getTrajs();
+		writeToText(outfile);
 	}
 
 	void readTrajs() throws IOException {
 		File file = new File(path_ + File.separator + "analysis" + File.separator + "trajs");
-		BufferedReader br;
 
 		if (! file.exists()) {
 			IJ.log("No Trajectory available. Build the trajectories.");
 			posToTracks(file);
 			return;
+		} else {
+			readFromText(file);
 		}
 
+	}
+	
+	public void writeToText(File file)throws IOException {
+		BufferedWriter bw = new BufferedWriter(new FileWriter(file));
+		for (int i = 0; i < trajs_.size(); i ++ ) {
+			for (int j = 0; j < trajs_.get(i).size(); j++) {
+				SmNode s = trajs_.get(i).get(j);
+				bw.write(String.format("%f, %f, %d, %f, %d\n", s.x, s.y, s.frame, s.reserved, i));				
+			}
+		}
+		bw.close(); 		
+	}
+	
+	public void readFromText(File file) throws IOException {
 		Trajectory oneTraj = new Trajectory();
 		int cur_cnt = -1;
 		String line;
-		br = new BufferedReader(new FileReader(file));
+		BufferedReader br = new BufferedReader(new FileReader(file));
 
 		while (null != (line = br.readLine())) {
 			int c = line.lastIndexOf(',');
@@ -98,8 +118,7 @@ public class TrajDataset implements Serializable{
 		}
 
 		br.close();
-		assert (trajs_.size() > 0);
-		//IJ.showMessage("Number of trajs read from disk:" + trajs_.size());
+		assert (trajs_.size() > 0);		
 	}
 
 	public void saveDataset() {

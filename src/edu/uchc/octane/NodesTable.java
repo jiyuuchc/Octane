@@ -60,7 +60,7 @@ public class NodesTable extends JTable{
 				}
 			}
 		} );
-				
+
 	}
 
 	public void drawBox() {
@@ -77,8 +77,9 @@ public class NodesTable extends JTable{
 	
 	public void setData(Trajectory traj) {
 		traj_ = traj;
+		clearSelection();
 		model_.fireTableDataChanged();
-		setRowSelectionInterval(0,0);
+		//setRowSelectionInterval(0,0);
 	}
 	
 	public void SetImp(ImagePlus imp) {
@@ -121,7 +122,7 @@ public class NodesTable extends JTable{
 			case 2:
 				return node.y;
 			case 3:
-				return node.quality;
+				return node.reserved;
 			}
 			return null;
 		}

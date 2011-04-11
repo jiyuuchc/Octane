@@ -79,7 +79,7 @@ public class PfgwRefiner implements SubPixelRefiner {
             yp.set(i, yd);
             // weight.set(i, w);
             V.set(i, 0, w);
-            z.set(i, frame_.getf(x, y) * w);
+            z.set(i, frame_.get(x, y) * w);
             i++;
          }
       }

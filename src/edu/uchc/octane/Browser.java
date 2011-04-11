@@ -21,8 +21,12 @@ package edu.uchc.octane;
 import java.awt.GridBagConstraints;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import java.awt.BasicStroke;
@@ -39,6 +43,7 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
@@ -46,6 +51,7 @@ import java.awt.event.WindowEvent;
 import java.awt.geom.GeneralPath;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -64,47 +70,207 @@ public class Browser extends JFrame implements ClipboardOwner{
 	private TrajDataset dataset_ = null;
 	TrajsTable trajsTable_;
 	NodesTable nodesTable_;
-	JButton buttonRoi_,buttonMark_, buttonExport_;
+	String path_;
+	
+	public Browser(TrajDataset data) {
+		super();
+		dataset_ = data;
+		SetupWindow();
+	}
+
+	public Browser(ImagePlus imp) {
+		super();
+		imp_ = imp;
+		FileInfo fi = imp.getOriginalFileInfo();
+		if (fi != null) {
+			path_ = fi.directory; 
+		} else {
+			path_ = null;
+			IJ.showMessage("Can't find trajectories location");
+			return;
+		}		
+		ObjectInputStream in;
+		FileInputStream fs;
+		File file = new File(path_ + File.separator + "analysis" + File.separator + "dataset");
+		try {
+			if (file.exists()) {
+				fs = new FileInputStream(path_ + File.separator + "analysis" + File.separator + "dataset");
+				in = new ObjectInputStream(fs);
+				dataset_ = (TrajDataset) in.readObject();
+				in.close();
+				fs.close();
+			} else {
+				revert();
+			} 			
+		} catch (Exception e) {
+			IJ.showMessage("Can't recover analysis results. Data corrupt?");
+			IJ.showMessage(e.toString() + "\n" + e.getMessage());
+			return;
+		}
+		SetupWindow();
+	}
+
+	private JMenuBar createMenuBar() {
+		JMenuBar menuBar = new JMenuBar();
+		
+		JMenu fileMenu = new JMenu("File");
+		fileMenu.setMnemonic(KeyEvent.VK_F);
+		JMenu editMenu = new JMenu("Edit");
+		editMenu.setMnemonic(KeyEvent.VK_E);
+		JMenu viewMenu = new JMenu("View");
+		editMenu.setMnemonic(KeyEvent.VK_V);
+
+		menuBar.add(fileMenu);
+		menuBar.add(editMenu);
+		menuBar.add(viewMenu);
+		
+		JMenuItem item; 
+		
+		item = new JMenuItem("Save");
+		fileMenu.add(item);
+		item.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				save(); 
+			}			
+		});
+		
+		item = new JMenuItem("Revert");
+		fileMenu.add(item);
+		item.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent ev) {
+				TrajDataset backup = dataset_; 
+				try {
+					revert();
+					trajsTable_.setData(dataset_.getTrajectories());
+					trajsTable_.clearSelection();
+					//nodesTable_.setData(null);
+				} catch (IOException e) {
+					dataset_ = backup;
+					IJ.showMessage("Can't recover analysis results. Data corrupt?");
+					IJ.showMessage(e.toString() + "\n" + e.getMessage());
+					return;
+				}
+			}			
+		});
+
+		item = new JMenuItem("Delete");
+		editMenu.add(item);
+		item.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				trajsTable_.deleteSelected(); 
+			}
+		});
+		
+		item = new JMenuItem("Hide Unmarked");
+		viewMenu.add(item);
+		item.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				trajsTable_.hideUnmarked();
+			}
+		});
+		
+		item = new JMenuItem("Show All");
+		viewMenu.add(item);
+		item.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				trajsTable_.setData(dataset_.getTrajectories()); 
+			}
+		});
+		
+		viewMenu.addSeparator();
+		
+		JCheckBoxMenuItem cbItem = new JCheckBoxMenuItem("Show Overlay", Prefs.showOverlay_);
+		viewMenu.add(cbItem);
+		cbItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e){
+				JCheckBoxMenuItem cb = (JCheckBoxMenuItem) e.getSource();
+				Prefs.showOverlay_ = cb.getState();
+			}
+		});
+
+		return menuBar;
+	}
+	
+	private JPanel createButtonBox() {
+		final JPanel buttonBox = new JPanel(); // button box
+		JButton button;
+
+		buttonBox.setLayout(new BoxLayout(buttonBox,BoxLayout.LINE_AXIS));
+		buttonBox.setBorder(BorderFactory.createEmptyBorder(0,10,5,5));
+		buttonBox.add(Box.createHorizontalGlue());
+		button = new JButton("SelectRoi");
+		buttonBox.add(button);
+
+		button.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (imp_ != null) {
+					selectRoi();
+				}
+			}
+		});
+		
+		buttonBox.add(Box.createRigidArea(new Dimension(10,0)));
+
+		button = new JButton("Mark");
+		buttonBox.add(button);
+		
+		button.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				trajsTable_.reverseMarkOfSelected();
+			}
+		});
+
+		buttonBox.add(Box.createRigidArea(new Dimension(10,0)));
+
+		button = new JButton("Copy");
+		buttonBox.add(button);
+
+		button.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (imp_ != null) {
+					copySelectedTrajectories();
+				}
+			}
+		});
+
+		return buttonBox;
+	}
+	
 	
 	private void Layout(){
+		
+		setBounds(100, 100, 660, 495);
+		
+		setJMenuBar(createMenuBar());
+		
+		JPanel mainPanel = new JPanel();
+			
 		final GridBagLayout layout = new GridBagLayout();
-		setLayout(layout);
+		mainPanel.setLayout(layout);
 		
-		final JScrollPane trajsPane = new JScrollPane();
-		final JScrollPane nodesPane = new JScrollPane();
-		final JPanel panel = new JPanel();
-		trajsTable_ = new TrajsTable(dataset_.getTrajectories());
-		trajsPane.setViewportView(trajsTable_);
-		nodesTable_ = new NodesTable(null);
-		nodesPane.setViewportView(nodesTable_);
-		
-		buttonRoi_ = new JButton("SelectRoi");
-		buttonMark_ = new JButton("Mark");
-		buttonExport_ = new JButton("Copy");
-		panel.setLayout(new BoxLayout(panel,BoxLayout.LINE_AXIS));
-		panel.setBorder(BorderFactory.createEmptyBorder(0,10,5,5));
-		panel.add(Box.createHorizontalGlue());
-		panel.add(buttonRoi_);
-		panel.add(Box.createRigidArea(new Dimension(10,0)));
-		panel.add(buttonMark_);
-		panel.add(Box.createRigidArea(new Dimension(10,0)));
-		panel.add(buttonExport_);
-
 		GridBagConstraints constraints;
 		constraints = new GridBagConstraints();
-		
 		constraints.anchor = GridBagConstraints.WEST;
 		constraints.gridx = 0; 
 		constraints.gridy = 0;
 		constraints.weightx =0;
 		constraints.weighty = 0;
-		add(new JLabel("List of Traces:"), constraints);
+		mainPanel.add(new JLabel("List of Traces:"), constraints);
 
 		constraints.gridx = 1; 
 		constraints.gridy = 0;
 		constraints.weightx =0;
 		constraints.weighty = 0;
-		add(new JLabel("Current Trace:"), constraints);
+		mainPanel.add(new JLabel("Current Trace:"), constraints);
 				
 		constraints.fill = GridBagConstraints.BOTH;
 		constraints.insets = new Insets(5,5,5,5);		
@@ -112,21 +278,28 @@ public class Browser extends JFrame implements ClipboardOwner{
 		constraints.gridy = 1;
 		constraints.weightx = 0.3;
 		constraints.weighty = 1.0;
-		add(trajsPane, constraints);
+		final JScrollPane trajsPane = new JScrollPane();
+		trajsTable_ = new TrajsTable(dataset_.getTrajectories());
+		trajsPane.setViewportView(trajsTable_);
+		mainPanel.add(trajsPane, constraints);
 		
 		constraints.gridx = 1;
 		constraints.gridy = 1;
 		constraints.weightx = 0.7;
 		constraints.weighty = 1.0;
-		add(nodesPane, constraints);
+		final JScrollPane nodesPane = new JScrollPane();
+		nodesTable_ = new NodesTable(null);
+		nodesPane.setViewportView(nodesTable_);		
+		mainPanel.add(nodesPane, constraints);
 
 		constraints.gridx = 0;
 		constraints.gridy = 2;
 		constraints.weightx = 0;
 		constraints.weighty = 0;		
-		add(panel, constraints);
+		mainPanel.add(createButtonBox(), constraints);
 		
-		setBounds(100, 100, 660, 495);
+		add(mainPanel);
+		
 		if (imp_ != null) {
 			setTitle(imp_.getTitle() + " Trajectories");
 			trajsTable_.SetImp(imp_);
@@ -136,34 +309,11 @@ public class Browser extends JFrame implements ClipboardOwner{
 		}
 	}
 	
-	private void ConnectSignals() {
+	private void SetupWindow() {
+		Layout();
+
 		trajsTable_.setNodesTable(nodesTable_);
 		
-		buttonRoi_.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if (imp_ != null) {
-					selectRoi();
-				}
-			}
-		});
-		
-		buttonMark_.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				trajsTable_.reverseMarkOfSelected();
-			}
-		});
-		
-		buttonExport_.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if (imp_ != null) {
-					copy();
-				}
-			}
-		});
-
 		imp_.getCanvas().addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
@@ -172,12 +322,7 @@ public class Browser extends JFrame implements ClipboardOwner{
 				}
 				
 			}
-		});	
-	}
-
-	private void SetupWindow() {
-		Layout();
-		ConnectSignals();
+		});
 		
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		
@@ -200,7 +345,7 @@ public class Browser extends JFrame implements ClipboardOwner{
 			});
 		}
 	}
-	
+
 	private void selectRoi() {
 		Roi roi = imp_.getRoi();
 		if (roi == null) {
@@ -228,7 +373,7 @@ public class Browser extends JFrame implements ClipboardOwner{
 		}
 	}
 	
-	private void copy() {
+	private void copySelectedTrajectories() {
 		//Vector<Trajectory> trajs = dataset_.getTrajectories();
 		StringBuilder buf = new StringBuilder();
 		int [] selected = trajsTable_.getSelectedRows();
@@ -279,7 +424,7 @@ public class Browser extends JFrame implements ClipboardOwner{
 		}
 	}
 
-	private int[] getSelectedRows() {
+	private int[] getSelectedOrAll() {
 		int [] selected = trajsTable_.getSelectedRows();
 		if (selected.length <= 1) {
 			selected = new int[trajsTable_.getRowCount()];
@@ -293,7 +438,7 @@ public class Browser extends JFrame implements ClipboardOwner{
 		}
 		return selected;
 	}
-	
+
 /*	private FloatProcessor gaussianImage(ImageProcessor img) {
 		int width = img.getWidth();
 		int height = img.getHeight();
@@ -321,7 +466,7 @@ public class Browser extends JFrame implements ClipboardOwner{
 		ImagePlus img = new ImagePlus("IFS", is);
 		double psdWidth = 0.85;
 
-		int [] selected = getSelectedRows();
+		int [] selected = getSelectedOrAll();
 		for ( int i = 0; i < selected.length; i ++) {
 			Trajectory traj = dataset_.getTrajectories().get(selected[i]);
 			for (int j = 0; j < traj.size(); j++ ) {
@@ -346,7 +491,7 @@ public class Browser extends JFrame implements ClipboardOwner{
 		double psdWidth = Prefs.palmPSDWidth_ * Prefs.palmRatio_;
 		int nPlotted = 0;
 		int nSkipped = 0;
-		int [] selected = getSelectedRows();
+		int [] selected = getSelectedOrAll();
 		for ( int i = 0; i < selected.length; i ++) {
 			Trajectory traj = dataset_.getTrajectories().get(selected[i]);
 			double xx = traj.getX(0);
@@ -389,7 +534,7 @@ public class Browser extends JFrame implements ClipboardOwner{
 
 		float [][] m = new float[rect.width][rect.height];
 		float [][] n = new float[rect.width][rect.height];
-		int [] selected = getSelectedRows();
+		int [] selected = getSelectedOrAll();
 		int i,j;
 		for (i =0; i < selected.length; i++) {
 			Trajectory t = dataset_.getTrajectories().get(selected[i]);
@@ -429,7 +574,7 @@ public class Browser extends JFrame implements ClipboardOwner{
 		float [][] dxs = new float[rect.width][rect.height];
 		float [][] dys = new float[rect.width][rect.height];
 		float [][] n = new float[rect.width][rect.height];
-		int [] selected = getSelectedRows();
+		int [] selected = getSelectedOrAll();
 		int i,j;
 		for (i =0; i < selected.length; i++) {
 			Trajectory t = dataset_.getTrajectories().get(selected[i]);
@@ -484,7 +629,7 @@ public class Browser extends JFrame implements ClipboardOwner{
 	public ImagePlus getImp() {
 		return imp_;
 	}
-	
+
 	public void selectMarked(boolean b) {
 		trajsTable_.clearSelection();
 		for (int i = 0; i < dataset_.getTrajectories().size(); i++) {
@@ -495,54 +640,19 @@ public class Browser extends JFrame implements ClipboardOwner{
 		}
 	}
 
-	public Browser(TrajDataset data) {
-		super();
-		dataset_ = data;
-		SetupWindow();
+	public void revert() throws IOException {
+		dataset_ = new TrajDataset();
+		dataset_.buildDataset(path_);
 	}
 
-	public Browser(ImagePlus imp) {
-		super();
-		imp_ = imp;
-		String path;
-		FileInfo fi = imp.getOriginalFileInfo();
-		if (fi != null) {
-			path = fi.directory; 
-		} else {
-			IJ.showMessage("Can't find trajectories location");
-			return;
-		}		
-		ObjectInputStream in;
-		FileInputStream fs;
-		File file = new File(path + File.separator + "analysis" + File.separator + "dataset");
-		if (file.exists()) {
-			try {
-				fs = new FileInputStream(path + File.separator + "analysis" + File.separator + "dataset");
-				in = new ObjectInputStream(fs);
-				dataset_ = (TrajDataset) in.readObject();
-				in.close();
-				fs.close();
-			} catch (Exception e) {
-				IJ.showMessage("Can't recover analysis results. Data corrupt?");
-				IJ.showMessage(e.toString() + "\n" + e.getMessage());
-				return;
-			}
-		} else {
-			try {
-				dataset_ = new TrajDataset();
-				dataset_.buildDataset(path);
-			} catch (Exception e) {
-				IJ.showMessage("Can't build trajectory. Data corrupt?");
-				IJ.showMessage(e.toString() + "\n" + e.getMessage());
-				return;				
-			}
-		} 
-		SetupWindow();
+	public void save() {
+		dataset_.saveDataset();
 	}
-
+	
 	@Override
 	public void dispose() {
-		dataset_.saveDataset();
+		save();
+		Prefs.savePrefs();
 		super.dispose();
 	}
 

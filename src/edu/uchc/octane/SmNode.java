@@ -24,7 +24,7 @@ public class SmNode implements Serializable {
 	double x;
 	double y;
 	int frame;
-	double quality;
+	double reserved;
 
 	public SmNode(double x, double y, int f) {
 		this(x, y, f, 0.0);
@@ -34,7 +34,7 @@ public class SmNode implements Serializable {
 		this.x = x;
 		this.y = y;
 		frame = f;
-		quality = q;
+		reserved = q;
 	}
 
 	public SmNode(String line) {
@@ -43,11 +43,11 @@ public class SmNode implements Serializable {
 		y = Double.parseDouble(items[1]);
 		frame = Integer.parseInt(items[2].trim());
 		if (items.length > 3) {
-			quality = Double.parseDouble(items[3]);
+			reserved = Double.parseDouble(items[3]);
 		}
 	}
 
 	public String toString() {
-		return (x + ", " + y + ", " + frame + ", " + quality);
+		return (x + ", " + y + ", " + frame + ", " + reserved);
 	}
 }

@@ -25,12 +25,14 @@ import java.awt.Font;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.GeneralPath;
+import java.util.Iterator;
 import java.util.Vector;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+
 
 public class TrajsTable extends JTable {
 
@@ -42,21 +44,25 @@ public class TrajsTable extends JTable {
 	private ImagePlus imp_ = null;
 	private Model model_;
 	private Animator animator_ = null;
-
+	
 	public TrajsTable(Vector<Trajectory> data) {
 		super();
 
-		data_=data;
+		setData(data);
+		
 		model_ = new Model();
 		setModel(model_);
 		setColumnSelectionAllowed(false);
 		setFont(new Font("", Font.PLAIN, 10));
 		setRowSelectionAllowed(true);
 		setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+
 		setAutoCreateRowSorter(true);
+		
 		getColumnModel().getColumn(0).setPreferredWidth(30);
 		getColumnModel().getColumn(1).setPreferredWidth(30);
 		getColumnModel().getColumn(2).setPreferredWidth(30);
+
 		addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
 				if (e.getClickCount() == 2 && imp_ != null) {
@@ -68,17 +74,23 @@ public class TrajsTable extends JTable {
 		getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
-				if (nodesTable_ != null) {
+				if (nodesTable_ != null && getSelectedRows().length == 1) {
 					populateNodesTable();
 				}
-				if (imp_ != null) {
+				if (imp_ != null && ! e.getValueIsAdjusting()) {
 					drawOverlay();
 				}
 			}
-			
 		});
 	}
 
+	public void setData(Vector<Trajectory> data) {
+		data_ = (Vector<Trajectory>) data.clone();
+		if (model_ != null ) {
+			model_.fireTableDataChanged();
+		}
+	}
+	
 	public void setNodesTable(NodesTable nodesTable) {
 		nodesTable_ = nodesTable;
 	}
@@ -94,7 +106,10 @@ public class TrajsTable extends JTable {
 		if (row >=0) {
 			int index = convertRowIndexToModel(row);
 			nodesTable_.setData(data_.get(index));
-		}		
+		} else {
+			nodesTable_.setData(null);
+		}
+		
 	}
 	
 	public void reverseMarkOfSelected() {
@@ -119,6 +134,10 @@ public class TrajsTable extends JTable {
 	}
 
 	public void drawOverlay() {
+		if (!Prefs.showOverlay_) {
+			imp_.setOverlay(null);
+			return;
+		}
 		GeneralPath path = new GeneralPath();
 		int [] rows = getSelectedRows();
 		for (int i = 0; i < rows.length; i++) {
@@ -150,6 +169,28 @@ public class TrajsTable extends JTable {
 		
 	}
 	
+	public void deleteSelected() {
+		int [] selected = getSelectedRows();
+		Vector<Trajectory> toBeDeleted = new Vector<Trajectory>();
+		for (int i = 0; i < selected.length; i++) {
+			toBeDeleted.add(data_.get(convertRowIndexToModel(selected[i])));
+		}
+		data_.removeAll(toBeDeleted);
+		clearSelection();
+		model_.fireTableDataChanged();
+	}
+	
+	public void hideUnmarked() {
+		Iterator<Trajectory> itr = data_.iterator();
+		while (itr.hasNext()){
+			Trajectory t = itr.next();
+			if (! t.marked) {
+				itr.remove();
+			}
+		}
+		model_.fireTableDataChanged();
+	}
+
 	class Model extends AbstractTableModel {
 		private static final long serialVersionUID = -1936221743708539850L;
 

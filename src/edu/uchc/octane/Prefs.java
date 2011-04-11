@@ -28,7 +28,7 @@ public class Prefs {
 	final static String DIC_YOFFSET_KEY = "DicYOffset";
 	final static String BALL_RADIUS_KEY = "BallRadius";
 	final static String POINT_INDICATOR_KEY = "PointIndicator";
-	final static String SHOW_INDICATOR_KEY = "ShowIndicator";
+	final static String SHOW_OVERLAY_KEY = "ShowOverlay";
 	final static String OMIT_SINGLE_FRAME_TRAJS = "OmitSingleFrame";
 	final static String PALM_RATIO = "PalmRatio";
 	final static String MAX_PEAK_AREA = "MaxPeakArea";
@@ -47,7 +47,7 @@ public class Prefs {
 	static int dicYOffset_ = 0;
 	static int ballRadius_ = 50;
 	static boolean pointIndicator_ = true;
-	static boolean showIndicator_ = true;
+	static boolean showOverlay_ = true;
 	static boolean omitSingleFrameTrajs_ = false;
 	static double palmRatio_ = 10.0;
 	static double palmPSDWidth_ = 0.1875;
@@ -71,7 +71,7 @@ public class Prefs {
 		virtualStack_ = pref.getBoolean(VIRTUAL_STACK_KEY, virtualStack_);
 		ballRadius_ = pref.getInt(BALL_RADIUS_KEY, ballRadius_);
 		pointIndicator_ = pref.getBoolean(POINT_INDICATOR_KEY, pointIndicator_);
-		showIndicator_ = pref.getBoolean(SHOW_INDICATOR_KEY, showIndicator_);
+		showOverlay_ = pref.getBoolean(SHOW_OVERLAY_KEY, showOverlay_);
 		omitSingleFrameTrajs_ = pref.getBoolean(OMIT_SINGLE_FRAME_TRAJS, omitSingleFrameTrajs_);
 		palmRatio_ = pref.getDouble(PALM_RATIO, palmRatio_);
 		palmPSDWidth_ = pref.getDouble(PALM_PSD_WIDTH, palmPSDWidth_);
@@ -89,12 +89,15 @@ public class Prefs {
 	public static void savePrefs() {
 		//pref_.put(LAST_WORKING_DIR_KEY, lastWorkingDir);
 
+		if (! initialized )
+			return;
+
 		pref_.putBoolean(VIRTUAL_STACK_KEY, virtualStack_);
 		pref_.putInt(DIC_XOFFSET_KEY, dicXOffset_);
 		pref_.putInt(DIC_YOFFSET_KEY, dicYOffset_);
 		pref_.putInt(BALL_RADIUS_KEY, ballRadius_);
 		pref_.putBoolean(POINT_INDICATOR_KEY, pointIndicator_);
-		pref_.putBoolean(SHOW_INDICATOR_KEY, showIndicator_);
+		pref_.putBoolean(SHOW_OVERLAY_KEY, showOverlay_);
 		pref_.putBoolean(OMIT_SINGLE_FRAME_TRAJS, omitSingleFrameTrajs_);
 		pref_.putDouble(PALM_RATIO, palmRatio_);
 		pref_.putDouble(PALM_PSD_WIDTH, palmPSDWidth_);
