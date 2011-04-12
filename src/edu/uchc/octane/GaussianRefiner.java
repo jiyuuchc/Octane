@@ -140,7 +140,7 @@ public class GaussianRefiner implements SubPixelRefiner, MultivariateRealFunctio
 	}
 
 	@Override
-	public double getQuality() {
+	public double getResidue() {
 		return residue_;
 	}
 

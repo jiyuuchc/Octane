@@ -55,7 +55,7 @@ public class ThresholdDialog implements ImageListener {
 	}
 
 	public boolean openDialog() {
-		dlg_.addSlider("Threshold", 1000.0, 40000.0, finder_.getTolerance());
+		dlg_.addSlider("Threshold", 0, 40000.0, finder_.getTolerance());
 
 		Vector<Scrollbar> sliders = (Vector<Scrollbar>)dlg_.getSliders();
 		Scrollbar slider = sliders.get(0);

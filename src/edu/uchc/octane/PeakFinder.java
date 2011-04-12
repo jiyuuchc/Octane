@@ -253,7 +253,7 @@ public class PeakFinder {
 				if (rtmp >= 0) {
 					xArray_[nNewMaxima] = refiner_.getXOut();
 					yArray_[nNewMaxima] = refiner_.getYOut();
-					maximaQuality_[nNewMaxima] = refiner_.getQuality();
+					maximaQuality_[nNewMaxima] = refiner_.getResidue();
 					peakSize_[nNewMaxima] = peakSize_[i];
 					nNewMaxima++;
 				}else {

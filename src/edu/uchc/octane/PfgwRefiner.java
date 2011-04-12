@@ -167,7 +167,7 @@ public class PfgwRefiner implements SubPixelRefiner {
    }
 
    @Override
-   public double getQuality() {
+   public double getResidue() {
       return quality_;
    }
 

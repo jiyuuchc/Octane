@@ -37,7 +37,7 @@ public class PFGWRefiner2 implements SubPixelRefiner {
 	   protected int max_iter;
 	   protected double tol;
 	   protected double max_step;
-	   private double quality_;
+	   private double residue_;
 
 	   public PFGWRefiner2(ImageProcessor ip) {
 	      sigma_2 = 1.8;
@@ -130,7 +130,7 @@ public class PFGWRefiner2 implements SubPixelRefiner {
 
 	         if ((xc * xc + yc * yc) < tol) {
 	            //IJ.log("" + p(3)/p(0) + "    " + p(5)/p(0));
-	            quality_ = -(p(0) + p(1)*xc + p(2)*yc + p(3)*xc*xc + p(4)*xc*yc + p(5)*yc*yc - 1500) / (p(3) + p(5))/2;
+	            //-(p(0) + p(1)*xc + p(2)*yc + p(3)*xc*xc + p(4)*xc*yc + p(5)*yc*yc - 1500) / (p(3) + p(5))/2;
 	            return iter_n;
 	         }
 
@@ -151,7 +151,7 @@ public class PFGWRefiner2 implements SubPixelRefiner {
 	   }
 
 	   @Override
-	   public double getQuality() {
-	      return quality_;
+	   public double getResidue() {
+	      return residue_;
 	   }
 }

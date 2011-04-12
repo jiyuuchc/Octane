@@ -23,5 +23,5 @@ public interface SubPixelRefiner {
 	public int refine(double x, double y);
 	public double getXOut();
 	public double getYOut();
-	public double getQuality(); 
+	public double getResidue(); 
 }
