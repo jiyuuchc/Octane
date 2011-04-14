@@ -724,8 +724,7 @@ public class Browser extends JFrame implements ClipboardOwner{
 		}
 		ShortProcessor ip = new ShortProcessor(1, d.length, d, null);
 		ImagePlus imp = new ImagePlus("",ip);
-		HistogramWindow hw = new HistogramWindow(imp);
-		hw.showHistogram(imp, max-min);
+		HistogramWindow hw = new HistogramWindow("Trajectory Length Histogram", imp, max-min);
 		hw.setVisible(true);
 		imp.close();
 	} 
@@ -742,8 +741,7 @@ public class Browser extends JFrame implements ClipboardOwner{
 		}
 		FloatProcessor ip = new FloatProcessor(1, cnt, Arrays.copyOf(d, cnt));
 		ImagePlus imp = new ImagePlus("", ip);
-		HistogramWindow hw = new HistogramWindow(imp);
-		hw.showHistogram(imp, Prefs.histogramBins_);
+		HistogramWindow hw = new HistogramWindow("Residue Histogram", imp, Prefs.histogramBins_);
 		hw.setVisible(true);
 		imp.close();		
 	}
