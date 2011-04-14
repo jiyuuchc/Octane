@@ -17,14 +17,9 @@
 //
 package edu.uchc.octane;
 
-import ij.ImagePlus;
-import ij.gui.Roi;
-import java.lang.Math;
 import java.awt.Font;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 
@@ -34,7 +29,6 @@ public class NodesTable extends JTable{
 	private static Class<?> [] ColumnClasses_ = {Integer.class, Double.class, Double.class, Double.class};
 	
 	private Trajectory traj_ = null;
-	private ImagePlus imp_ = null;
 	private Model model_;
 	public NodesTable(Trajectory traj) {
 		super();
@@ -47,43 +41,20 @@ public class NodesTable extends JTable{
 		setRowSelectionAllowed(true);
 		setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		setDefaultRenderer(Double.class, new CellRenderer());
-
 		//getColumnModel().getColumn(0).setPreferredWidth(70);
 		//getColumnModel().getColumn(1).setPreferredWidth(70);
-		//getColumnModel().getColumn(2).setPreferredWidth(70);
-		
-		getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-			@Override
-			public void valueChanged(ListSelectionEvent e) {
-				if (imp_ != null && traj_ != null) {
-					drawBox();
-				}
-			}
-		} );
-
+		//getColumnModel().getColumn(2).setPreferredWidth(70);		
 	}
 
-	public void drawBox() {
-		int row = getSelectedRow();
-		if (row >=0) {
-			int index = convertRowIndexToModel(row);
-			int x = (int) Math.round(traj_.getX(index));
-			int y = (int) Math.round(traj_.getY(index));
-			int f = traj_.getFrame(index);
-			imp_.setSlice(f);
-			imp_.setRoi(new Roi(x - 5, y - 5, 11, 11));
-		}				
-	}
-	
 	public void setData(Trajectory traj) {
 		traj_ = traj;
 		clearSelection();
 		model_.fireTableDataChanged();
 		//setRowSelectionInterval(0,0);
 	}
-	
-	public void SetImp(ImagePlus imp) {
-		imp_ = imp;
+
+	public Trajectory getData() {
+		return traj_;
 	}
 
 	class CellRenderer extends DefaultTableCellRenderer {

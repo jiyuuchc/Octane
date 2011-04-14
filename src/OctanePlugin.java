@@ -48,24 +48,28 @@ public class OctanePlugin implements PlugIn{
 	}
 
 	public void openBrowser() {
-		Browser browser = new Browser(imp_);
-		browser.setVisible(true);
-		dict_.put(imp_.getTitle(), browser);
-		browser.addWindowListener(new WindowAdapter() {
-			@Override
-			public void windowClosed(WindowEvent e) {
-				dict_.remove(imp_.getTitle());
-			}
-		});
+		try {
+			Browser browser = new Browser(imp_);
+			browser.setup();
+			dict_.put(imp_.getTitle(), browser);
+			browser.getWindow().addWindowListener(new WindowAdapter() {
+				@Override
+				public void windowClosed(WindowEvent e) {
+					dict_.remove(imp_.getTitle());
+				}
+			});
+		} catch (Exception e) {
+			IJ.log(e.getMessage());
+		}
 	}
 	
 	public void openPeakFinder() {
 		ThresholdDialog finderDlg = new ThresholdDialog(imp_);
 		if (finderDlg.openDialog() == true) {
-			Browser browser = new Browser(imp_, finderDlg.getProcessedNodes());
-			browser.setVisible(true);
+			Browser browser = new Browser(imp_);
+			browser.setup(finderDlg.getProcessedNodes());
 			dict_.put(imp_.getTitle(), browser);
-			browser.addWindowListener(new WindowAdapter() {
+			browser.getWindow().addWindowListener(new WindowAdapter() {
 				@Override
 				public void windowClosed(WindowEvent e) {
 					dict_.remove(imp_.getTitle());

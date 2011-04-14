@@ -18,22 +18,9 @@
 
 package edu.uchc.octane;
 
-import java.awt.GridBagConstraints;
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
@@ -41,22 +28,12 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.ClipboardOwner;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.awt.geom.GeneralPath;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Vector;
-
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
 
 import ij.IJ;
 import ij.ImagePlus;
@@ -68,49 +45,45 @@ import ij.io.FileInfo;
 import ij.process.FloatProcessor;
 import ij.process.ShortProcessor;
 
-public class Browser extends JFrame implements ClipboardOwner{
+public class Browser implements ClipboardOwner{
 
-	private ImagePlus imp_ = null;
-	private TrajDataset dataset_ = null;
-	TrajsTable trajsTable_;
-	NodesTable nodesTable_;
+	ImagePlus imp_ = null;
+	TrajDataset dataset_ = null;
+	//TrajsTable trajsTable_;
+	//NodesTable nodesTable_;
 	String path_;
+	Animator animator_ = null;
+	BrowserWindow browserWindow_ = null;
 
 	public Browser(ImagePlus imp) {
-		super();
-		
+		super();		
 		setupPath(imp);
-
-		try {
-			loadDataset();
-		} catch (Exception e) {
-			IJ.log("Can't load analysis results from default location.");
-			return;
-		}
-
-		SetupWindow();
-	}
-
-	public Browser(ImagePlus imp, TrajDataset data) {
-		super();
-		
-		setupPath(imp);
-		dataset_ = data;
-		SetupWindow();
 	}
 	
-	public Browser(ImagePlus imp, Vector<SmNode> nodes) {
-		super();
-		
-		setupPath(imp);
+	public void setup() throws IOException, ClassNotFoundException {
+		loadDataset();
+		createWindow();
+	}
+
+	public void setup(TrajDataset data) {
+		dataset_ = data;
+		createWindow();
+	}
+	
+	public void setup(Vector<SmNode> nodes) {
 		dataset_ = new TrajDataset();
 		dataset_.setNodes(nodes);
 		dataset_.buildTrajectoriesFromNodes();
 		
-		SetupWindow();
+		createWindow();
 	}
 
-	private void setupPath(ImagePlus imp) {
+	void createWindow() {
+		browserWindow_ = new BrowserWindow(this);
+		browserWindow_.setVisible(true);
+	}
+
+	void setupPath(ImagePlus imp) {
 		path_ = null;
 		imp_ = imp;
 		FileInfo fi = imp.getOriginalFileInfo();
@@ -118,330 +91,43 @@ public class Browser extends JFrame implements ClipboardOwner{
 			path_ = fi.directory; 
 		} 
 	}
-	
-	private JMenuBar createMenuBar() {
-		JMenuBar menuBar = new JMenuBar();
-		
-		JMenu fileMenu = new JMenu("File");
-		fileMenu.setMnemonic(KeyEvent.VK_F);
-		JMenu editMenu = new JMenu("Edit");
-		editMenu.setMnemonic(KeyEvent.VK_E);
-		JMenu viewMenu = new JMenu("View");
-		editMenu.setMnemonic(KeyEvent.VK_V);
-		JMenu processMenu = new JMenu("Process");
-		menuBar.add(fileMenu);
-		menuBar.add(editMenu);
-		menuBar.add(viewMenu);
-		menuBar.add(processMenu);
 
-		JMenuItem item; 
-		JCheckBoxMenuItem cbItem;
-
-		item = new JMenuItem("Save");
-		fileMenu.add(item);
-		item.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				saveDataset(); 
-			}			
-		});
-		
-		item = new JMenuItem("Rebuild");
-		fileMenu.add(item);
-		item.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent ev) { 
-				rebuildTrajectories();
-				trajsTable_.setData(dataset_.getTrajectories());
-				trajsTable_.clearSelection();
-				//nodesTable_.setData(null);
-			}			
-		});
-
-		item = new JMenuItem("Delete");
-		editMenu.add(item);
-		item.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				trajsTable_.deleteSelected(); 
-			}
-		});
-		
-		item = new JMenuItem("Hide Unmarked");
-		viewMenu.add(item);
-		item.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				trajsTable_.hideUnmarked();
-			}
-		});
-		
-		item = new JMenuItem("Show All");
-		viewMenu.add(item);
-		item.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				trajsTable_.showAll(); 
-			}
-		});
-		
-		viewMenu.addSeparator();
-
-		cbItem = new JCheckBoxMenuItem("Show Overlay", Prefs.showOverlay_);
-		viewMenu.add(cbItem);
-		cbItem.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e){
-				JCheckBoxMenuItem cb = (JCheckBoxMenuItem) e.getSource();
-				Prefs.showOverlay_ = cb.getState();
-			}
-		});
-
-		item = new JMenuItem("Flow Map");
-		processMenu.add(item);
-		item.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e){
-				constructFlowMap();
-			}
-		});
-
-		item = new JMenuItem("Mobility Map");
-		processMenu.add(item);
-		item.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e){
-				constructMobilityMap();
-			}
-		});
-
-		item = new JMenuItem("PALM");
-		processMenu.add(item);
-		item.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e){
-				constructPalm();
-			}
-		});
-
-		item = new JMenuItem("IFS");
-		processMenu.add(item);
-		item.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e){
-				constructIFS();
-			}
-		});
-		
-		processMenu.addSeparator();
-		
-		item = new JMenuItem("Trajectory Length Histogram");
-		processMenu.add(item);
-		item.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e){
-				showLengthHistogram();
-			}
-		});
-
-		item = new JMenuItem("Residue Histogram");
-		processMenu.add(item);
-		item.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e){
-				showResidueHistogram();
-			}
-		});
-
-		return menuBar;
-	}
-	
-	private JPanel createButtonBox() {
-		final JPanel buttonBox = new JPanel(); // button box
-		JButton button;
-
-		buttonBox.setLayout(new BoxLayout(buttonBox,BoxLayout.LINE_AXIS));
-		buttonBox.setBorder(BorderFactory.createEmptyBorder(0,10,5,5));
-		buttonBox.add(Box.createHorizontalGlue());
-		button = new JButton("SelectRoi");
-		buttonBox.add(button);
-
-		button.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if (imp_ != null) {
-					selectRoi();
-				}
-			}
-		});
-		
-		buttonBox.add(Box.createRigidArea(new Dimension(10,0)));
-
-		button = new JButton("Mark");
-		buttonBox.add(button);
-		
-		button.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				trajsTable_.reverseMarkOfSelected();
-			}
-		});
-
-		buttonBox.add(Box.createRigidArea(new Dimension(10,0)));
-
-		button = new JButton("Export");
-		buttonBox.add(button);
-
-		button.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if (imp_ != null) {
-					copySelectedTrajectories();
-				}
-			}
-		});
-
-		return buttonBox;
-	}
-	
-	
-	private void Layout(){
-		
-		setBounds(100, 100, 660, 495);
-		
-		setJMenuBar(createMenuBar());
-		
-		JPanel mainPanel = new JPanel();
-			
-		final GridBagLayout layout = new GridBagLayout();
-		mainPanel.setLayout(layout);
-		
-		GridBagConstraints constraints;
-		constraints = new GridBagConstraints();
-		constraints.anchor = GridBagConstraints.WEST;
-		constraints.gridx = 0; 
-		constraints.gridy = 0;
-		constraints.weightx =0;
-		constraints.weighty = 0;
-		mainPanel.add(new JLabel("List of Traces:"), constraints);
-
-		constraints.gridx = 1; 
-		constraints.gridy = 0;
-		constraints.weightx =0;
-		constraints.weighty = 0;
-		mainPanel.add(new JLabel("Current Trace:"), constraints);
-				
-		constraints.fill = GridBagConstraints.BOTH;
-		constraints.insets = new Insets(5,5,5,5);		
-		constraints.gridx = 0;
-		constraints.gridy = 1;
-		constraints.weightx = 0.3;
-		constraints.weighty = 1.0;
-		final JScrollPane trajsPane = new JScrollPane();
-		trajsTable_ = new TrajsTable(dataset_.getTrajectories());
-		trajsPane.setViewportView(trajsTable_);
-		mainPanel.add(trajsPane, constraints);
-		
-		constraints.gridx = 1;
-		constraints.gridy = 1;
-		constraints.weightx = 0.7;
-		constraints.weighty = 1.0;
-		final JScrollPane nodesPane = new JScrollPane();
-		nodesTable_ = new NodesTable(null);
-		nodesPane.setViewportView(nodesTable_);		
-		mainPanel.add(nodesPane, constraints);
-
-		constraints.gridx = 0;
-		constraints.gridy = 2;
-		constraints.weightx = 0;
-		constraints.weighty = 0;		
-		mainPanel.add(createButtonBox(), constraints);
-		
-		add(mainPanel);
-		
-		if (imp_ != null) {
-			setTitle(imp_.getTitle() + " Trajectories");
-			trajsTable_.SetImp(imp_);
-			nodesTable_.SetImp(imp_);
-		} else {
-			setTitle("Trajectories");
-		}
-	}
-	
-	private void SetupWindow() {
-		Layout();
-
-		trajsTable_.setNodesTable(nodesTable_);
-		
-		imp_.getCanvas().addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				if (e.getClickCount() == 2 && imp_ != null) {
-					findMolecule();
-				}
-				
-			}
-		});
-		
-		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-		
-		if (imp_ != null ) {
-			imp_.getWindow().addWindowListener(new WindowAdapter() {
-				@Override
-				public void windowIconified(WindowEvent e) {
-					setVisible(false);
-				}
-				
-				@Override
-				public void windowDeiconified(WindowEvent e) {
-					setVisible(true);
-				}
-				
-				@Override
-				public void windowClosed(WindowEvent e) {
-					dispose();
-				}
-			});
-		}
+	public BrowserWindow getWindow() {
+		return browserWindow_;
 	}
 
-	private void selectRoi() {
+	public Vector<Trajectory> getTrajectories() {
+		return dataset_.getTrajectories();
+	}
+
+	void selectTrajectoriesWithinRoi() {
 		Roi roi = imp_.getRoi();
 		if (roi == null) {
 			return;
 		}
-		trajsTable_.getSelectionModel().setValueIsAdjusting(true);
-		trajsTable_.clearSelection();
-		int firstSel = -1;
-		for (int i = 0; i < dataset_.getTrajectories().size(); i++) {
-			Trajectory t = dataset_.getTrajectories().get(i);
+		boolean firstSel = true;
+		for (int i = 0; i < getTrajectories().size(); i++) {
+			Trajectory t = getTrajectories().get(i);
 			for (int j = 0; j< t.size(); j++) {
 				if (roi.contains( (int)t.getX(j), (int)t.getY(j) )) {
-					int l = trajsTable_.convertRowIndexToView(i);
-					trajsTable_.addRowSelectionInterval(l,l);
-					if (firstSel < 0) {
-						firstSel = l;					
-					break;
+					if (firstSel) {
+						browserWindow_.selectTrajectoriesByIndex(i);
+						firstSel = false;
+					} else {
+						browserWindow_.addTrajectoriesToSelection(i);
 					}
+					break;
 				}
 			}
 		}
-
-		if (firstSel >=0) {
-			Rectangle r = trajsTable_.getCellRect(firstSel, 0, true);
-			trajsTable_.scrollRectToVisible(r);
-		}
-		trajsTable_.getSelectionModel().setValueIsAdjusting(false);
 	}
 	
-	private void copySelectedTrajectories() {
-		//Vector<Trajectory> trajs = dataset_.getTrajectories();
+	void copySelectedTrajectories() {
 		StringBuilder buf = new StringBuilder();
-		int [] selected = trajsTable_.getSelectedRows();
+		int [] selected = browserWindow_.getSelectedTrajectories();
 		Trajectory traj;
 		for (int i = 0; i < selected.length; i++) {
-			int index = trajsTable_.convertRowIndexToModel(selected[i]);
-			traj = dataset_.getTrajectories().get(index);
+			traj = getTrajectories().get(selected[i]);
 			for (int j = 0; j < traj.size(); j++) {
 				buf.append(String.format("%10.4f, %10.4f, %10d, %5d%n", traj.getX(j), traj.getY(j), traj.getFrame(j), i));
 			}
@@ -451,7 +137,7 @@ public class Browser extends JFrame implements ClipboardOwner{
 		clipboard.setContents(contents, this);		
 	}
 
-	private void findMolecule() {
+	void findMolecule() {
 		ImageCanvas canvas = imp_.getCanvas();
 		Point p = canvas.getCursorLoc();
 		int frame = imp_.getSlice();
@@ -478,26 +164,8 @@ public class Browser extends JFrame implements ClipboardOwner{
 			index ++;
 		}
 		if (found) {
-			index = trajsTable_.convertRowIndexToView(index-1);
-			trajsTable_.setRowSelectionInterval(index,index);
-			Rectangle r = trajsTable_.getCellRect(index, 0, true);
-			trajsTable_.scrollRectToVisible(r);
+			browserWindow_.selectTrajectoriesByIndex(index - 1);
 		}
-	}
-
-	private int[] getSelectedOrAll() {
-		int [] selected = trajsTable_.getSelectedRows();
-		if (selected.length <= 1) {
-			selected = new int[trajsTable_.getRowCount()];
-			for (int i = 0; i < selected.length; i++) {
-				selected[i] = i;
-			}
-		} else {
-			for (int i = 0; i < selected.length; i++) {
-				selected[i] = trajsTable_.convertRowIndexToModel(selected[i]);
-			}
-		}
-		return selected;
 	}
 
 /*	private FloatProcessor gaussianImage(ImageProcessor img) {
@@ -515,6 +183,50 @@ public class Browser extends JFrame implements ClipboardOwner{
 		return ip;
 	}*/
 
+	void drawOverlay() {
+		if (!Prefs.showOverlay_) {
+			imp_.setOverlay(null);
+			return;
+		}
+		GeneralPath path = new GeneralPath();
+		int [] selected = browserWindow_.getSelectedTrajectories();
+		for (int i = 0; i < selected.length; i++) {
+			Trajectory v = getTrajectories().get(selected[i]);
+			path.moveTo(v.getX(0), v.getY(0));
+			for (int j = 1; j < v.size(); j++) {
+				path.lineTo(v.getX(j), v.getY(j));
+			}
+		}
+		imp_.setOverlay(path, Color.yellow, new BasicStroke(1f));			
+	}
+	
+	public void drawBox() {
+		SmNode node = browserWindow_.getCurrentNode();
+		int x,y;
+		if (node != null && imp_ != null) {
+			imp_.setSlice(node.frame);
+			x = (int) Math.round(node.x);
+			y = (int) Math.round(node.y);
+			imp_.setRoi(x-5,y-5,11,11);
+			ImageCanvas canvas = imp_.getCanvas();
+			Rectangle r = canvas.getSrcRect();
+			int sx = canvas.screenX(x);
+			int sy = canvas.screenY(y);
+			if (sx < 4 || sx > r.width - 5 || sy < 4 || sy > r.height - 5) {
+				int nx = Math.max(x - r.width/2, 0);
+				int ny = Math.max(y - r.height/2, 0);
+				if (nx + r.width > imp_.getWidth()) {
+					nx = imp_.getWidth() - r.width;
+				}
+				if (ny + r.height > imp_.getHeight()){
+					ny = imp_.getHeight() - r.height;
+				}
+				canvas.setSourceRect(new Rectangle(nx, ny, r.width, r.height));
+				imp_.updateAndDraw();
+			}
+		}
+	}
+	
 	public void constructIFS() {
 		Rectangle rect;
 		imp_.killRoi();
@@ -527,7 +239,7 @@ public class Browser extends JFrame implements ClipboardOwner{
 		ImagePlus img = new ImagePlus("IFS", is);
 		double psdWidth = 0.85;
 
-		int [] selected = getSelectedOrAll();
+		int [] selected = browserWindow_.getSelectedTrajectoriesOrAll();
 		for ( int i = 0; i < selected.length; i ++) {
 			Trajectory traj = dataset_.getTrajectories().get(selected[i]);
 			for (int j = 0; j < traj.size(); j++ ) {
@@ -552,7 +264,7 @@ public class Browser extends JFrame implements ClipboardOwner{
 		double psdWidth = Prefs.palmPSDWidth_ * Prefs.palmRatio_;
 		int nPlotted = 0;
 		int nSkipped = 0;
-		int [] selected = getSelectedOrAll();
+		int [] selected = browserWindow_.getSelectedTrajectoriesOrAll();
 		for ( int i = 0; i < selected.length; i ++) {
 			Trajectory traj = dataset_.getTrajectories().get(selected[i]);
 			double xx = traj.getX(0);
@@ -595,7 +307,7 @@ public class Browser extends JFrame implements ClipboardOwner{
 
 		float [][] m = new float[rect.width][rect.height];
 		float [][] n = new float[rect.width][rect.height];
-		int [] selected = getSelectedOrAll();
+		int [] selected = browserWindow_.getSelectedTrajectoriesOrAll();
 		int i,j;
 		for (i =0; i < selected.length; i++) {
 			Trajectory t = dataset_.getTrajectories().get(selected[i]);
@@ -635,7 +347,7 @@ public class Browser extends JFrame implements ClipboardOwner{
 		float [][] dxs = new float[rect.width][rect.height];
 		float [][] dys = new float[rect.width][rect.height];
 		float [][] n = new float[rect.width][rect.height];
-		int [] selected = getSelectedOrAll();
+		int [] selected = browserWindow_.getSelectedTrajectoriesOrAll();
 		int i,j;
 		for (i =0; i < selected.length; i++) {
 			Trajectory t = dataset_.getTrajectories().get(selected[i]);
@@ -692,28 +404,27 @@ public class Browser extends JFrame implements ClipboardOwner{
 	}
 
 	public void selectMarked(boolean b) {
-		trajsTable_.clearSelection();
+		browserWindow_.selectTrajectoriesByIndex(-1); //clear selection
 		for (int i = 0; i < dataset_.getTrajectories().size(); i++) {
-			if (dataset_.getTrajectories().get(i).marked == b) {
-				int row = trajsTable_.convertRowIndexToView(i);
-				trajsTable_.addRowSelectionInterval(row, row);
+			if (getTrajectories().get(i).marked == b) {
+				browserWindow_.addTrajectoriesToSelection(i);
 			}
 		}
 	}
 
 	public void rebuildTrajectories(){
 		dataset_.buildTrajectoriesFromNodes();
+		browserWindow_.dataChanged();
 	}
 
 	public void showLengthHistogram() {
-		int [] selected = getSelectedOrAll();
-		Vector<Trajectory> trajs = dataset_.getTrajectories();
+		int [] selected = browserWindow_.getSelectedTrajectoriesOrAll();
 		short [] d = new short[selected.length];
 		
 		int min = 10000;
 		int max = -1;
 		for (int i = 0; i < selected.length; i++) {
-			Trajectory t = trajs.get(selected[i]);
+			Trajectory t = getTrajectories().get(selected[i]);
 			d[i] = (short) (t.getLength());
 			if (d[i] > max) {
 				max = d[i];
@@ -730,11 +441,11 @@ public class Browser extends JFrame implements ClipboardOwner{
 	} 
 
 	public void showResidueHistogram() {
-		int [] selected = getSelectedOrAll();
+		int [] selected = browserWindow_.getSelectedTrajectoriesOrAll();
 		double [] d = new double[dataset_.getNodes().size()];
 		int cnt = 0;
 		for ( int i= 0; i < selected.length; i++) {
-			Iterator<SmNode> itr = dataset_.getTrajectories().get(selected[i]).iterator();
+			Iterator<SmNode> itr = getTrajectories().get(selected[i]).iterator();
 			while (itr.hasNext()) {
 				d[cnt ++] = itr.next().reserved;
 			}
@@ -749,6 +460,19 @@ public class Browser extends JFrame implements ClipboardOwner{
 	String defaultSaveFilename() {
 		final String s = path_ + File.separator + imp_.getTitle() + ".dataset";
 		return s;
+	}
+
+	public void animate() {
+		if (animator_ == null) {
+			animator_ = new Animator(imp_);
+			animator_.setLoop(true);
+		}
+		
+		int index= browserWindow_.getSelectedTrajectoryIndex();
+		if (index >=0) {
+			animator_.animate(dataset_.getTrajectories().get(index));
+		}
+		
 	}
 
 	public void saveDataset(String pathname) {
@@ -775,14 +499,7 @@ public class Browser extends JFrame implements ClipboardOwner{
 	}
 	
 	@Override
-	public void dispose() {
-		saveDataset();
-		Prefs.savePrefs();
-		super.dispose();
-	}
-
-	@Override
 	public void lostOwnership(Clipboard arg0, Transferable arg1) {
-		// who cares		
+		// 
 	}
 }
