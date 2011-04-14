@@ -28,7 +28,7 @@ public class PrefDialog {
 		dlg.addNumericField("PALM PSD", Prefs.palmPSDWidth_, 3);
 		dlg.addNumericField("PALM Threshold", Prefs.palmThreshold_, 1);
 		
-		String [] choices = {"Polyfit Gaussian Weight","Gaussian Fit"};
+		String [] choices = {"Polyfit Gaussian Weight","Gaussian Fit", "Zeor Background Gaussian"};
 		dlg.addChoice("SubPixel Fitting Algrithm", choices, choices[Prefs.refiner_]);
 		dlg.addNumericField("Residue Threshold", Prefs.residueThreshold_, 1);
 		

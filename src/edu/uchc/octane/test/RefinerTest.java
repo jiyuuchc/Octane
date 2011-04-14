@@ -6,6 +6,7 @@ import java.io.OutputStreamWriter;
 import edu.uchc.octane.GaussianRefiner;
 import edu.uchc.octane.PFGWRefiner2;
 import edu.uchc.octane.PeakFinder;
+import edu.uchc.octane.ZeroBgGaussianRefiner;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.process.ImageProcessor;
@@ -21,8 +22,8 @@ public class RefinerTest {
 		//imp.show();
 
 		PeakFinder finder = new PeakFinder();
-		finder.setTolerance(30);
-		finder.setRefiner(new PFGWRefiner2(imp.getProcessor()));
+		finder.setTolerance(25);
+		finder.setRefiner(new ZeroBgGaussianRefiner(imp.getProcessor()));
 
 		ImageStack stack = imp.getImageStack();
 

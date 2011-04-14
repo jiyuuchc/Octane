@@ -40,7 +40,7 @@ public class Prefs {
 	final static String REFINER_KEY = "refiner";
 	final static String HISTOGRAMBINS_KEY = "histogramBins";
 	final static String RESIDUETHRESHOLD_KEY = "histogramBins";
-	
+	final static String SLOPPYNESS_KEY = "sloppyness";
 	//static String lastWorkingDir;
 	static boolean initialized = false;
 
@@ -61,6 +61,7 @@ public class Prefs {
 	static int refiner_ = 1;
 	static int histogramBins_ = 20;
 	static double residueThreshold_ = 100;
+	static int sloppyness_ = 1;
 
 	static Preferences pref_;
 
@@ -87,6 +88,7 @@ public class Prefs {
 		refiner_ = pref.getInt(REFINER_KEY, refiner_);
 		histogramBins_ = pref.getInt(HISTOGRAMBINS_KEY, histogramBins_);
 		residueThreshold_ = pref.getDouble(RESIDUETHRESHOLD_KEY, residueThreshold_);
+		sloppyness_ = pref.getInt(SLOPPYNESS_KEY, sloppyness_);
 
 		pref_ = pref;
 		initialized = true;
@@ -115,6 +117,7 @@ public class Prefs {
 		pref_.putInt(REFINER_KEY, refiner_);
 		pref_.putInt(HISTOGRAMBINS_KEY, histogramBins_);
 		pref_.putDouble(RESIDUETHRESHOLD_KEY , residueThreshold_);
+		pref_.putInt(SLOPPYNESS_KEY, sloppyness_);
 	}
 
 }

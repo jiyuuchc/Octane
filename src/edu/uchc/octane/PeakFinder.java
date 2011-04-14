@@ -17,7 +17,6 @@
 //
 package edu.uchc.octane;
 
-import ij.ImagePlus;
 import ij.gui.PointRoi;
 import ij.gui.Roi;
 import ij.process.ImageProcessor;
@@ -153,12 +152,6 @@ public class PeakFinder {
 		if (maxThreshold_ == ImageProcessor.NO_THRESHOLD) {
 			maxThreshold_ = Float.MAX_VALUE;
 		}
-//		if (threshold_ != ImageProcessor.NO_THRESHOLD) {
-//			if (ip_.getCalibrationTable() != null && threshold_ > 0 && threshold_ < ip_.getCalibrationTable().length) {
-//				threshold_ = ip_.getCalibrationTable()[(int) threshold_];
-//			}
-//			threshold_ -= (globalMax - globalMin) * 1e-6;
-//		}// avoid rounding errors
 
 		nMaxima_ = 0;
 		xArray_ = new double[pixels.length];
@@ -177,7 +170,7 @@ public class PeakFinder {
 		nMaxima_ = 0;
 
 		for (int i = pixels.length - 1; i >= 0; i--) {
-			float v = pixels[i].value;
+			double v = pixels[i].value;
 
 			int offset = pixels[i].x + width_ * pixels[i].y;
 			if ((pixelStates[offset] & OWNED) != 0) {
@@ -189,37 +182,37 @@ public class PeakFinder {
 			pixelStates[offset] |= LISTED;
 			int listLen = 1;
 			int listCurPos = 0;
+			int listCurEnd = listLen;
 			boolean isMax = true;
 			do {
-				offset = xList[listCurPos] + width_ * yList[listCurPos];
-				for (int d = 0; d < 8; d++) { // analyze all neighbors (in 8 directions) at the same level
-					int offset2 = offset + dirOffset_[d];
-					if (! isDirAllowed(xList[listCurPos], yList[listCurPos], d)) {
-						continue;
-					}
-					if ((pixelStates[offset2] & OWNED) != 0) { //conflict
-						isMax = false; 
-						break;
-					}
-					if ((pixelStates[offset2] & LISTED) != 0) { //already listed
-						continue;
-					}
-					int x2 = xList[listCurPos] + dirXoffset_[d];
-					int y2 = yList[listCurPos] + dirYoffset_[d];
-					float v2 = ip_.getPixelValue(x2, y2);
-					if (v2 >= v - tol_) {
-						xList[listLen] = x2;
-						yList[listLen] = y2;
-						listLen++; // we have found a new point within the tolerance
-						pixelStates[offset2] = LISTED;
-					}
-				} // for directions d
-				listCurPos++;
-			} while (listCurPos < listLen && listLen <= Prefs.maxPeakArea_);
-
-			if (listLen > Prefs.maxPeakArea_) {
-				isMax = false;
-			}
+				while (listCurPos < listCurEnd) {
+					offset = xList[listCurPos] + width_ * yList[listCurPos];
+					for (int d = 0; d < 8; d++) { // analyze all neighbors (in 8 directions) at the same level
+						int offset2 = offset + dirOffset_[d];
+						if (! isDirAllowed(xList[listCurPos], yList[listCurPos], d)) {
+							continue;
+						}
+						if ((pixelStates[offset2] & OWNED) != 0) { //conflict
+							isMax = false; 
+							break;
+						}
+						if ((pixelStates[offset2] & LISTED) != 0) { //already listed
+							continue;
+						}
+						int x2 = xList[listCurPos] + dirXoffset_[d];
+						int y2 = yList[listCurPos] + dirYoffset_[d];
+						float v2 = ip_.getPixelValue(x2, y2);
+						if (v2 >= v - tol_) {// we have found a new point within the tolerance
+							xList[listLen] = x2;
+							yList[listLen] = y2;
+							listLen++; 
+							pixelStates[offset2] = LISTED;
+						}
+					} // for directions d
+					listCurPos++;
+				} // while listCurPose < listCurEnd
+				listCurEnd = listLen;
+			} while (listCurPos < listLen - Prefs.sloppyness_ );
 
 			for (listCurPos = 0; listCurPos < listLen; listCurPos++) {
 				offset = xList[listCurPos] + width_ * yList[listCurPos];
@@ -241,10 +234,16 @@ public class PeakFinder {
 
 	public short refineMaxima() {
 		if (refiner_ == null ) {
-			if (Prefs.refiner_ == 0) {
+			switch (Prefs.refiner_) {
+			case 0: 
 				refiner_ = new PFGWRefiner2(ip_);
-			} else {
+				break;
+			case 1:
 				refiner_ = new GaussianRefiner(ip_);
+				break;
+			case 2:
+				refiner_ = new ZeroBgGaussianRefiner(ip_);
+				break;
 			}
 		}
 
