@@ -113,7 +113,7 @@ public class TrajsTable extends JTable {
 			@Override
 			public boolean include(
 					javax.swing.RowFilter.Entry<? extends Model, ? extends Integer> entry) {
-				return isVisible_[entry.getIdentifier()];
+				return isVisible_[entry.getIdentifier()] && !data_.get(entry.getIdentifier()).deleted;
 			}
 		});
 
@@ -127,9 +127,13 @@ public class TrajsTable extends JTable {
 		isVisible_ = new boolean[data.size()];
 		Arrays.fill(isVisible_, true);
 		clearSelection();
+		tableDataChanged();
+	}
+
+	public void tableDataChanged() {
 		if (model_ != null ) {
 			model_.fireTableDataChanged();
-		}
+		}		
 	}
 
 	public void reverseMarkOfSelected() {
@@ -140,30 +144,19 @@ public class TrajsTable extends JTable {
 		}
 		for (int i = 0; i < rows.length; i++) {		
 			Trajectory v = data_.get(rows[i]);
-			if (v.isMarked() == false) {
-				v.mark(true);
+			if (v.marked == false) {
+				v.marked = true;
 				acted = true;
 			}
 		}
 		if (!acted) {
 			for (int i = 0; i < rows.length; i++) {
-				data_.get(rows[i]).mark(false);
+				data_.get(rows[i]).marked = false;
 			}
 		}
 		model_.fireTableRowsUpdated(0,model_.getRowCount()-1);
 	}
 
-	public void deleteSelected() {
-		int [] selected = getSelectedRows();
-		Vector<Trajectory> toBeDeleted = new Vector<Trajectory>();
-		for (int i = 0; i < selected.length; i++) {
-			toBeDeleted.add(data_.get(convertRowIndexToModel(selected[i])));
-		}
-		data_.removeAll(toBeDeleted);
-		clearSelection();
-		model_.fireTableDataChanged();
-	}
-	
 	public void hideUnmarked() {
 		int cnt = 0;
 		Iterator<Trajectory> itr = data_.iterator();

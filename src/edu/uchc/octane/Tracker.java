@@ -88,7 +88,7 @@ public class Tracker {
 			for (int i = 0; i < trajs.size(); i ++ ) {
 				Trajectory traj = trajs.get(i);
 				for ( int j = 0; j < traj.size(); j++) {
-					int frame = traj.getFrame(j) - 1;
+					int frame = traj.get(j).frame - 1;
 					while (frame >= frameLength_.size()) {
 						frameLength_.add(0);
 					}
@@ -105,10 +105,10 @@ public class Tracker {
 			for (int i = 0; i < trajs.size(); i++) {
 				Trajectory traj = trajs.get(i);
 				for ( int j = 0; j < traj.size(); j++) {
-					int frame = traj.getFrame(j) - 1;
+					int frame = traj.get(j).frame - 1;
 					int cnt = frameLength_.get(frame);
-					data_[frame][cnt][0] = traj.getX(j);
-					data_[frame][cnt][1] = traj.getY(j);
+					data_[frame][cnt][0] = traj.get(j).x;
+					data_[frame][cnt][1] = traj.get(j).y;
 					data_[frame][cnt][2] = traj.get(j).reserved;
 					frameLength_.set(frame, frameLength_.get(frame) + 1);
 				}

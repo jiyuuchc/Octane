@@ -20,31 +20,11 @@ package edu.uchc.octane;
 import java.util.Vector;
 
 public class Trajectory extends Vector<SmNode> {
-
-   public boolean marked = false; 
+   public boolean marked = false;
+   public boolean deleted = false;
    public String note = null;
-
-   public double getX(int index) {
-      return get(index).x;
-   }
-
-   public double getY(int index) {
-      return get(index).y;
-   }
-
-   public int getFrame(int index) {
-      return get(index).frame;
-   }
    
    public int getLength() {
 	   return get(size() - 1).frame - get(0).frame + 1;
-   }
-
-   public boolean isMarked() {
-      return marked;
-   }
-
-   public void mark(boolean b) {
-      marked = b;
    }
 }

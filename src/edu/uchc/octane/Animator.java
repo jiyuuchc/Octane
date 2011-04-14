@@ -47,8 +47,8 @@ public class Animator {
 
 		private AnimateTimerTask(Trajectory trajectory) {
 			trajectory_ = trajectory;
-			firstFrame_ = trajectory.getFrame(0);
-			lastFrame_ = trajectory.getFrame(trajectory.size() - 1);
+			firstFrame_ = trajectory.get(0).frame;
+			lastFrame_ = trajectory.get(trajectory.size() - 1).frame;
 			// IJ.write("First "+ firstFrame_ + " Last" + lastFrame_);
 			curFrame_ = firstFrame_;
 			curIndex_ = 0;
@@ -79,9 +79,9 @@ public class Animator {
 
 			if (trajectory_.get(curIndex_).frame == curFrame_) {
 				GeneralPath path = new GeneralPath();
-				path.moveTo(trajectory_.getX(0),trajectory_.getY(0));
+				path.moveTo(trajectory_.get(0).x,trajectory_.get(0).y);
 				for (int i = 1; i <curIndex_; i++) {
-					path.lineTo(trajectory_.getX(i), trajectory_.getY(i));
+					path.lineTo(trajectory_.get(i).x, trajectory_.get(i).y);
 				}
 				imp_.setOverlay(path, Color.yellow, new BasicStroke(1f));
 				curIndex_ += increment_;

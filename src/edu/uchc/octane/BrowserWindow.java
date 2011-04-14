@@ -18,6 +18,8 @@
 
 package edu.uchc.octane;
 
+import ij.IJ;
+import ij.ImageJ;
 import ij.ImagePlus;
 
 import java.awt.Dimension;
@@ -56,6 +58,7 @@ public class BrowserWindow extends JFrame {
 
 	public BrowserWindow(Browser b) {
 		super();
+		if (IJ.isLinux()) setBackground(ImageJ.backgroundColor);
 		browser_ = b;
 		SetupWindow();
 	}
@@ -101,7 +104,9 @@ public class BrowserWindow extends JFrame {
 		item.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				trajsTable_.deleteSelected(); 
+				browser_.deleteSelectedTrajectories();
+				trajsTable_.clearSelection();
+				trajsTable_.tableDataChanged();
 			}
 		});
 		
@@ -420,7 +425,7 @@ public class BrowserWindow extends JFrame {
 		}				
 	}
 
-	public void dataChanged() {
+	public void updateNewData() {
 		trajsTable_.setData(browser_.getTrajectories());
 	}
 	
