@@ -30,23 +30,17 @@ public class PFGWRefiner2 implements SubPixelRefiner {
 
 	   ImageProcessor frame_;
 	   RealVector p_;
-	   double x_out, y_out;
-	   protected double sigma_2;
-	   protected int fit_area;
-	   protected int poly_order;
-	   protected int max_iter;
-	   protected double tol;
-	   protected double max_step;
-	   private double residue_;
+	   double x_out, y_out, h_out;
+	   final double sigma_2 = 3;
+	   final int fit_area = 3;
+	   final int poly_order = 2;
+	   final int max_iter = 20;
+	   final double tol = 0.00005;
+	   final double max_step = 1.0;
+	   final double cuvLimit = 1.8;
+	   double residue_;
 
 	   public PFGWRefiner2(ImageProcessor ip) {
-	      sigma_2 = 1.8;
-	      fit_area = 3;
-	      poly_order = 4;
-	      tol = 0.00005;
-	      max_step = 2;
-	      max_iter = 20;
-
 	      frame_ = ip;
 	   }
 
@@ -94,6 +88,8 @@ public class PFGWRefiner2 implements SubPixelRefiner {
 
 	      QRDecompositionImpl qr = new QRDecompositionImpl(V);
 	      p_ = qr.getSolver().solve(z);
+	      RealVector r = V.operate(p_).subtract(z);
+	      residue_ = r.dotProduct(r);
 	   }
 
 	   double p(int i) {
@@ -102,22 +98,19 @@ public class PFGWRefiner2 implements SubPixelRefiner {
 
 	   @Override
 	   public int refine(double x_in, double y_in){
+		  double bg = frame_.getAutoThreshold();
 	      int iter_n = 1;
 	      x_out = x_in;
 	      y_out = y_in;
 
 	      while (iter_n < max_iter) {
-	         // IJ.log("x: " + x_out + " y: " + y_out);
 	         polyfitgaussweight(x_out, y_out);
 
-	         // logVector(p_);
-
-	         // a=p_(3); b=p_(4)/2; c=p(5); d=p(1)/2; f=p(2)/2; g=p(0);
+	         // a=p(3); b=p(4)/2; c=p(5); 
 	         // J=a*c-b^2;
 	         double j = p(3) * p(5) - p(4) * p(4) / 4;
 	         if (j < 0)
 	        	return -1;
-	            //throw new Exception("J < 0: lost tracking");
 	         double xc = (p(4) * p(2) - 2 * p(5) * p(1)) / j / 4;
 	         double yc = (p(4) * p(1) - 2 * p(3) * p(2)) / j / 4;
 	         x_out = x_out + Math.signum(xc) * Math.min(Math.abs(xc), max_step);
@@ -125,19 +118,25 @@ public class PFGWRefiner2 implements SubPixelRefiner {
 
 	         if (Math.abs(x_out - x_in) > 5 * max_step || Math.abs(y_out - y_in) > 5 * max_step) {
 	        	return -1;
-	            //throw new Exception("Wandered to far: lost tracking");
 	         }
 
 	         if ((xc * xc + yc * yc) < tol) {
-	            //IJ.log("" + p(3)/p(0) + "    " + p(5)/p(0));
-	            //-(p(0) + p(1)*xc + p(2)*yc + p(3)*xc*xc + p(4)*xc*yc + p(5)*yc*yc - 1500) / (p(3) + p(5))/2;
+
+	            h_out = p(0) + p(1)*xc + p(2)*yc + p(3)*xc*xc + p(4)*xc*yc + p(5)*yc*yc - bg;
+	            if (h_out < 0) {
+	            	return -2;
+	            }
+	        	double h = -(p(3) + p(5)) / 2 * cuvLimit; // should be around 1/2*sigma^2
+//	        	if ( - cuv < cuvLimit) {
+//	        		return -2;
+//	        	}
+	            residue_ = residue_ / h / h;
 	            return iter_n;
 	         }
 
 	         iter_n = iter_n + 1;
 	      }
 	      return -1;
-	      //throw new Exception("Too many iteration without converging.");
 	   }
 
 	   @Override
@@ -151,7 +150,12 @@ public class PFGWRefiner2 implements SubPixelRefiner {
 	   }
 
 	   @Override
+	   public double getHeightOut() {
+		   return h_out;
+	   }
+	   
+	   @Override
 	   public double getResidue() {
-	      return residue_;
+	      return residue_ /(2 * fit_area + 1) / (2 * fit_area + 1);
 	   }
 }

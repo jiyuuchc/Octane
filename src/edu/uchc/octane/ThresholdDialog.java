@@ -42,6 +42,8 @@ public class ThresholdDialog implements ImageListener {
 	ImagePlus imp_;
 	PeakFinder finder_;
 	NonBlockingGenericDialog dlg_;
+
+	Vector<SmNode> nodes_; 
 	
 	public ThresholdDialog(ImagePlus imp) {
 		imp_ = imp;
@@ -49,7 +51,6 @@ public class ThresholdDialog implements ImageListener {
 		finder_ = new PeakFinder();
 		finder_.setRoi(imp_.getRoi());
 		finder_.setImageProcessor(imp_.getProcessor());
-		finder_.setThreshold(ImageProcessor.NO_THRESHOLD);
 		
 		dlg_ = new NonBlockingGenericDialog("Set Threshold:" + imp.getTitle());
 	}
@@ -103,27 +104,28 @@ public class ThresholdDialog implements ImageListener {
 
 	public void updateMaximum() {
 		imp_.killRoi();
-		finder_.findMaxima(imp_);
-		finder_.markMaxima(imp_);
+		finder_.findMaxima();
+		imp_.setRoi(finder_.markMaxima());
 	}
 
 	public boolean processStack() {
-		String path_ = null;			
+		//String path_ = null;			
 
 		imp_.killRoi();
-		BufferedWriter writer = null;
+		//BufferedWriter writer = null;
 
-		FileInfo fi = imp_.getOriginalFileInfo();
-		path_ = fi.directory;
-		String fn = path_ + "analysis" + File.separator + "positions";
-		File file = new File(fn);
+		//FileInfo fi = imp_.getOriginalFileInfo();
+		//path_ = fi.directory;
+		//String fn = path_ + "analysis" + File.separator + "positions";
+		//File file = new File(fn);
 		int nFound = 0;
 		int nMissed = 0;
 		IJ.log(imp_.getTitle() + ": Processing");
-		try {
-			(new File(path_ + "analysis")).mkdirs();
-			writer = new BufferedWriter(new FileWriter(file));
+		//try {
+			//(new File(path_ + "analysis")).mkdirs();
+			//writer = new BufferedWriter(new FileWriter(file));
 			ImageStack stack = imp_.getImageStack();
+			nodes_ = new Vector<SmNode>();
 			for (int frame = 1; frame <= stack.getSize(); frame++) {
 				if ((frame % 50) == 0) {
 					IJ.log("Processed: "+ frame + "frames.");
@@ -131,16 +133,17 @@ public class ThresholdDialog implements ImageListener {
 				IJ.showProgress(frame, stack.getSize());
 				ImageProcessor ip = stack.getProcessor(frame);
 				finder_.setImageProcessor(ip);
-				nFound += finder_.findMaxima(imp_);
+				nFound += finder_.findMaxima();
 				nMissed += finder_.refineMaxima();
-				finder_.saveMaxima(writer, frame);
+				//finder_.exportCurrentMaxima(writer, frame);
+				nodes_.addAll(finder_.getCurrentNodes(frame));
 			}
-			writer.close();
-		} catch (IOException e) {
-			IJ.showMessage("IO error: " + e.getMessage());
-			return false;
-		}
-		IJ.log(imp_.getTitle() + "- Tested:" + nFound + " Missed:" + nMissed);
+			//writer.close();
+		//} catch (IOException e) {
+		//	IJ.showMessage("IO error: " + e.getMessage());
+		//	return false;
+		//}
+		IJ.showMessage(imp_.getTitle() + "- Tested:" + nFound + " Missed:" + nMissed);
 		
 		return true;
 	}
@@ -150,6 +153,10 @@ public class ThresholdDialog implements ImageListener {
 			finder_.setImageProcessor(ip);
 			updateMaximum();
 		}
+	}
+
+	public Vector<SmNode> getProcessedNodes() {
+		return nodes_;
 	}
 
 	@Override

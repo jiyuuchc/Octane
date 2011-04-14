@@ -33,7 +33,6 @@ import edu.uchc.octane.PrefDialog;
 import edu.uchc.octane.Prefs;
 import edu.uchc.octane.ThresholdDialog;
 
-
 public class OctanePlugin implements PlugIn{
 
 	ImagePlus imp_;
@@ -63,7 +62,15 @@ public class OctanePlugin implements PlugIn{
 	public void openPeakFinder() {
 		ThresholdDialog finderDlg = new ThresholdDialog(imp_);
 		if (finderDlg.openDialog() == true) {
-			openBrowser();		
+			Browser browser = new Browser(imp_, finderDlg.getProcessedNodes());
+			browser.setVisible(true);
+			dict_.put(imp_.getTitle(), browser);
+			browser.addWindowListener(new WindowAdapter() {
+				@Override
+				public void windowClosed(WindowEvent e) {
+					dict_.remove(imp_.getTitle());
+				}
+			});
 		} else {
 			dict_.remove(imp_.getTitle());
 		}
@@ -93,7 +100,7 @@ public class OctanePlugin implements PlugIn{
 			if (cmd.equals("browser")) {
 				dict_.put(imp_.getTitle(), null);
 				
-				File file = new File(path + File.separator + "analysis" + File.separator + "positions");
+				File file = new File(path + File.separator + imp_.getTitle() + ".dataset");
 				if (! file.exists()) {
 					openPeakFinder();
 				} else {

@@ -3,6 +3,7 @@ package edu.uchc.octane.test;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 
+import edu.uchc.octane.GaussianRefiner;
 import edu.uchc.octane.PFGWRefiner2;
 import edu.uchc.octane.PeakFinder;
 import ij.ImagePlus;
@@ -18,7 +19,7 @@ public class RefinerTest {
 		ImagePlus imp;
 		imp = ij.IJ.openImage(path);
 		//imp.show();
-		
+
 		PeakFinder finder = new PeakFinder();
 		finder.setTolerance(30);
 		finder.setRefiner(new PFGWRefiner2(imp.getProcessor()));
@@ -29,9 +30,9 @@ public class RefinerTest {
 		for (int frame = 1; frame <= stack.getSize(); frame++) {
 			ImageProcessor ip = stack.getProcessor(frame);
 			finder.setImageProcessor(ip);
-			finder.findMaxima(imp);
+			finder.findMaxima();
 			finder.refineMaxima();
-			finder.saveMaxima(writer,frame);
+			finder.exportCurrentMaxima(writer,frame);
 		}
 	}
 }

@@ -18,18 +18,20 @@
 package edu.uchc.octane;
 
 import ij.ImagePlus;
-
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.GeneralPath;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Vector;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableRowSorter;
+import javax.swing.RowFilter;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
@@ -40,11 +42,70 @@ public class TrajsTable extends JTable {
 	private static Class<?> [] ColumnClasses_ = {Integer.class, Integer.class, Boolean.class, String.class};
 	
 	private Vector<Trajectory> data_ = null;
+	private boolean [] isVisible_;
 	private NodesTable nodesTable_ = null;
 	private ImagePlus imp_ = null;
 	private Model model_;
 	private Animator animator_ = null;
-	
+
+	class Model extends AbstractTableModel {
+
+		@Override
+		public int getColumnCount() {
+			return ColumnNames_.length;
+		}
+
+		@Override
+		public int getRowCount() {
+			return data_.size();
+		}
+
+		@Override
+		public Object getValueAt(int rowIndex, int colIndex) {
+			Trajectory traj = data_.get(rowIndex);
+			switch (colIndex) {
+			case 0:
+				return traj.get(0).frame;
+			case 1:
+				return traj.getLength();
+			case 2:
+				return traj.marked;
+			case 3:
+				return traj.note;
+			}
+			return null;
+		}
+
+		@Override
+		public String getColumnName(int columnIndex) {
+			return ColumnNames_[columnIndex];
+		}
+
+		@Override
+		public Class<?> getColumnClass(int columnIndex) {
+			return ColumnClasses_[columnIndex];
+		}
+		
+		@Override
+		public boolean isCellEditable(int row, int col) {
+			if (col == 2 || col == 3) {
+				return true;
+			} else {
+				return false;
+			}
+		}
+
+		@Override
+		public void setValueAt(Object value, int row, int col) {
+			if (col == 3) {
+				data_.get(row).note = (String) value;
+			} else if (col == 2) {
+				data_.get(row).marked = (Boolean)value;
+			}
+		}
+
+	}
+
 	public TrajsTable(Vector<Trajectory> data) {
 		super();
 
@@ -57,8 +118,17 @@ public class TrajsTable extends JTable {
 		setRowSelectionAllowed(true);
 		setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 
-		setAutoCreateRowSorter(true);
-		
+		//setAutoCreateRowSorter(true);
+		TableRowSorter<Model> sorter = new TableRowSorter<Model>(model_);
+		setRowSorter(sorter);
+		sorter.setRowFilter(new RowFilter<Model, Integer> () {
+			@Override
+			public boolean include(
+					javax.swing.RowFilter.Entry<? extends Model, ? extends Integer> entry) {
+				return isVisible_[entry.getIdentifier()];
+			}
+		});
+
 		getColumnModel().getColumn(0).setPreferredWidth(30);
 		getColumnModel().getColumn(1).setPreferredWidth(30);
 		getColumnModel().getColumn(2).setPreferredWidth(30);
@@ -74,10 +144,12 @@ public class TrajsTable extends JTable {
 		getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
-				if (nodesTable_ != null && getSelectedRows().length == 1) {
+				if (e.getValueIsAdjusting())
+					return;
+				if (nodesTable_ != null) {
 					populateNodesTable();
 				}
-				if (imp_ != null && ! e.getValueIsAdjusting()) {
+				if (imp_ != null) {
 					drawOverlay();
 				}
 			}
@@ -85,7 +157,9 @@ public class TrajsTable extends JTable {
 	}
 
 	public void setData(Vector<Trajectory> data) {
-		data_ = (Vector<Trajectory>) data.clone();
+		data_ = data;
+		isVisible_ = new boolean[data.size()];
+		Arrays.fill(isVisible_, true);		
 		if (model_ != null ) {
 			model_.fireTableDataChanged();
 		}
@@ -109,7 +183,9 @@ public class TrajsTable extends JTable {
 		} else {
 			nodesTable_.setData(null);
 		}
-		
+		if (getSelectedRows().length == 1) { 
+			nodesTable_.setRowSelectionInterval(0,0);
+		}
 	}
 	
 	public void reverseMarkOfSelected() {
@@ -181,72 +257,16 @@ public class TrajsTable extends JTable {
 	}
 	
 	public void hideUnmarked() {
+		int cnt = 0;
 		Iterator<Trajectory> itr = data_.iterator();
-		while (itr.hasNext()){
-			Trajectory t = itr.next();
-			if (! t.marked) {
-				itr.remove();
-			}
+		while (itr.hasNext()) {
+			isVisible_[cnt ++] = itr.next().marked; 
 		}
 		model_.fireTableDataChanged();
 	}
 
-	class Model extends AbstractTableModel {
-		private static final long serialVersionUID = -1936221743708539850L;
-
-		@Override
-		public int getColumnCount() {
-			return ColumnNames_.length;
-		}
-
-		@Override
-		public int getRowCount() {
-			return data_.size();
-		}
-
-		@Override
-		public Object getValueAt(int rowIndex, int colIndex) {
-			Trajectory traj = data_.get(rowIndex);
-			switch (colIndex) {
-			case 0:
-				return traj.get(0).frame;
-			case 1:
-				return traj.size();
-			case 2:
-				return traj.marked;
-			case 3:
-				return traj.note;
-			}
-			return null;
-		}
-
-		@Override
-		public String getColumnName(int columnIndex) {
-			return ColumnNames_[columnIndex];
-		}
-
-		@Override
-		public Class<?> getColumnClass(int columnIndex) {
-			return ColumnClasses_[columnIndex];
-		}
-		
-		@Override
-		public boolean isCellEditable(int row, int col) {
-			if (col == 2 || col == 3) {
-				return true;
-			} else {
-				return false;
-			}
-		}
-
-		@Override
-		public void setValueAt(Object value, int row, int col) {
-			if (col == 3) {
-				data_.get(row).note = (String) value;
-			} else if (col == 2) {
-				data_.get(row).marked = (Boolean)value;
-			}
-		}
-
+	public void showAll() {
+		Arrays.fill(isVisible_, true);
+		model_.fireTableDataChanged();
 	}
 }

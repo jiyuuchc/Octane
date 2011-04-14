@@ -25,9 +25,9 @@ import java.awt.Rectangle;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Arrays;
+import java.util.Vector;
 
 public class PeakFinder {
-	//private final int MAX_PEAK_AREA = 25; // FIXME should use pref
 	private double tol_;
 	private int[] dirOffset_;
 	private int[] dirXoffset_;
@@ -38,14 +38,14 @@ public class PeakFinder {
 	private ImageProcessor ip_;
 	private int width_;
 	private int height_;
-	private double threshold_;
+	private double minThreshold_, maxThreshold_;
 	private Roi roi_;
 	private SubPixelRefiner refiner_;
 	private double[] xArray_;
 	private double[] yArray_;
 	private int[] peakSize_;
+	private double[] residue_;
 	private short nMaxima_;
-	private double[] maximaQuality_;
 
 	public void setRoi(Roi roi) {
 		roi_ = roi;
@@ -93,10 +93,6 @@ public class PeakFinder {
 		tol_ = tol;
 	}
 
-	public void setThreshold(double threshold) {
-		threshold_ = threshold;
-	}
-	
 	public void setRefiner(SubPixelRefiner refiner) {
 		refiner_ = refiner;
 	}
@@ -108,7 +104,7 @@ public class PeakFinder {
 		dirYoffset_ = new int[] { -1, -1, 0, 1, 1, 1, 0, -1 };
 	}
 
-	public int findMaxima(ImagePlus imp) {
+	public int findMaxima() {
 		Rectangle bbox;
 		if (roi_ != null) {
 			bbox = roi_.getBounds();
@@ -149,17 +145,26 @@ public class PeakFinder {
 		}
 		Arrays.sort(pixels);
 
-		if (threshold_ != ImageProcessor.NO_THRESHOLD) {
-			if (ip_.getCalibrationTable() != null && threshold_ > 0 && threshold_ < ip_.getCalibrationTable().length) {
-				threshold_ = ip_.getCalibrationTable()[(int) threshold_];
-			}
-			threshold_ -= (globalMax - globalMin) * 1e-6;
-		}// avoid rounding errors
+		minThreshold_ = ip_.getMinThreshold();
+		if (minThreshold_ == ImageProcessor.NO_THRESHOLD) {
+			minThreshold_ = -Float.MAX_VALUE;
+		}
+		maxThreshold_ = ip_.getMaxThreshold();
+		if (maxThreshold_ == ImageProcessor.NO_THRESHOLD) {
+			maxThreshold_ = Float.MAX_VALUE;
+		}
+//		if (threshold_ != ImageProcessor.NO_THRESHOLD) {
+//			if (ip_.getCalibrationTable() != null && threshold_ > 0 && threshold_ < ip_.getCalibrationTable().length) {
+//				threshold_ = ip_.getCalibrationTable()[(int) threshold_];
+//			}
+//			threshold_ -= (globalMax - globalMin) * 1e-6;
+//		}// avoid rounding errors
 
 		nMaxima_ = 0;
 		xArray_ = new double[pixels.length];
 		yArray_ = new double[pixels.length];
 		peakSize_ = new int[pixels.length];
+		residue_ = new double[pixels.length];
 		return analyzeMaxima(pixels);
 	} 
 
@@ -221,7 +226,7 @@ public class PeakFinder {
 				pixelStates[offset] = OWNED; // mark as processed
 			} 
 
-			if (isMax) {
+			if (isMax && v < maxThreshold_ && v > minThreshold_) {
 				if (roi_ == null || roi_.contains(pixels[i].x, pixels[i].y)) {
 					xArray_[nMaxima_] = pixels[i].x;
 					yArray_[nMaxima_] = pixels[i].y;
@@ -245,7 +250,7 @@ public class PeakFinder {
 
 		short nMissed = 0;
 		short nNewMaxima = 0;
-		maximaQuality_ = new double[nMaxima_];
+		residue_ = new double[nMaxima_];
 		if (nMaxima_ > 0 && Prefs.refinePeak_ ) {
 			for (int i = 0; i < nMaxima_; i++) {
 				int rtmp;
@@ -253,8 +258,8 @@ public class PeakFinder {
 				if (rtmp >= 0) {
 					xArray_[nNewMaxima] = refiner_.getXOut();
 					yArray_[nNewMaxima] = refiner_.getYOut();
-					maximaQuality_[nNewMaxima] = refiner_.getResidue();
-					peakSize_[nNewMaxima] = peakSize_[i];
+					residue_[nNewMaxima] = refiner_.getResidue();
+					peakSize_[nNewMaxima] = (int)Math.round(refiner_.getHeightOut());
 					nNewMaxima++;
 				}else {
 					nMissed++;
@@ -268,7 +273,7 @@ public class PeakFinder {
 		return nMissed;
 	}
 
-	public void markMaxima(ImagePlus imp) {
+	public Roi markMaxima() {
 		if (nMaxima_ > 0) {
 			int[] xpoints = new int[nMaxima_];
 			int[] ypoints = new int[nMaxima_];
@@ -276,18 +281,29 @@ public class PeakFinder {
 				xpoints[i] = (int) Math.round(xArray_[i]);
 				ypoints[i] = (int) Math.round(yArray_[i]);
 			}
-			imp.setRoi(new PointRoi(xpoints, ypoints, nMaxima_));
+			return new PointRoi(xpoints, ypoints, nMaxima_);
+		} else {
+			return null;
 		}
 	}
 
-	public void saveMaxima(Writer writer, int frame) throws IOException {
+	public void exportCurrentMaxima(Writer writer, int frame) throws IOException {
 		if (nMaxima_ > 0) {
 			for (int i = 0; i < nMaxima_; i++) {
 				double x = xArray_[i];
 				double y = yArray_[i];
-				writer.write(x + ", " + y +  ", " + frame + "," + peakSize_[i] + '\n');
+				writer.write(x + ", " + y +  ", " + frame + "," + peakSize_[i] + "," + residue_[i] + '\n');
 			}
 		}
+	}
+
+	public Vector<SmNode> getCurrentNodes(int frame) {
+		Vector<SmNode> nodes;
+		nodes = new Vector<SmNode>();
+		for ( int i = 0; i < nMaxima_; i ++) {
+			nodes.add(new SmNode(xArray_[i], yArray_[i], frame, residue_[i]));
+		}
+		return nodes;
 	}
 
 	private boolean isDirAllowed(int x, int y, int direction) {

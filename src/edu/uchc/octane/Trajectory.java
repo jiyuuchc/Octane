@@ -36,6 +36,10 @@ public class Trajectory extends Vector<SmNode> {
       return get(index).frame;
    }
    
+   public int getLength() {
+	   return get(size() - 1).frame - get(0).frame + 1;
+   }
+
    public boolean isMarked() {
       return marked;
    }

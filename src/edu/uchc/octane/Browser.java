@@ -50,66 +50,75 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.geom.GeneralPath;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.Vector;
+
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
+import ij.gui.HistogramWindow;
 import ij.gui.ImageCanvas;
 import ij.gui.Roi;
 import ij.io.FileInfo;
 import ij.process.FloatProcessor;
+import ij.process.ShortProcessor;
 
 public class Browser extends JFrame implements ClipboardOwner{
-	
+
 	private ImagePlus imp_ = null;
 	private TrajDataset dataset_ = null;
 	TrajsTable trajsTable_;
 	NodesTable nodesTable_;
 	String path_;
-	
-	public Browser(TrajDataset data) {
-		super();
-		dataset_ = data;
-		SetupWindow();
-	}
 
 	public Browser(ImagePlus imp) {
 		super();
+		
+		setupPath(imp);
+
+		try {
+			loadDataset();
+		} catch (Exception e) {
+			IJ.log("Can't load analysis results from default location.");
+			return;
+		}
+
+		SetupWindow();
+	}
+
+	public Browser(ImagePlus imp, TrajDataset data) {
+		super();
+		
+		setupPath(imp);
+		dataset_ = data;
+		SetupWindow();
+	}
+	
+	public Browser(ImagePlus imp, Vector<SmNode> nodes) {
+		super();
+		
+		setupPath(imp);
+		dataset_ = new TrajDataset();
+		dataset_.setNodes(nodes);
+		dataset_.buildTrajectoriesFromNodes();
+		
+		SetupWindow();
+	}
+
+	private void setupPath(ImagePlus imp) {
+		path_ = null;
 		imp_ = imp;
 		FileInfo fi = imp.getOriginalFileInfo();
 		if (fi != null) {
 			path_ = fi.directory; 
-		} else {
-			path_ = null;
-			IJ.showMessage("Can't find trajectories location");
-			return;
-		}		
-		ObjectInputStream in;
-		FileInputStream fs;
-		File file = new File(path_ + File.separator + "analysis" + File.separator + "dataset");
-		try {
-			if (file.exists()) {
-				fs = new FileInputStream(path_ + File.separator + "analysis" + File.separator + "dataset");
-				in = new ObjectInputStream(fs);
-				dataset_ = (TrajDataset) in.readObject();
-				in.close();
-				fs.close();
-			} else {
-				revert();
-			} 			
-		} catch (Exception e) {
-			IJ.showMessage("Can't recover analysis results. Data corrupt?");
-			IJ.showMessage(e.toString() + "\n" + e.getMessage());
-			return;
-		}
-		SetupWindow();
+		} 
 	}
-
+	
 	private JMenuBar createMenuBar() {
 		JMenuBar menuBar = new JMenuBar();
 		
@@ -126,33 +135,26 @@ public class Browser extends JFrame implements ClipboardOwner{
 		menuBar.add(processMenu);
 
 		JMenuItem item; 
-		
+		JCheckBoxMenuItem cbItem;
+
 		item = new JMenuItem("Save");
 		fileMenu.add(item);
 		item.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				save(); 
+				saveDataset(); 
 			}			
 		});
 		
-		item = new JMenuItem("Revert");
+		item = new JMenuItem("Rebuild");
 		fileMenu.add(item);
 		item.addActionListener(new ActionListener() {
 			@Override
-			public void actionPerformed(ActionEvent ev) {
-				TrajDataset backup = dataset_; 
-				try {
-					revert();
-					trajsTable_.setData(dataset_.getTrajectories());
-					trajsTable_.clearSelection();
-					//nodesTable_.setData(null);
-				} catch (IOException e) {
-					dataset_ = backup;
-					IJ.showMessage("Can't recover analysis results. Data corrupt?");
-					IJ.showMessage(e.toString() + "\n" + e.getMessage());
-					return;
-				}
+			public void actionPerformed(ActionEvent ev) { 
+				rebuildTrajectories();
+				trajsTable_.setData(dataset_.getTrajectories());
+				trajsTable_.clearSelection();
+				//nodesTable_.setData(null);
 			}			
 		});
 
@@ -179,13 +181,13 @@ public class Browser extends JFrame implements ClipboardOwner{
 		item.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				trajsTable_.setData(dataset_.getTrajectories()); 
+				trajsTable_.showAll(); 
 			}
 		});
 		
 		viewMenu.addSeparator();
-		
-		JCheckBoxMenuItem cbItem = new JCheckBoxMenuItem("Show Overlay", Prefs.showOverlay_);
+
+		cbItem = new JCheckBoxMenuItem("Show Overlay", Prefs.showOverlay_);
 		viewMenu.add(cbItem);
 		cbItem.addActionListener(new ActionListener() {
 			@Override
@@ -203,7 +205,7 @@ public class Browser extends JFrame implements ClipboardOwner{
 				constructFlowMap();
 			}
 		});
-		
+
 		item = new JMenuItem("Mobility Map");
 		processMenu.add(item);
 		item.addActionListener(new ActionListener() {
@@ -228,6 +230,26 @@ public class Browser extends JFrame implements ClipboardOwner{
 			@Override
 			public void actionPerformed(ActionEvent e){
 				constructIFS();
+			}
+		});
+		
+		processMenu.addSeparator();
+		
+		item = new JMenuItem("Trajectory Length Histogram");
+		processMenu.add(item);
+		item.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e){
+				showLengthHistogram();
+			}
+		});
+
+		item = new JMenuItem("Residue Histogram");
+		processMenu.add(item);
+		item.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e){
+				showResidueHistogram();
 			}
 		});
 
@@ -267,7 +289,7 @@ public class Browser extends JFrame implements ClipboardOwner{
 
 		buttonBox.add(Box.createRigidArea(new Dimension(10,0)));
 
-		button = new JButton("Copy");
+		button = new JButton("Export");
 		buttonBox.add(button);
 
 		button.addActionListener(new ActionListener() {
@@ -388,6 +410,7 @@ public class Browser extends JFrame implements ClipboardOwner{
 		if (roi == null) {
 			return;
 		}
+		trajsTable_.getSelectionModel().setValueIsAdjusting(true);
 		trajsTable_.clearSelection();
 		int firstSel = -1;
 		for (int i = 0; i < dataset_.getTrajectories().size(); i++) {
@@ -408,6 +431,7 @@ public class Browser extends JFrame implements ClipboardOwner{
 			Rectangle r = trajsTable_.getCellRect(firstSel, 0, true);
 			trajsTable_.scrollRectToVisible(r);
 		}
+		trajsTable_.getSelectionModel().setValueIsAdjusting(false);
 	}
 	
 	private void copySelectedTrajectories() {
@@ -677,18 +701,84 @@ public class Browser extends JFrame implements ClipboardOwner{
 		}
 	}
 
-	public void revert() throws IOException {
-		dataset_ = new TrajDataset();
-		dataset_.buildDataset(path_);
+	public void rebuildTrajectories(){
+		dataset_.buildTrajectoriesFromNodes();
 	}
 
-	public void save() {
-		dataset_.saveDataset();
+	public void showLengthHistogram() {
+		int [] selected = getSelectedOrAll();
+		Vector<Trajectory> trajs = dataset_.getTrajectories();
+		short [] d = new short[selected.length];
+		
+		int min = 10000;
+		int max = -1;
+		for (int i = 0; i < selected.length; i++) {
+			Trajectory t = trajs.get(selected[i]);
+			d[i] = (short) (t.getLength());
+			if (d[i] > max) {
+				max = d[i];
+			}
+			if (d[i]< min) {
+				min = d[i];
+			}
+		}
+		ShortProcessor ip = new ShortProcessor(1, d.length, d, null);
+		ImagePlus imp = new ImagePlus("",ip);
+		HistogramWindow hw = new HistogramWindow(imp);
+		hw.showHistogram(imp, max-min);
+		hw.setVisible(true);
+		imp.close();
+	} 
+
+	public void showResidueHistogram() {
+		int [] selected = getSelectedOrAll();
+		double [] d = new double[dataset_.getNodes().size()];
+		int cnt = 0;
+		for ( int i= 0; i < selected.length; i++) {
+			Iterator<SmNode> itr = dataset_.getTrajectories().get(selected[i]).iterator();
+			while (itr.hasNext()) {
+				d[cnt ++] = itr.next().reserved;
+			}
+		}
+		FloatProcessor ip = new FloatProcessor(1, cnt, Arrays.copyOf(d, cnt));
+		ImagePlus imp = new ImagePlus("", ip);
+		HistogramWindow hw = new HistogramWindow(imp);
+		hw.showHistogram(imp, Prefs.histogramBins_);
+		hw.setVisible(true);
+		imp.close();		
+	}
+	
+	String defaultSaveFilename() {
+		final String s = path_ + File.separator + imp_.getTitle() + ".dataset";
+		return s;
+	}
+
+	public void saveDataset(String pathname) {
+		try {
+			File file = new File(pathname);
+			dataset_.saveDataset(file);
+		} catch (IOException e) {
+			IJ.showMessage("IOError: Failed to save file.");
+		}
+		
+	}
+
+	public void saveDataset() {
+		saveDataset(defaultSaveFilename());
+	}
+
+	public void loadDataset(String pathname) throws IOException, ClassNotFoundException {
+		File file = new File(pathname);
+		dataset_ = TrajDataset.loadDataset(file);
+	}
+
+	public void loadDataset() throws IOException, ClassNotFoundException {
+		loadDataset(defaultSaveFilename());
 	}
 	
 	@Override
 	public void dispose() {
-		save();
+		saveDataset();
 		Prefs.savePrefs();
 		super.dispose();
 	}
@@ -698,4 +788,3 @@ public class Browser extends JFrame implements ClipboardOwner{
 		// who cares		
 	}
 }
-

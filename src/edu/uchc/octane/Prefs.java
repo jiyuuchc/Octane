@@ -38,8 +38,10 @@ public class Prefs {
 	final static String PALM_THRESHOLD = "palmThreshold";
 	final static String REFINE_PEAK_KEY = "refinePeak";
 	final static String REFINER_KEY = "refiner";
+	final static String HISTOGRAMBINS_KEY = "histogramBins";
+	final static String RESIDUETHRESHOLD_KEY = "histogramBins";
 	
-	static String lastWorkingDir;
+	//static String lastWorkingDir;
 	static boolean initialized = false;
 
 	static boolean virtualStack_ = true;
@@ -57,7 +59,9 @@ public class Prefs {
 	static double palmThreshold_ = 100; 
 	static boolean refinePeak_ = true;
 	static int refiner_ = 1;
-	
+	static int histogramBins_ = 20;
+	static double residueThreshold_ = 100;
+
 	static Preferences pref_;
 
 	public static void loadPrefs() {
@@ -81,6 +85,8 @@ public class Prefs {
 		palmThreshold_ = pref.getDouble(PALM_THRESHOLD, palmThreshold_);
 		refinePeak_ = pref.getBoolean(REFINE_PEAK_KEY, refinePeak_);
 		refiner_ = pref.getInt(REFINER_KEY, refiner_);
+		histogramBins_ = pref.getInt(HISTOGRAMBINS_KEY, histogramBins_);
+		residueThreshold_ = pref.getDouble(RESIDUETHRESHOLD_KEY, residueThreshold_);
 
 		pref_ = pref;
 		initialized = true;
@@ -107,6 +113,8 @@ public class Prefs {
 		pref_.putDouble(PALM_THRESHOLD, palmThreshold_);
 		pref_.putBoolean(REFINE_PEAK_KEY, refinePeak_);
 		pref_.putInt(REFINER_KEY, refiner_);
+		pref_.putInt(HISTOGRAMBINS_KEY, histogramBins_);
+		pref_.putDouble(RESIDUETHRESHOLD_KEY , residueThreshold_);
 	}
 
 }

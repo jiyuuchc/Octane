@@ -19,21 +19,16 @@ package edu.uchc.octane;
 
 import ij.IJ;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.ListIterator;
 import java.util.Stack;
 import java.util.Vector;
-import java.io.File;
-
 
 @SuppressWarnings("unchecked")
 public class Tracker {
+	TrajDataset dataset_;
+	
 	int curFrame_;
 	int maxBlinking_;
 	LinkedList<LinkedList<Integer>> tracks_;
@@ -53,7 +48,41 @@ public class Tracker {
 		LinkedList<Integer> frameLength_;
 		static final int MAX_PARTICLES_PER_FRAME = 10000;
 		
-		public XytData(Vector<Trajectory> trajs) {
+		public XytData() {
+			// 
+		}
+		
+		public void buildFromNodes(Vector<SmNode> nodes) {
+			frameLength_ = new LinkedList<Integer>();
+			for (int i = 0; i < nodes.size(); i++) {
+				SmNode s = nodes.get(i);
+				if (s.reserved < Prefs.residueThreshold_) {
+					while (s.frame >= frameLength_.size()) {
+						frameLength_.add(0);
+					}
+					frameLength_.set(s.frame, frameLength_.get(s.frame)+1);
+				}
+			}
+
+			data_ = new double[frameLength_.size()][][];
+			for (int i = 0; i < frameLength_.size(); i++ ) {
+				data_[i] = new double[frameLength_.get(i)][3];
+				frameLength_.set(i,0);
+			}
+			
+			for (int i = 0; i < nodes.size(); i++) {
+				SmNode s = nodes.get(i);
+				if (s.reserved < Prefs.residueThreshold_) {
+					int cnt = frameLength_.get(s.frame);
+					data_[s.frame][cnt][0] = s.x;
+					data_[s.frame][cnt][1] = s.y;
+					data_[s.frame][cnt][2] = s.reserved;
+					frameLength_.set(s.frame, frameLength_.get(s.frame) + 1);
+				}
+			}
+		}
+
+		public void buildFromTrajectories(Vector<Trajectory> trajs) {
 			frameLength_ = new LinkedList<Integer>();
 			
 			for (int i = 0; i < trajs.size(); i ++ ) {
@@ -86,46 +115,46 @@ public class Tracker {
 			}
 		}
 		
-		public XytData(File file) {
-			try {
-				BufferedReader br = new BufferedReader(new FileReader(file));
-				String line;
-				frameLength_ = new LinkedList<Integer>();
-				//Vector<Vector<Double[]>> data = new Vector<Vector<Double[]>>();
-				
-				while (null != (line = br.readLine())) {
-					String[] items = line.split(",");
-					int frame = Integer.parseInt(items[2].trim()) - 1;
-					while (frame >= frameLength_.size()) {
-						frameLength_.add(0);
-					}
-					frameLength_.set(frame, frameLength_.get(frame) + 1);
-				}
-				br.close();
-
-				data_ = new double[frameLength_.size()][][];
-				for (int i = 0; i < frameLength_.size(); i++ ) {
-					data_[i] = new double[frameLength_.get(i)][3];
-					frameLength_.set(i,0);
-				}
-				
-				br = new BufferedReader(new FileReader(file));
-				while (null != (line = br.readLine())) {
-					String[] items = line.split(",");
-					int frame = Integer.parseInt(items[2].trim()) - 1;
-					int cnt = frameLength_.get(frame);
-					data_[frame][cnt][0] = Double.parseDouble(items[0]);
-					data_[frame][cnt][1] = Double.parseDouble(items[1]);
-					if (items.length > 3) {
-						data_[frame][cnt][2] = Double.parseDouble(items[3]);
-					}
-					frameLength_.set(frame, frameLength_.get(frame) + 1);					
-				}
-				br.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
+//		public XytData(File file) {
+//			try {
+//				BufferedReader br = new BufferedReader(new FileReader(file));
+//				String line;
+//				frameLength_ = new LinkedList<Integer>();
+//				//Vector<Vector<Double[]>> data = new Vector<Vector<Double[]>>();
+//				
+//				while (null != (line = br.readLine())) {
+//					String[] items = line.split(",");
+//					int frame = Integer.parseInt(items[2].trim()) - 1;
+//					while (frame >= frameLength_.size()) {
+//						frameLength_.add(0);
+//					}
+//					frameLength_.set(frame, frameLength_.get(frame) + 1);
+//				}
+//				br.close();
+//
+//				data_ = new double[frameLength_.size()][][];
+//				for (int i = 0; i < frameLength_.size(); i++ ) {
+//					data_[i] = new double[frameLength_.get(i)][3];
+//					frameLength_.set(i,0);
+//				}
+//				
+//				br = new BufferedReader(new FileReader(file));
+//				while (null != (line = br.readLine())) {
+//					String[] items = line.split(",");
+//					int frame = Integer.parseInt(items[2].trim()) - 1;
+//					int cnt = frameLength_.get(frame);
+//					data_[frame][cnt][0] = Double.parseDouble(items[0]);
+//					data_[frame][cnt][1] = Double.parseDouble(items[1]);
+//					if (items.length > 3) {
+//						data_[frame][cnt][2] = Double.parseDouble(items[3]);
+//					}
+//					frameLength_.set(frame, frameLength_.get(frame) + 1);					
+//				}
+//				br.close();
+//			} catch (IOException e) {
+//				e.printStackTrace();
+//			}
+//		}
 
 		public int getFirstOfFrame(int frame) {
 			return MAX_PARTICLES_PER_FRAME * frame;
@@ -157,25 +186,25 @@ public class Tracker {
 			return idx / MAX_PARTICLES_PER_FRAME;
 		}
 		
-		void writeToDisk(File file) throws IOException {
-			BufferedWriter bw = new BufferedWriter(new FileWriter(file));
-			int cnt = 0;
-			for ( Iterator <LinkedList<Integer>> it = stoppedTracks_.iterator(); it.hasNext();) {
-				LinkedList<Integer> track = it.next();
-				for (Iterator<Integer> it2 = track.iterator(); it2.hasNext();) {
-					int idx = it2.next();
-					int frame = getFrameFromIdx(idx);
-					int n = idx - getFirstOfFrame(frame);
-					double [] c = data_[frame][n];
-					bw.write(String.format("%f, %f, %d, %f, %d\n", c[0], c[1], frame + 1, c[2], cnt));
-				}
-				cnt++;
-			}
-			
-			bw.close(); 
-		} // writeToDisk
+//		void writeToDisk(File file) throws IOException {
+//			BufferedWriter bw = new BufferedWriter(new FileWriter(file));
+//			int cnt = 0;
+//			for ( Iterator <LinkedList<Integer>> it = stoppedTracks_.iterator(); it.hasNext();) {
+//				LinkedList<Integer> track = it.next();
+//				for (Iterator<Integer> it2 = track.iterator(); it2.hasNext();) {
+//					int idx = it2.next();
+//					int frame = getFrameFromIdx(idx);
+//					int n = idx - getFirstOfFrame(frame);
+//					double [] c = data_[frame][n];
+//					bw.write(String.format("%f, %f, %d, %f, %d\n", c[0], c[1], frame + 1, c[2], cnt));
+//				}
+//				cnt++;
+//			}
+//			
+//			bw.close(); 
+//		} // writeToDisk
 		
-		Vector<Trajectory> getTrajs() {
+		Vector<Trajectory> createTrajs() {
 			Vector<Trajectory> trajs = new Vector<Trajectory>() ;
 			
 			for (Iterator <LinkedList<Integer>> it = stoppedTracks_.iterator(); it.hasNext(); ) {
@@ -194,23 +223,29 @@ public class Tracker {
 		}
 	}
 
-	public Tracker(Vector<Trajectory> trajs, double max_search_r, int frame_skip_allowed) {
-		//data_ = nodes;
-		threshold_ = max_search_r;
-		threshold2_ = threshold_ * threshold_;
-		maxBlinking_ = frame_skip_allowed;
-
-		xytData_ = new XytData(trajs);
+	public Tracker(TrajDataset dataset) {
+		dataset_ = dataset;
+		xytData_ = new XytData();
+		xytData_.buildFromNodes(dataset.getNodes());
 	}
 
-	public Tracker(File f, double max_search_r, int frame_skip_allowed) {
-		//data_ = nodes;
-		threshold_ = max_search_r;
-		threshold2_ = threshold_ * threshold_;
-		maxBlinking_ = frame_skip_allowed;
-
-		xytData_ = new XytData(f);
-	}
+//	public Tracker(Vector<Trajectory> trajs, double max_search_r, int frame_skip_allowed) {
+//		//data_ = nodes;
+//		threshold_ = max_search_r;
+//		threshold2_ = threshold_ * threshold_;
+//		maxBlinking_ = frame_skip_allowed;
+//
+//		xytData_ = new XytData(trajs);
+//	}
+//
+//	public Tracker(File f, double max_search_r, int frame_skip_allowed) {
+//		//data_ = nodes;
+//		threshold_ = max_search_r;
+//		threshold2_ = threshold_ * threshold_;
+//		maxBlinking_ = frame_skip_allowed;
+//
+//		xytData_ = new XytData(f);
+//	}
 
 	void trivialBonds() {
 		int firstPos = xytData_.getFirstOfFrame(curFrame_);
@@ -376,6 +411,10 @@ public class Tracker {
 	}
 	
 	public void doTracking() {
+		threshold_ = Prefs.trackerMaxDsp_;
+		threshold2_ = threshold_ * threshold_;
+		maxBlinking_ = Prefs.trackerMaxBlinking_;
+		
 		tracks_ = new LinkedList<LinkedList<Integer>>();
 		stoppedTracks_ = new LinkedList<LinkedList<Integer>>();
 		//initial track # = first frame particle #  
@@ -433,15 +472,8 @@ public class Tracker {
 			stoppedTracks_.add(track);
 		}
 		tracks_.clear();
-	
-	} //doTracking
-	
-	public void toDisk(File file) throws IOException {
-		xytData_.writeToDisk(file);
-	}
-	
-	public Vector<Trajectory> getTrajs() {
-		return xytData_.getTrajs();
-	}
+		
+		dataset_.setTrajectories(xytData_.createTrajs());
 
+	} //doTracking
 }

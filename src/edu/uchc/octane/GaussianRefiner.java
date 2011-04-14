@@ -20,19 +20,18 @@ package edu.uchc.octane;
 
 import org.apache.commons.math.FunctionEvaluationException;
 import org.apache.commons.math.analysis.MultivariateRealFunction;
+import org.apache.commons.math.ConvergenceException;
 import org.apache.commons.math.optimization.GoalType;
 import org.apache.commons.math.optimization.RealPointValuePair;
 import org.apache.commons.math.optimization.direct.NelderMead;
 
+import ij.IJ;
 import ij.process.ImageProcessor;
-//import edu.stanford.rsl.jpop.OptimizableFunction;
-//import edu.stanford.rsl.jpop.FunctionOptimizer;
 
 public class GaussianRefiner implements SubPixelRefiner, MultivariateRealFunction {
 	
-	static final int kernelSize_ = 2;
+	static final int kernelSize_ = 3;
 	static final double defaultH_ = 200.0;
-	static final double defaultBG_ = 1700.0;
 	static final double sigma2_ = 1.73;
 	
 	static double [] gaussLookupTable_;
@@ -52,12 +51,13 @@ public class GaussianRefiner implements SubPixelRefiner, MultivariateRealFunctio
 	ImageProcessor ip_;
 	double [] parameters_; 
 	double residue_;
+	double bg_ = 1700.0;
 
 	public GaussianRefiner(ImageProcessor ip){
 		ip_ = ip;
 		parameters_ = new double[4];
 		parameters_[2] = defaultH_;
-		parameters_[3] = defaultBG_;
+		bg_ = ip.getAutoThreshold();
 	}
 
 	double gauss(double x) {
@@ -92,19 +92,26 @@ public class GaussianRefiner implements SubPixelRefiner, MultivariateRealFunctio
 			parameters_[1] = 0;
 		}
 
-		return fitWithNelderMead();
+		parameters_[3] = bg_;
+
+		try {
+			fitWithNelderMead();
+		} /*catch (ConvergenceException e) {
+			IJ.log(e.getMessage());
+			return 0;
+		}*/
+		catch (Exception e) {
+			return -1;
+		}
+		return 0;
 	}
 	
-	int fitWithNelderMead() {
+	void fitWithNelderMead() throws ConvergenceException, FunctionEvaluationException, IllegalArgumentException {
 		NelderMead nm = new NelderMead();
-		try {
-			RealPointValuePair vp = nm.optimize(this, GoalType.MINIMIZE, parameters_);
-			parameters_ = vp.getPoint();
-			residue_ = vp.getValue();
-		} catch (Exception e) {
-			// do nothing
-		} 
-		return 0;
+
+		RealPointValuePair vp = nm.optimize(this, GoalType.MINIMIZE, parameters_);
+		parameters_ = vp.getPoint();
+		residue_ = vp.getValue() / parameters_[2] / parameters_[2]; // normalized to H^2
 	}
 
 //	public int fitWithUncmin(double x, double y) {
@@ -140,8 +147,13 @@ public class GaussianRefiner implements SubPixelRefiner, MultivariateRealFunctio
 	}
 
 	@Override
+	public double getHeightOut() {
+		return parameters_[2];
+	}
+
+	@Override
 	public double getResidue() {
-		return residue_;
+		return residue_ / (2 * kernelSize_ + 1) / (2 * kernelSize_ + 1);
 	}
 
 //	@Override
@@ -185,7 +197,9 @@ public class GaussianRefiner implements SubPixelRefiner, MultivariateRealFunctio
 		double yp = Math.sin(p[1]) * hw;
 		double h = p[2];
 		double bg = p[3];
-		
+		if (bg < 0 || h < 0) {
+			return 1e10;
+		}
 		for (int xi = - kernelSize_; xi <= kernelSize_; xi++) {
 			for (int yi = - kernelSize_; yi <= kernelSize_; yi++) {
 				double delta =  (double)(ip_.get(x0_ + xi , y0_ + yi))
