@@ -23,7 +23,7 @@ public class RefinerTest {
 
 		PeakFinder finder = new PeakFinder();
 		finder.setTolerance(25);
-		finder.setRefiner(new ZeroBgGaussianRefiner(imp.getProcessor()));
+		finder.setRefiner(new GaussianRefiner(imp.getProcessor()));
 
 		ImageStack stack = imp.getImageStack();
 
