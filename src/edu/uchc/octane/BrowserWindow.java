@@ -21,6 +21,7 @@ package edu.uchc.octane;
 import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
+import ij.gui.GenericDialog;
 
 import java.awt.Dimension;
 import java.awt.GridBagLayout;
@@ -35,9 +36,12 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 import java.awt.GridBagConstraints;
+import java.io.IOException;
+
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -98,6 +102,24 @@ public class BrowserWindow extends JFrame {
 				browser_.rebuildTrajectories();
 			}			
 		});
+		
+		fileMenu.addSeparator();
+		
+		item = new JMenuItem("Export Trajectories");
+		fileMenu.add(item);
+		item.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent ev) {
+				try {
+					JFileChooser fc = new JFileChooser();
+					if (fc.showSaveDialog(browser_.getWindow()) == JFileChooser.APPROVE_OPTION) {
+						browser_.exportTrajectories(fc.getSelectedFile());
+					}
+				} catch (IOException e) {
+					IJ.showMessage("Can't save file! " + e.getMessage()); 
+				}
+			}			
+		});		
 
 		item = new JMenuItem("Delete");
 		editMenu.add(item);
@@ -193,6 +215,22 @@ public class BrowserWindow extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e){
 				browser_.showResidueHistogram();
+			}
+		});
+
+		item = new JMenuItem("Displacement Histogram");
+		processMenu.add(item);
+		item.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e){
+				int stepsize = 1;
+				GenericDialog gd = new GenericDialog("Step Size Input");
+				gd.addNumericField("Step Size: ", stepsize, 0);
+				gd.showDialog();
+				if (gd.wasCanceled())
+					return;
+				stepsize = (int) gd.getNextNumber();
+				browser_.showDisplacementHistogram(stepsize);
 			}
 		});
 

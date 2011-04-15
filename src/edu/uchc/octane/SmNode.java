@@ -50,4 +50,12 @@ public class SmNode implements Serializable {
 	public String toString() {
 		return (x + ", " + y + ", " + frame + ", " + reserved);
 	}
+	
+	public double distance2(SmNode n) {
+		return (x - n.x)*(x - n.x) + (y - n.y)*(y - n.y);
+	}
+	
+	public double distance(SmNode n) {
+		return Math.sqrt(distance2(n));
+	}
 }

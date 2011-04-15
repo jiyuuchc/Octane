@@ -44,7 +44,7 @@ public class ThresholdDialog implements ImageListener {
 	PeakFinder finder_;
 	NonBlockingGenericDialog dlg_;
 
-	Vector<SmNode> nodes_; 
+	SmNode[][] nodes_; 
 	
 	public ThresholdDialog(ImagePlus imp) {
 		imp_ = imp;
@@ -126,7 +126,7 @@ public class ThresholdDialog implements ImageListener {
 			//(new File(path_ + "analysis")).mkdirs();
 			//writer = new BufferedWriter(new FileWriter(file));
 			ImageStack stack = imp_.getImageStack();
-			nodes_ = new Vector<SmNode>();
+			nodes_ = new SmNode[stack.getSize()][];
 			for (int frame = 1; frame <= stack.getSize(); frame++) {
 				if ((frame % 50) == 0) {
 					IJ.log("Processed: "+ frame + "frames.");
@@ -137,7 +137,7 @@ public class ThresholdDialog implements ImageListener {
 				nFound += finder_.findMaxima();
 				nMissed += finder_.refineMaxima();
 				//finder_.exportCurrentMaxima(writer, frame);
-				nodes_.addAll(Arrays.asList(finder_.getCurrentNodes(frame)));
+				nodes_[frame - 1] = finder_.getCurrentNodes(frame);
 			}
 			//writer.close();
 		//} catch (IOException e) {
@@ -156,7 +156,7 @@ public class ThresholdDialog implements ImageListener {
 		}
 	}
 
-	public Vector<SmNode> getProcessedNodes() {
+	public SmNode[][] getProcessedNodes() {
 		return nodes_;
 	}
 

@@ -58,7 +58,7 @@ public class Prefs {
 	static int trackerMaxBlinking_ = 2;
 	static double palmThreshold_ = 100; 
 	static boolean refinePeak_ = true;
-	static int refiner_ = 1;
+	static int refiner_ = 0;
 	static int histogramBins_ = 20;
 	static double residueThreshold_ = 100;
 	static int sloppyness_ = 1;

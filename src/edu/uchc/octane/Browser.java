@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Vector;
 
 import ij.IJ;
@@ -71,9 +72,8 @@ public class Browser implements ClipboardOwner{
 		createWindow();
 	}
 	
-	public void setup(Vector<SmNode> nodes) {
-		SmNode [] n = (SmNode []) nodes.toArray();
-		dataset_ = TrajDataset.createDatasetFromNodes(n);
+	public void setup(SmNode[][] nodes) {
+		dataset_ = TrajDataset.createDatasetFromNodes(nodes);
 		createWindow();
 	}
 
@@ -412,8 +412,8 @@ public class Browser implements ClipboardOwner{
 	}
 
 	public void rebuildTrajectories(){
-//		dataset_.buildTrajectoriesFromNodes();
-//		browserWindow_.updateNewData();
+		dataset_.reTrack();
+		browserWindow_.updateNewData();
 	}
 
 	public void showLengthHistogram() {
@@ -440,21 +440,63 @@ public class Browser implements ClipboardOwner{
 	} 
 
 	public void showResidueHistogram() {
-//		int [] selected = browserWindow_.getSelectedTrajectoriesOrAll();
-//		ArrayList<Double> d = new ArrayList<Double>();
-//		for ( int i= 0; i < selected.length; i++) {
-//			Iterator<SmNode> itr = getTrajectories().get(selected[i]).iterator();
-//			while (itr.hasNext()) {
-//				d.add(itr.next().reserved);
-//			}
-//		}
-//		FloatProcessor ip = new FloatProcessor(1, d.size(), d.toArray(typeof(Double)));
-//		ImagePlus imp = new ImagePlus("", ip);
-//		HistogramWindow hw = new HistogramWindow("Residue Histogram", imp, Prefs.histogramBins_);
-//		hw.setVisible(true);
-//		imp.close();		
+		int [] selected = browserWindow_.getSelectedTrajectoriesOrAll();
+		//ArrayList<Double> d = new ArrayList<Double>();
+		int numOfNodes = 0;
+		for ( int i= 0; i < selected.length; i++) {
+			numOfNodes += dataset_.getTrjectoryByIndex(selected[i]).size();
+		}
+		double [] d = new double[numOfNodes];
+		int cnt = 0;
+		for ( int i= 0; i < selected.length; i++) {
+			Iterator<SmNode> itr = dataset_.getTrjectoryByIndex(selected[i]).iterator();
+			while (itr.hasNext()) {
+				d[cnt++] = itr.next().reserved;
+			}
+		}
+		FloatProcessor ip = new FloatProcessor(1, d.length, d);
+		ImagePlus imp = new ImagePlus("", ip);
+		HistogramWindow hw = new HistogramWindow("Residue Histogram", imp, Prefs.histogramBins_);
+		hw.setVisible(true);
+		imp.close();		
 	}
 	
+	public void showDisplacementHistogram(int stepSize) {
+		int [] selected = browserWindow_.getSelectedTrajectoriesOrAll();
+		ArrayList<Double> dl = new ArrayList<Double>();
+		for (int i = 0; i < selected.length; i++) {
+			Trajectory t = dataset_.getTrjectoryByIndex(selected[i]);
+			for (int j = 0; j < t.size(); j++) {
+				int k = j + 1;
+				int frame = t.get(j).frame;
+				while ( k < t.size()) {
+					if (t.get(k).frame - frame < stepSize) {
+						k++;
+					} else if (t.get(k).frame - frame == stepSize) {
+						dl.add(t.get(j).distance(t.get(k)));
+						break;
+					} else {
+						break;
+					}
+				}
+			}
+			IJ.showProgress(i, selected.length);
+		}
+		double [] d = new double[dl.size()];
+		for (int i = 0; i < dl.size(); i ++) {
+			d[i] = dl.get(i).doubleValue();
+		}
+		if (d.length <= 1) {
+			IJ.showMessage("Not enough data point. Stepsize too large?");
+			return;
+		}
+		FloatProcessor ip = new FloatProcessor(1, d.length, d);
+		ImagePlus imp = new ImagePlus("", ip);
+		HistogramWindow hw = new HistogramWindow("Displacement Histogram", imp, Prefs.histogramBins_);
+		hw.setVisible(true);
+		imp.close();
+	}
+
 	public void animate() {
 		if (animator_ == null) {
 			animator_ = new Animator(imp_);
@@ -506,5 +548,9 @@ public class Browser implements ClipboardOwner{
 	@Override
 	public void lostOwnership(Clipboard arg0, Transferable arg1) {
 		// 
+	}
+
+	public void exportTrajectories(File file) throws IOException {
+		dataset_.writeTrajectoriesToText(file);		
 	}
 }
