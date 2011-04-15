@@ -31,7 +31,8 @@ public class PrefDialog {
 		String [] choices = {"Polyfit Gaussian Weight","Gaussian Fit", "Zeor Background Gaussian"};
 		dlg.addChoice("SubPixel Fitting Algrithm", choices, choices[Prefs.refiner_]);
 		dlg.addNumericField("Residue Threshold", Prefs.residueThreshold_, 1);
-		
+		dlg.addNumericField("Histogram Bins", Prefs.histogramBins_, 0);
+
 		dlg.showDialog();
 		if (dlg.wasCanceled())
 			return;
@@ -42,6 +43,7 @@ public class PrefDialog {
 		Prefs.palmThreshold_ = dlg.getNextNumber();
 		Prefs.refiner_ = dlg.getNextChoiceIndex();
 		Prefs.residueThreshold_ = dlg.getNextNumber();
+		Prefs.histogramBins_ = (int) dlg.getNextNumber();
 		Prefs.savePrefs();
 	}
 }

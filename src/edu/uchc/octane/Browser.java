@@ -42,6 +42,7 @@ import ij.ImagePlus;
 import ij.ImageStack;
 import ij.gui.HistogramWindow;
 import ij.gui.ImageCanvas;
+import ij.gui.Plot;
 import ij.gui.Roi;
 import ij.io.FileInfo;
 import ij.process.FloatProcessor;
@@ -71,7 +72,7 @@ public class Browser implements ClipboardOwner{
 		dataset_ = data;
 		createWindow();
 	}
-	
+
 	public void setup(SmNode[][] nodes) {
 		dataset_ = TrajDataset.createDatasetFromNodes(nodes);
 		createWindow();
@@ -466,7 +467,7 @@ public class Browser implements ClipboardOwner{
 		ArrayList<Double> dl = new ArrayList<Double>();
 		for (int i = 0; i < selected.length; i++) {
 			Trajectory t = dataset_.getTrjectoryByIndex(selected[i]);
-			for (int j = 0; j < t.size(); j++) {
+			for (int j = 0; j < t.size() - stepSize; j++) {
 				int k = j + 1;
 				int frame = t.get(j).frame;
 				while ( k < t.size()) {
@@ -495,6 +496,41 @@ public class Browser implements ClipboardOwner{
 		HistogramWindow hw = new HistogramWindow("Displacement Histogram", imp, Prefs.histogramBins_);
 		hw.setVisible(true);
 		imp.close();
+	}
+	
+	public void showMSD() {
+		int [] selected = browserWindow_.getSelectedTrajectoriesOrAll();
+		ArrayList<Double> dl = new ArrayList<Double>();
+		ArrayList<Integer> nl = new ArrayList<Integer>();
+		for (int i = 0; i < selected.length; i ++) {
+			Trajectory t = dataset_.getTrjectoryByIndex(selected[i]);
+			for (int j = 0; j < t.size()-1; j++) {
+				int frame = t.get(j).frame;
+				for (int k = j + 1; k < t.size(); k++) {
+					int deltaframe = t.get(k).frame - frame;
+					while (deltaframe > dl.size()) {
+						dl.add(0.0);
+						nl.add(0);
+					}
+					dl.set(deltaframe - 1, dl.get(deltaframe-1) + t.get(j).distance2(t.get(k))); 
+					nl.set(deltaframe - 1, nl.get(deltaframe-1) + 1);
+				}
+			}
+			IJ.showProgress(i, selected.length);
+		}
+		double [] x = new double [dl.size() + 1];
+		double [] y = new double [dl.size() + 1];
+		x[0] = 0;
+		y[0] = 0;
+		for (int i = 0; i < dl.size(); i++) {
+			x[i+1] = 1.0 + i;
+			y[i+1] = dl.get(i).doubleValue() / nl.get(i).intValue();
+		}
+		if (x.length > 0) {
+			Plot plotWin = new Plot("MSD Plot", "T/T-frame", "MSD (pixel^2)", x, y);
+			plotWin.show();
+			plotWin.addPoints(x, y, Plot.BOX);
+		} 
 	}
 
 	public void animate() {
@@ -551,6 +587,6 @@ public class Browser implements ClipboardOwner{
 	}
 
 	public void exportTrajectories(File file) throws IOException {
-		dataset_.writeTrajectoriesToText(file);		
+		dataset_.writePositionsToText(file);		
 	}
 }

@@ -19,7 +19,10 @@
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
+
+import javax.swing.JFileChooser;
 import javax.swing.UIManager;
 
 import ij.IJ;
@@ -32,6 +35,7 @@ import edu.uchc.octane.Browser;
 import edu.uchc.octane.PrefDialog;
 import edu.uchc.octane.Prefs;
 import edu.uchc.octane.ThresholdDialog;
+import edu.uchc.octane.TrajDataset;
 
 public class OctanePlugin implements PlugIn{
 
@@ -47,23 +51,24 @@ public class OctanePlugin implements PlugIn{
 		}
 	}
 
-	public void openBrowser() {
-		try {
-			Browser browser = new Browser(imp_);
+	public void openBrowser(TrajDataset dataset) throws IOException, ClassNotFoundException {
+		Browser browser = new Browser(imp_);
+		if (dataset == null) {
 			browser.setup();
-			dict_.put(imp_.getTitle(), browser);
-			browser.getWindow().addWindowListener(new WindowAdapter() {
-				@Override
-				public void windowClosed(WindowEvent e) {
-					dict_.remove(imp_.getTitle());
-				}
-			});
-		} catch (Exception e) {
-			IJ.log(e.getMessage());
+		} else {
+			browser.setup(dataset);
 		}
+		dict_.put(imp_.getTitle(), browser);
+		browser.getWindow().addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosed(WindowEvent e) {
+				dict_.remove(imp_.getTitle());
+			}
+		});
+
 	}
 	
-	public void openPeakFinder() {
+	public void analyze() {
 		ThresholdDialog finderDlg = new ThresholdDialog(imp_);
 		if (finderDlg.openDialog() == true) {
 			Browser browser = new Browser(imp_);
@@ -101,16 +106,32 @@ public class OctanePlugin implements PlugIn{
 		}
 
 		if (! dict_.containsKey(imp_.getTitle())) { // do not open multiple window for the same image
-			if (cmd.equals("browser")) {
-				dict_.put(imp_.getTitle(), null);
-				
-				File file = new File(path + File.separator + imp_.getTitle() + ".dataset");
-				if (! file.exists()) {
-					openPeakFinder();
-				} else {
-					openBrowser();
+			try {
+				if (cmd.equals("browser")) {
+					dict_.put(imp_.getTitle(), null);
+					analyze();
+				} else if (cmd.equals("load")){
+					if (path != null && new File(path + File.separator + imp_.getTitle() + ".dataset").exists()) {
+						openBrowser(null);
+					} else {
+						IJ.showMessage("You don't seem to have a previously saved " +
+						"analysis at the default location. Please specify another path.");
+						JFileChooser fc = new JFileChooser();
+						if (fc.showOpenDialog(IJ.getApplet()) == JFileChooser.APPROVE_OPTION) {
+							TrajDataset dataset = TrajDataset.loadDataset(fc.getSelectedFile());
+							openBrowser(dataset);
+						}
+					}
+				} else if (cmd.equals("import")) { 
+					JFileChooser fc = new JFileChooser();
+					if (fc.showOpenDialog(IJ.getApplet()) == JFileChooser.APPROVE_OPTION) {
+						TrajDataset dataset = TrajDataset.importDatasetFromPositionsText(fc.getSelectedFile());
+						openBrowser(dataset);
+					}
 				}
-			}
-		} 
+			} catch (Exception e) {
+				IJ.showMessage("Can't load the file! " + e.getMessage()); 
+			} 				
+		}
 	}
 }

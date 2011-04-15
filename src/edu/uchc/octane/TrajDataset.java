@@ -50,6 +50,7 @@ public class TrajDataset{
 	boolean [] isTrackedParticle_; 
 	
 	LinkedList<Trajectory> activeTracks_;
+	Trajectory wasted_;
 
 	double threshold_;
 	double threshold2_;
@@ -60,13 +61,6 @@ public class TrajDataset{
 	public TrajDataset() {
 		trajectories_ = new Vector<Trajectory>();
 	}
-
-//	Vector<Trajectory> getTrajectories() {
-//		if (trajs_ == null || trajs_.size() == 0) {
-//			return null;
-//		} else 
-//			return trajs_;
-//	}
 
 	public Trajectory getTrjectoryByIndex(int i) {
 		return trajectories_.get(i);
@@ -102,15 +96,19 @@ public class TrajDataset{
 		rebuildNodes();
 		doTracking();
 	}
-	
-	//	public void writePositionsToText(File file) throws IOException {
-//		BufferedWriter bw = new BufferedWriter(new FileWriter(file));
-//		for (int i = 0; i < nodes_.size(); i ++ ) {
-//				SmNode s = nodes_.get(i);
-//				bw.write(String.format("%f, %f, %d, %f\n", s.x, s.y, s.frame, s.reserved));				
-//		}
-//		bw.close();		
-//	}
+
+	public void writePositionsToText(File file) throws IOException {
+		rebuildNodes();
+		BufferedWriter bw = new BufferedWriter(new FileWriter(file));
+		for (int i = 0; i < nodes_.length; i ++ ) {
+			for (int j = 0; j < nodes_[i].length; j++) {
+				SmNode s = nodes_[i][j];
+				bw.write(String.format("%f, %f, %d, %f\n", s.x, s.y, s.frame, s.reserved));
+			}
+		}
+		bw.close();
+		nodes_ = null;
+	}
 
 	public void writeTrajectoriesToText(File file)throws IOException {
 		BufferedWriter bw = new BufferedWriter(new FileWriter(file));
@@ -344,12 +342,14 @@ public class TrajDataset{
 			SmNode trackHead = it.next().lastElement();
 			if (trackHead != null) { // only for active tracks
 				for (int j = 0; j < nodes_[curFrame_].length; j ++) {
-					double d = trackHead.distance2(nodes_[curFrame_][j]);
-					if (d <= threshold2_) { // don't miss the = sign
-						forwardBonds_[id].add(j);
-						bondLengths_[id].add(d);
-						backwardBonds_[j].add(id);
-					} 
+					if (nodes_[curFrame_][j].reserved < Prefs.residueThreshold_) {
+						double d = trackHead.distance2(nodes_[curFrame_][j]);
+						if (d <= threshold2_) { // don't miss the = sign
+							forwardBonds_[id].add(j);
+							bondLengths_[id].add(d);
+							backwardBonds_[j].add(id);
+						} 
+					}
 				}
 			}
 		}
@@ -382,6 +382,7 @@ public class TrajDataset{
 		
 		activeTracks_ = new LinkedList<Trajectory>();
 		trajectories_ = new Vector<Trajectory>();
+		wasted_ = new Trajectory();
 
 		//initial track # = first frame particle #  
 		for (int i = 0; i < nodes_[0].length; i ++ ) {
@@ -419,10 +420,14 @@ public class TrajDataset{
 			//add new particles into the track list
 			for (int i = 0; i < nodes_[curFrame_].length; i++) {
 				if (!isTrackedParticle_[i]) {
-					Trajectory t;
-					t = new Trajectory();
-					t.add(nodes_[curFrame_][i]);
-					activeTracks_.add(t);
+					if (nodes_[curFrame_][i].reserved < Prefs.residueThreshold_) {
+						Trajectory t;
+						t = new Trajectory();
+						t.add(nodes_[curFrame_][i]);
+						activeTracks_.add(t);
+					} else {
+						wasted_.add(nodes_[curFrame_][i]);
+					}
 				}
 			}
 
@@ -440,9 +445,12 @@ public class TrajDataset{
 			Trajectory track = it.next();
 			trajectories_.add(track);
 		}
+		wasted_.deleted = true;
+		trajectories_.add(wasted_);
 		activeTracks_.clear();
 		activeTracks_ = null;
 		nodes_ = null;
+		wasted_ = null;
 
 	} //doTracking
 
