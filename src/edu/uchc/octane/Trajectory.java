@@ -23,7 +23,7 @@ public class Trajectory extends Vector<SmNode> {
    public boolean marked = false;
    public boolean deleted = false;
    public String note = null;
-   
+
    public int getLength() {
 	   return get(size() - 1).frame - get(0).frame + 1;
    }

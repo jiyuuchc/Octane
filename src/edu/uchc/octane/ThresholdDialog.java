@@ -26,6 +26,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Vector;
 
 import ij.IJ;
@@ -136,7 +137,7 @@ public class ThresholdDialog implements ImageListener {
 				nFound += finder_.findMaxima();
 				nMissed += finder_.refineMaxima();
 				//finder_.exportCurrentMaxima(writer, frame);
-				nodes_.addAll(finder_.getCurrentNodes(frame));
+				nodes_.addAll(Arrays.asList(finder_.getCurrentNodes(frame)));
 			}
 			//writer.close();
 		//} catch (IOException e) {

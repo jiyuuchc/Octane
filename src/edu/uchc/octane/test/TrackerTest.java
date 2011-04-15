@@ -4,6 +4,7 @@ import ij.ImagePlus;
 import java.io.File;
 import java.io.IOException;
 
+import edu.uchc.octane.SmNode;
 import edu.uchc.octane.ThresholdDialog;
 import edu.uchc.octane.TrajDataset;
 
@@ -19,9 +20,7 @@ public class TrackerTest {
 
 		ThresholdDialog finderDlg = new ThresholdDialog(imp);
 		if (finderDlg.openDialog() == true) {
-			TrajDataset d= new TrajDataset();
-			d.setNodes(finderDlg.getProcessedNodes());
-			d.buildTrajectoriesFromNodes();
+			TrajDataset d= TrajDataset.createDatasetFromNodes((SmNode[])finderDlg.getProcessedNodes().toArray());
 			d.writeTrajectoriesToText(new File(p + "\\trajs"));
 		}
 	}

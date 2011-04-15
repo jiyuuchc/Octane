@@ -29,59 +29,57 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Vector;
 
 public class TrajDataset implements Serializable{
 	
 	private static final long serialVersionUID = -4434499638684956916L;
+	
 	private Vector<Trajectory> trajs_;
-	private Vector<SmNode> nodes_;
-//	private String path_;
 
 	public TrajDataset() {
 		trajs_ = new Vector<Trajectory>();
-		nodes_ = new Vector<SmNode>();
 	}
 
-	public Vector<Trajectory> getTrajectories() {
-		if (trajs_ == null || trajs_.size() == 0) {
-			return null;
-		} else 
-			return trajs_;
+//	Vector<Trajectory> getTrajectories() {
+//		if (trajs_ == null || trajs_.size() == 0) {
+//			return null;
+//		} else 
+//			return trajs_;
+//	}
+
+	public Trajectory getTrjectoryByIndex(int i) {
+		return trajs_.get(i);
 	}
 
-	public void setTrajectories(Vector<Trajectory> trajs) {
-		trajs_ = trajs;
-	}
-	
-	public Vector<SmNode> getNodes() {
-		if (nodes_ == null || nodes_.size() == 0 )
-			return null;
-		else
-			return nodes_;
-	}
-	
-	public void setNodes(Vector<SmNode> nodes) {
-		nodes_ = nodes;
+	public int getSize() {
+		return trajs_.size();
 	}
 
-	public void buildTrajectoriesFromNodes() {
-		if (getNodes() == null) {
-			return;
-		}
-		
-		Tracker tracker = new Tracker(this);
-		tracker.doTracking();
-	}
+//	public void setTrajectories(Vector<Trajectory> trajs) {
+//		trajs_ = trajs;
+//	}
 	
-	public void writePositionsToText(File file) throws IOException {
-		BufferedWriter bw = new BufferedWriter(new FileWriter(file));
-		for (int i = 0; i < nodes_.size(); i ++ ) {
-				SmNode s = nodes_.get(i);
-				bw.write(String.format("%f, %f, %d, %f\n", s.x, s.y, s.frame, s.reserved));				
-		}
-		bw.close();		
-	}
+//	Vector<SmNode> getNodes() {
+//		if (nodes_ == null || nodes_.size() == 0 )
+//			return null;
+//		else
+//			return nodes_;
+//	}
+	
+//	public void setNodes(Vector<SmNode> nodes) {
+//		nodes_ = nodes;
+//	}
+
+//	public void writePositionsToText(File file) throws IOException {
+//		BufferedWriter bw = new BufferedWriter(new FileWriter(file));
+//		for (int i = 0; i < nodes_.size(); i ++ ) {
+//				SmNode s = nodes_.get(i);
+//				bw.write(String.format("%f, %f, %d, %f\n", s.x, s.y, s.frame, s.reserved));				
+//		}
+//		bw.close();		
+//	}
 
 	public void writeTrajectoriesToText(File file)throws IOException {
 		BufferedWriter bw = new BufferedWriter(new FileWriter(file));
@@ -117,20 +115,17 @@ public class TrajDataset implements Serializable{
 	}
 
 	static public TrajDataset importDatasetFromPositionsText(File file) throws IOException {
-		
-		TrajDataset dataset = new TrajDataset();
-
 		BufferedReader br;
 		String line;
-		
+		ArrayList<SmNode> nodes = new ArrayList<SmNode>(); 
 		br = new BufferedReader(new FileReader(file));
 		while (null != (line = br.readLine())) {
 			SmNode node = new SmNode(line);
-			dataset.nodes_.add(node);
+			nodes.add(node);
 		}
 		br.close();
 		
-		return dataset;
+		return createDatasetFromNodes((SmNode []) nodes.toArray());
 	}
 	
 	static public TrajDataset importDatasetFromTrajectoriesText(File file) throws IOException {
@@ -154,12 +149,22 @@ public class TrajDataset implements Serializable{
 			}
 			SmNode node = new SmNode(line.substring(0, c)); 
 			oneTraj.add(node);
-			dataset.nodes_.add(node);
+			//dataset.nodes_.add(node);
 		}
 
 		br.close();
 		assert (dataset.trajs_.size() > 0);	
 		
 		return dataset;
+	}
+	
+	static public TrajDataset createDatasetFromNodes(SmNode [] nodes) {
+		TrajDataset dataset;
+		
+		dataset = new TrajDataset();
+		Tracker tracker = new Tracker(nodes);
+		tracker.doTracking();
+		dataset.trajs_ = tracker.getTracks();
+		return dataset;		
 	}
 }

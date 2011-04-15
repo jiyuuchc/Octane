@@ -279,7 +279,7 @@ public class BrowserWindow extends JFrame {
 		constraints.weightx = 0.3;
 		constraints.weighty = 1.0;
 		final JScrollPane trajsPane = new JScrollPane();
-		trajsTable_ = new TrajsTable(browser_.getTrajectories());
+		trajsTable_ = new TrajsTable(browser_.getData());
 		trajsTable_.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
 				if (e.getClickCount() == 2 ) {
@@ -362,7 +362,7 @@ public class BrowserWindow extends JFrame {
 	void populateNodesTable() {
 		if (trajsTable_.getSelectedRowCount() > 0) {
 			int index = getSelectedTrajectoryIndex();
-			nodesTable_.setData(browser_.getTrajectories().get(index));
+			nodesTable_.setData(browser_.getData().getTrjectoryByIndex(index));
 		} else {
 			nodesTable_.setData(null);
 		}
@@ -426,7 +426,7 @@ public class BrowserWindow extends JFrame {
 	}
 
 	public void updateNewData() {
-		trajsTable_.setData(browser_.getTrajectories());
+		trajsTable_.setData(browser_.getData());
 	}
 	
 	@Override

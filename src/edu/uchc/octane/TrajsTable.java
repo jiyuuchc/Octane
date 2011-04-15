@@ -32,7 +32,8 @@ public class TrajsTable extends JTable {
 	private static String[] ColumnNames_ = { "Frame", "Len", "Marked","Notes"};
 	private static Class<?> [] ColumnClasses_ = {Integer.class, Integer.class, Boolean.class, String.class};
 	
-	private Vector<Trajectory> data_ = null;
+	private TrajDataset data_ = null;
+//	private Vector<Trajectory> data_ = null;
 	private boolean [] isVisible_;
 	private Model model_;
 
@@ -45,12 +46,12 @@ public class TrajsTable extends JTable {
 
 		@Override
 		public int getRowCount() {
-			return data_.size();
+			return data_.getSize();
 		}
 
 		@Override
 		public Object getValueAt(int rowIndex, int colIndex) {
-			Trajectory traj = data_.get(rowIndex);
+			Trajectory traj = data_.getTrjectoryByIndex(rowIndex);
 			switch (colIndex) {
 			case 0:
 				return traj.get(0).frame;
@@ -86,15 +87,15 @@ public class TrajsTable extends JTable {
 		@Override
 		public void setValueAt(Object value, int row, int col) {
 			if (col == 3) {
-				data_.get(row).note = (String) value;
+				data_.getTrjectoryByIndex(row).note = (String) value;
 			} else if (col == 2) {
-				data_.get(row).marked = (Boolean)value;
+				data_.getTrjectoryByIndex(row).marked = (Boolean)value;
 			}
 		}
 
 	}
 
-	public TrajsTable(Vector<Trajectory> data) {
+	public TrajsTable(TrajDataset data) {
 		super();
 
 		setData(data);
@@ -113,7 +114,7 @@ public class TrajsTable extends JTable {
 			@Override
 			public boolean include(
 					javax.swing.RowFilter.Entry<? extends Model, ? extends Integer> entry) {
-				return isVisible_[entry.getIdentifier()] && !data_.get(entry.getIdentifier()).deleted;
+				return isVisible_[entry.getIdentifier()] && !data_.getTrjectoryByIndex(entry.getIdentifier()).deleted;
 			}
 		});
 
@@ -122,9 +123,9 @@ public class TrajsTable extends JTable {
 		getColumnModel().getColumn(2).setPreferredWidth(30);
 	}
 
-	public void setData(Vector<Trajectory> data) {
+	public void setData(TrajDataset data) {
 		data_ = data;
-		isVisible_ = new boolean[data.size()];
+		isVisible_ = new boolean[data.getSize()];
 		Arrays.fill(isVisible_, true);
 		clearSelection();
 		tableDataChanged();
@@ -143,7 +144,7 @@ public class TrajsTable extends JTable {
 			rows[i] = convertRowIndexToModel(rows[i]);
 		}
 		for (int i = 0; i < rows.length; i++) {		
-			Trajectory v = data_.get(rows[i]);
+			Trajectory v = data_.getTrjectoryByIndex(rows[i]);
 			if (v.marked == false) {
 				v.marked = true;
 				acted = true;
@@ -151,7 +152,7 @@ public class TrajsTable extends JTable {
 		}
 		if (!acted) {
 			for (int i = 0; i < rows.length; i++) {
-				data_.get(rows[i]).marked = false;
+				data_.getTrjectoryByIndex(rows[i]).marked = false;
 			}
 		}
 		model_.fireTableRowsUpdated(0,model_.getRowCount()-1);
@@ -159,9 +160,8 @@ public class TrajsTable extends JTable {
 
 	public void hideUnmarked() {
 		int cnt = 0;
-		Iterator<Trajectory> itr = data_.iterator();
-		while (itr.hasNext()) {
-			isVisible_[cnt ++] = itr.next().marked; 
+		for (int i=0; i < data_.getSize(); i++) {
+			isVisible_[cnt ++] = data_.getTrjectoryByIndex(i).marked; 
 		}
 		model_.fireTableDataChanged();
 	}

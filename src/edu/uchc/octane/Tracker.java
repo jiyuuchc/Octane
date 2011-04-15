@@ -19,6 +19,7 @@ package edu.uchc.octane;
 
 import ij.IJ;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.ListIterator;
@@ -44,76 +45,84 @@ public class Tracker {
 
 	public class XytData {
 		
-		double [][][] data_;
-		LinkedList<Integer> frameLength_;
+		//double [][][] data_;
+		SmNode [][] data_;
+		int [] frameLength_;
 		static final int MAX_PARTICLES_PER_FRAME = 10000;
 		
 		public XytData() {
 			// 
 		}
-		
-		public void buildFromNodes(Vector<SmNode> nodes) {
-			frameLength_ = new LinkedList<Integer>();
-			for (int i = 0; i < nodes.size(); i++) {
-				SmNode s = nodes.get(i);
+
+		public void buildFromNodes(SmNode [] nodes) {
+			int maxFrame = -1;
+			for ( int i = 0; i < nodes.length; i ++) {
+				if (nodes[i].frame > maxFrame) {
+					maxFrame = nodes[i].frame;
+				}
+			}
+			frameLength_ = new int[maxFrame];
+			Arrays.fill(frameLength_, 0);
+			for (int i = 0; i < nodes.length; i++) {
+				SmNode s = nodes[i];
 				if (s.reserved < Prefs.residueThreshold_) {
-					while (s.frame >= frameLength_.size()) {
-						frameLength_.add(0);
-					}
-					frameLength_.set(s.frame, frameLength_.get(s.frame)+1);
+					frameLength_[s.frame - 1]++;
 				}
 			}
 
-			data_ = new double[frameLength_.size()][][];
-			for (int i = 0; i < frameLength_.size(); i++ ) {
-				data_[i] = new double[frameLength_.get(i)][3];
-				frameLength_.set(i,0);
+			//data_ = new double[frameLength_.size()][][];
+			data_ = new SmNode[frameLength_.length][];
+			for (int i = 0; i < frameLength_.length; i++ ) {
+				//data_[i] = new double[frameLength_.get(i)][3];
+				data_[i] = new SmNode[frameLength_[i]];
 			}
-			
-			for (int i = 0; i < nodes.size(); i++) {
-				SmNode s = nodes.get(i);
+			Arrays.fill(frameLength_, 0);
+
+			for (int i = 0; i < nodes.length; i++) {
+				SmNode s = nodes[i];
 				if (s.reserved < Prefs.residueThreshold_) {
-					int cnt = frameLength_.get(s.frame);
-					data_[s.frame][cnt][0] = s.x;
-					data_[s.frame][cnt][1] = s.y;
-					data_[s.frame][cnt][2] = s.reserved;
-					frameLength_.set(s.frame, frameLength_.get(s.frame) + 1);
+					int cnt = frameLength_[s.frame-1];
+//					data_[s.frame][cnt][0] = s.x;
+//					data_[s.frame][cnt][1] = s.y;
+//					data_[s.frame][cnt][2] = s.reserved;
+					data_[s.frame - 1][cnt] = s;
+					frameLength_[s.frame - 1]++;
 				}
 			}
 		}
 
-		public void buildFromTrajectories(Vector<Trajectory> trajs) {
-			frameLength_ = new LinkedList<Integer>();
-			
-			for (int i = 0; i < trajs.size(); i ++ ) {
-				Trajectory traj = trajs.get(i);
-				for ( int j = 0; j < traj.size(); j++) {
-					int frame = traj.get(j).frame - 1;
-					while (frame >= frameLength_.size()) {
-						frameLength_.add(0);
-					}
-					frameLength_.set(frame, frameLength_.get(frame) + 1);
-				}
-			}
-			
-			data_ = new double[frameLength_.size()][][];
-			for (int i = 0; i < frameLength_.size(); i++ ) {
-				data_[i] = new double[frameLength_.get(i)][3];
-				frameLength_.set(i,0);
-			}
-
-			for (int i = 0; i < trajs.size(); i++) {
-				Trajectory traj = trajs.get(i);
-				for ( int j = 0; j < traj.size(); j++) {
-					int frame = traj.get(j).frame - 1;
-					int cnt = frameLength_.get(frame);
-					data_[frame][cnt][0] = traj.get(j).x;
-					data_[frame][cnt][1] = traj.get(j).y;
-					data_[frame][cnt][2] = traj.get(j).reserved;
-					frameLength_.set(frame, frameLength_.get(frame) + 1);
-				}
-			}
-		}
+//		public void buildFromTrajectories(Vector<Trajectory> trajs) {
+//			frameLength_ = new LinkedList<Integer>();
+//			
+//			for (int i = 0; i < trajs.size(); i ++ ) {
+//				Trajectory traj = trajs.get(i);
+//				for ( int j = 0; j < traj.size(); j++) {
+//					int frame = traj.get(j).frame - 1;
+//					while (frame >= frameLength_.size()) {
+//						frameLength_.add(0);
+//					}
+//					frameLength_.set(frame, frameLength_.get(frame) + 1);
+//				}
+//			}
+//			
+//			data_ = new double[frameLength_.size()][][];
+//			for (int i = 0; i < frameLength_.size(); i++ ) {
+//				data_[i] = new double[frameLength_.get(i)][3];
+//				frameLength_.set(i,0);
+//			}
+//
+//			for (int i = 0; i < trajs.size(); i++) {
+//				Trajectory traj = trajs.get(i);
+//				for ( int j = 0; j < traj.size(); j++) {
+//					int frame = traj.get(j).frame - 1;
+//					int cnt = frameLength_.get(frame);
+//					data_[frame][cnt][0] = traj.get(j).x;
+//					data_[frame][cnt][1] = traj.get(j).y;
+//					data_[frame][cnt][2] = traj.get(j).reserved;
+//					frameLength_.set(frame, frameLength_.get(frame) + 1);
+//				}
+//			}
+//		}
 		
 //		public XytData(File file) {
 //			try {
@@ -165,27 +174,30 @@ public class Tracker {
 		}
 
 		public double getDistance2(int idx1, int idx2) {
-			int f1 = idx1/MAX_PARTICLES_PER_FRAME ;
-			int f2 = idx2/MAX_PARTICLES_PER_FRAME ;
+			int f1 = idx2Frame(idx1);
+			int f2 = idx2Frame(idx2);
 
 			//if (f1 - f2 != 1 && f1 - f2 != -1) {
 			//	return threshold2_;
 			//}
 
-			double [] c1 = data_[f1][idx1%MAX_PARTICLES_PER_FRAME];
-			double [] c2 = data_[f2][idx2%MAX_PARTICLES_PER_FRAME];
-			
-			return (c1[0]-c2[0])*(c1[0]-c2[0]) +(c1[1]-c2[1])*(c1[1]-c2[1]); 
+//			double [] c1 = data_[f1][idx1%MAX_PARTICLES_PER_FRAME];
+//			double [] c2 = data_[f2][idx2%MAX_PARTICLES_PER_FRAME];
+			SmNode c1 = data_[f1][idx1%MAX_PARTICLES_PER_FRAME];
+			SmNode c2 = data_[f2][idx2%MAX_PARTICLES_PER_FRAME];
+
+//			return (c1[0]-c2[0])*(c1[0]-c2[0]) +(c1[1]-c2[1])*(c1[1]-c2[1]); 
+			return (c1.x - c2.x)*(c1.x - c2.x) + (c1.y - c2.y)*(c1.y - c2.y); 
 		}
-		
+
 		public int getNumFrames() {
 			return data_.length;
 		}
-		
-		int getFrameFromIdx(int idx) {
+
+		int idx2Frame(int idx) {
 			return idx / MAX_PARTICLES_PER_FRAME;
 		}
-		
+
 //		void writeToDisk(File file) throws IOException {
 //			BufferedWriter bw = new BufferedWriter(new FileWriter(file));
 //			int cnt = 0;
@@ -204,7 +216,7 @@ public class Tracker {
 //			bw.close(); 
 //		} // writeToDisk
 		
-		Vector<Trajectory> createTrajs() {
+		public Vector<Trajectory> createTrajs() {
 			Vector<Trajectory> trajs = new Vector<Trajectory>() ;
 			
 			for (Iterator <LinkedList<Integer>> it = stoppedTracks_.iterator(); it.hasNext(); ) {
@@ -213,20 +225,21 @@ public class Tracker {
 				LinkedList<Integer> track = it.next();
 				for (Iterator <Integer> it2 = track.iterator(); it2.hasNext();) {
 					int idx = it2.next();
-					int frame = getFrameFromIdx(idx);
+					int frame = idx2Frame(idx);
 					int n = idx - getFirstOfFrame(frame);
-					double [] c = data_[frame][n];
-					oneTraj.add(new SmNode(c[0], c[1], frame + 1, c[2]));
+					//double [] c = data_[frame][n];
+					SmNode c = data_[frame][n];
+					//oneTraj.add(new SmNode(c[0], c[1], frame + 1, c[2]));
+					oneTraj.add(c);
 				}				
 			}
 			return trajs;
 		}
 	}
 
-	public Tracker(TrajDataset dataset) {
-		dataset_ = dataset;
+	public Tracker(SmNode [] nodes) {
 		xytData_ = new XytData();
-		xytData_.buildFromNodes(dataset.getNodes());
+		xytData_.buildFromNodes(nodes);
 	}
 
 //	public Tracker(Vector<Trajectory> trajs, double max_search_r, int frame_skip_allowed) {
@@ -440,7 +453,7 @@ public class Tracker {
 			for ( Iterator<LinkedList<Integer>> it = tracks_.iterator(); it.hasNext(); ) {
 				LinkedList<Integer> track = it.next();
 				if (track.getLast() > 0) {
-					int frame = xytData_.getFrameFromIdx((track.getLast()));
+					int frame = xytData_.idx2Frame((track.getLast()));
 					if (curFrame_ - frame > maxBlinking_) {
 						it.remove();
 						stoppedTracks_.add(track);
@@ -472,8 +485,10 @@ public class Tracker {
 			stoppedTracks_.add(track);
 		}
 		tracks_.clear();
-		
-		dataset_.setTrajectories(xytData_.createTrajs());
 
 	} //doTracking
+	
+	public Vector<Trajectory> getTracks() {
+		return xytData_.createTrajs();
+	}
 }

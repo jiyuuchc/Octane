@@ -296,11 +296,11 @@ public class PeakFinder {
 		}
 	}
 
-	public Vector<SmNode> getCurrentNodes(int frame) {
-		Vector<SmNode> nodes;
-		nodes = new Vector<SmNode>();
+	public SmNode[] getCurrentNodes(int frame) {
+		SmNode [] nodes;
+		nodes = new SmNode[nMaxima_];
 		for ( int i = 0; i < nMaxima_; i ++) {
-			nodes.add(new SmNode(xArray_[i], yArray_[i], frame, residue_[i]));
+			nodes[i] = new SmNode(xArray_[i], yArray_[i], frame, residue_[i]);
 		}
 		return nodes;
 	}
