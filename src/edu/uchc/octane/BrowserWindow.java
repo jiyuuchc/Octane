@@ -174,23 +174,23 @@ public class BrowserWindow extends JFrame {
 			}
 		});
 
-		item = new JMenuItem("Flow Map");
-		processMenu.add(item);
-		item.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e){
-				browser_.constructFlowMap();
-			}
-		});
-
-		item = new JMenuItem("Mobility Map");
-		processMenu.add(item);
-		item.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e){
-				browser_.constructMobilityMap();
-			}
-		});
+//		item = new JMenuItem("Flow Map");
+//		processMenu.add(item);
+//		item.addActionListener(new ActionListener() {
+//			@Override
+//			public void actionPerformed(ActionEvent e){
+//				browser_.constructFlowMap();
+//			}
+//		});
+//
+//		item = new JMenuItem("Mobility Map");
+//		processMenu.add(item);
+//		item.addActionListener(new ActionListener() {
+//			@Override
+//			public void actionPerformed(ActionEvent e){
+//				browser_.constructMobilityMap();
+//			}
+//		});
 
 		item = new JMenuItem("PALM");
 		processMenu.add(item);
@@ -201,14 +201,14 @@ public class BrowserWindow extends JFrame {
 			}
 		});
 
-		item = new JMenuItem("IFS");
-		processMenu.add(item);
-		item.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e){
-				browser_.constructIFS();
-			}
-		});
+//		item = new JMenuItem("IFS");
+//		processMenu.add(item);
+//		item.addActionListener(new ActionListener() {
+//			@Override
+//			public void actionPerformed(ActionEvent e){
+//				browser_.constructIFS();
+//			}
+//		});
 		
 		processMenu.addSeparator();
 		
