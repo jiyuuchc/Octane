@@ -28,6 +28,8 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.ClipboardOwner;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseAdapter;
 import java.awt.geom.GeneralPath;
 import java.io.File;
 import java.io.IOException;
@@ -43,6 +45,7 @@ import ij.ImageStack;
 import ij.gui.HistogramWindow;
 import ij.gui.ImageCanvas;
 import ij.gui.Plot;
+import ij.gui.PointRoi;
 import ij.gui.Roi;
 import ij.io.FileInfo;
 import ij.process.FloatProcessor;
@@ -90,6 +93,15 @@ public class Browser implements ClipboardOwner{
 		if (fi != null) {
 			path_ = fi.directory; 
 		} 
+		
+		imp.getCanvas().addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if (e.getClickCount() == 2 ) {
+					findMolecule();
+				}
+			}			
+		});
 	}
 
 	public BrowserWindow getWindow() {
@@ -105,18 +117,25 @@ public class Browser implements ClipboardOwner{
 		if (roi == null) {
 			return;
 		}
-		boolean firstSel = true;
-		for (int i = 0; i < dataset_.getSize(); i++) {
-			Trajectory t = dataset_.getTrjectoryByIndex(i);
-			for (int j = 0; j< t.size(); j++) {
-				if (roi.contains( (int)t.get(j).x, (int)t.get(j).y)) {
-					if (firstSel) {
-						browserWindow_.selectTrajectoriesByIndex(i);
-						firstSel = false;
-					} else {
-						browserWindow_.addTrajectoriesToSelection(i);
+		if (roi instanceof PointRoi && ((PointRoi) roi).getNCoordinates() == 1) {
+			int frame = imp_.getFrame();
+			int x = ((PointRoi) roi).getXCoordinates() [0];
+			int y = ((PointRoi) roi).getYCoordinates() [0];
+			findMolecule(x,y,frame);
+		} else {
+			boolean firstSel = true;
+			for (int i = 0; i < dataset_.getSize(); i++) {
+				Trajectory t = dataset_.getTrjectoryByIndex(i);
+				for (int j = 0; j< t.size(); j++) {
+					if (roi.contains( (int)t.get(j).x, (int)t.get(j).y)) {
+						if (firstSel) {
+							browserWindow_.selectTrajectoriesByIndex(i);
+							firstSel = false;
+						} else {
+							browserWindow_.addTrajectoriesToSelection(i);
+						}
+						break;
 					}
-					break;
 				}
 			}
 		}
@@ -137,26 +156,22 @@ public class Browser implements ClipboardOwner{
 		clipboard.setContents(contents, this);		
 	}
 
-	void findMolecule() {
-		ImageCanvas canvas = imp_.getCanvas();
-		Point p = canvas.getCursorLoc();
-		int frame = imp_.getSlice();
-		
+	void findMolecule(int x, int y, int f) {
 		int index = 0;
 		boolean found = false;
 		int lastIndex = dataset_.getSize();
 		while (!found && index < lastIndex) {
 			Trajectory t = dataset_.getTrjectoryByIndex(index);
-			if (t.get(0).frame <= frame && t.get(t.size()-1).frame >= frame) {
-				int fi = frame - t.get(0).frame;
+			if (t != null && t.size() > 0 && t.get(0).frame <= f && t.get(t.size()-1).frame >= f) {
+				int fi = f - t.get(0).frame;
 				if (fi >= t.size()) { 
 					fi = t.size() - 1;
 				}
-				while (t.get(fi).frame > frame) {
+				while (t.get(fi).frame > f) {
 					fi --;
 				}
-				if (t.get(fi).frame == frame) {
-					if ( Math.abs(t.get(fi).x - p.x) < 2.5 && Math.abs(t.get(fi).y - p.y) < 2.5) {
+				if (t.get(fi).frame == f) {
+					if ( Math.abs(t.get(fi).x - x) < 2.5 && Math.abs(t.get(fi).y - y) < 2.5) {
 						found = true;
 					}
 				}
@@ -165,7 +180,15 @@ public class Browser implements ClipboardOwner{
 		}
 		if (found) {
 			browserWindow_.selectTrajectoriesByIndex(index - 1);
-		}
+		}		
+	}
+	
+	void findMolecule() {
+		ImageCanvas canvas = imp_.getCanvas();
+		Point p = canvas.getCursorLoc();
+		int frame = imp_.getSlice();
+		
+		findMolecule(p.x, p.y, frame);
 	}
 
 /*	private FloatProcessor gaussianImage(ImageProcessor img) {

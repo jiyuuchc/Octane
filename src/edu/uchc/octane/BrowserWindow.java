@@ -328,6 +328,7 @@ public class BrowserWindow extends JFrame {
 		final JScrollPane trajsPane = new JScrollPane();
 		trajsTable_ = new TrajsTable(browser_.getData());
 		trajsTable_.addMouseListener(new MouseAdapter() {
+			@Override
 			public void mouseClicked(MouseEvent e) {
 				if (e.getClickCount() == 2 ) {
 					browser_.animate();
