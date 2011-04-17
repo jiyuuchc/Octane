@@ -371,7 +371,8 @@ public class BrowserWindow extends JFrame {
 		nodesTable_.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
-				browser_.drawBox();
+				if (!e.getValueIsAdjusting())
+					browser_.drawBox();
 			}
 		} );
 		nodesPane.setViewportView(nodesTable_);		
@@ -481,14 +482,22 @@ public class BrowserWindow extends JFrame {
 	 *
 	 * @param index the index
 	 */
-	public void selectTrajectoriesByIndex(int index) {
-		if (index < 0) {
+	public void selectTrajectoryByIndex(int index) {
+		selectTrajectoryAndNodeByIndex(index, 0);
+	}
+	
+	public void selectTrajectoryAndNodeByIndex(int trajIndex, int nodeIndex) {
+		if (trajIndex < 0) {
 			trajsTable_.clearSelection();
+			return;
 		}
-		int row = trajsTable_.convertRowIndexToView(index);
+		nodesTable_.getSelectionModel().setValueIsAdjusting(true);
+		int row = trajsTable_.convertRowIndexToView(trajIndex);
 		trajsTable_.setRowSelectionInterval(row,row);
 		Rectangle r = trajsTable_.getCellRect(row, 0, true);
 		trajsTable_.scrollRectToVisible(r);
+		nodesTable_.setRowSelectionInterval(nodeIndex,nodeIndex);
+		nodesTable_.getSelectionModel().setValueIsAdjusting(true);
 	}
 	
 	/**

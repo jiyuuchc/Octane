@@ -170,7 +170,10 @@ public class GaussianRefiner implements SubPixelRefiner, DifferentiableMultivari
 //			System.out.println();
 //		}
 //		System.out.println();
-		
+		if (parameters_[2] < 0) {
+			return -3;
+		}
+
 		return 0;
 	}
 	

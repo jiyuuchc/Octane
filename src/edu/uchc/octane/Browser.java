@@ -167,7 +167,7 @@ public class Browser implements ClipboardOwner{
 				for (int j = 0; j< t.size(); j++) {
 					if (roi.contains( (int)t.get(j).x, (int)t.get(j).y)) {
 						if (firstSel) {
-							browserWindow_.selectTrajectoriesByIndex(i);
+							browserWindow_.selectTrajectoryByIndex(i);
 							firstSel = false;
 						} else {
 							browserWindow_.addTrajectoriesToSelection(i);
@@ -196,12 +196,13 @@ public class Browser implements ClipboardOwner{
 
 	void findMolecule(int x, int y, int f) {
 		int index = 0;
+		int fi = 0;
 		boolean found = false;
 		int lastIndex = dataset_.getSize();
 		while (!found && index < lastIndex) {
 			Trajectory t = dataset_.getTrajectoryByIndex(index);
 			if (t != null && t.size() > 0 && t.get(0).frame <= f && t.get(t.size()-1).frame >= f) {
-				int fi = f - t.get(0).frame;
+				fi = f - t.get(0).frame;
 				if (fi >= t.size()) { 
 					fi = t.size() - 1;
 				}
@@ -217,7 +218,7 @@ public class Browser implements ClipboardOwner{
 			index ++;
 		}
 		if (found) {
-			browserWindow_.selectTrajectoriesByIndex(index - 1);
+			browserWindow_.selectTrajectoryAndNodeByIndex(index - 1 , fi);
 		}		
 	}
 	
@@ -487,7 +488,7 @@ public class Browser implements ClipboardOwner{
 	 * @param b select marked if true, unmarked if false
 	 */
 	public void selectMarked(boolean b) {
-		browserWindow_.selectTrajectoriesByIndex(-1); //clear selection
+		browserWindow_.selectTrajectoryByIndex(-1); //clear selection
 		for (int i = 0; i < dataset_.getSize(); i++) {
 			if (dataset_.getTrajectoryByIndex(i).marked == b) {
 				browserWindow_.addTrajectoriesToSelection(i);
