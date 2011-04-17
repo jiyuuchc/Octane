@@ -26,7 +26,6 @@ import org.apache.commons.math.linear.QRDecompositionImpl;
 import org.apache.commons.math.linear.RealVector;
 
 
-// TODO: Auto-generated Javadoc
 /**
  * Subpixel fitting the peak using polynomial functions with Guassian weighting function.
  */
@@ -39,8 +38,6 @@ public class PFGWResolver implements SubPixelResolver {
 	double x_out, y_out, h_out;
 
 	final double sigma_2 = 2;
-
-	final int kernelSize_ = 2;
 
 	final int poly_order = 2;
 
@@ -56,7 +53,7 @@ public class PFGWResolver implements SubPixelResolver {
 
 	double bg_;
 
-	int numPixels = (kernelSize_ * 2 + 1) * (kernelSize_ * 2 + 1);
+	int numPixels = (Prefs.kernelSize_ * 2 + 1) * (Prefs.kernelSize_ * 2 + 1);
 
 	ArrayRealVector xps = new ArrayRealVector(numPixels);
 
@@ -80,28 +77,28 @@ public class PFGWResolver implements SubPixelResolver {
 	 protected void polyfitgaussweight(double x, double y) {
 		 int x0_ , y0_;
 		 double xp, yp;
-		 if (x < kernelSize_) {
-			 x0_ = kernelSize_;
-		 } else if (x >= frame_.getWidth() - kernelSize_) {
-			 x0_ = frame_.getWidth() - kernelSize_ - 1;
+		 if (x < Prefs.kernelSize_) {
+			 x0_ = Prefs.kernelSize_;
+		 } else if (x >= frame_.getWidth() - Prefs.kernelSize_) {
+			 x0_ = frame_.getWidth() - Prefs.kernelSize_ - 1;
 		 } else { 
 			 x0_ = (int) x;
 		 }
 		 xp = x0_ + .5 - x;
 
-		 if (y < kernelSize_) {
-			 y0_ = kernelSize_;
-		 } else if (y >= frame_.getHeight() - kernelSize_) {
-			 y0_ = frame_.getHeight() - kernelSize_ - 1;
+		 if (y < Prefs.kernelSize_) {
+			 y0_ = Prefs.kernelSize_;
+		 } else if (y >= frame_.getHeight() - Prefs.kernelSize_) {
+			 y0_ = frame_.getHeight() - Prefs.kernelSize_ - 1;
 		 } else { 
 			 y0_ = (int) y;
 		 }
 		 yp = y0_ + .5 - y;
 
 		 int i = 0;
-		 for (int xi = -kernelSize_; xi <= kernelSize_; xi++) {
+		 for (int xi = -Prefs.kernelSize_; xi <= Prefs.kernelSize_; xi++) {
 			 double xd = xp + xi;
-			 for (int yi = -kernelSize_; yi <= kernelSize_; yi++) {
+			 for (int yi = -Prefs.kernelSize_; yi <= Prefs.kernelSize_; yi++) {
 				 double yd = yp + yi;
 				 double w = Math.exp(-(xd * xd + yd * yd) / sigma_2);
 				 xps.setEntry(i, xd);
@@ -210,6 +207,6 @@ public class PFGWResolver implements SubPixelResolver {
 	  */
 	 @Override
 	 public double getResidue() {
-		 return residue_ /(2 * kernelSize_ + 1) / (2 * kernelSize_ + 1);
+		 return residue_ /(2 * Prefs.kernelSize_ + 1) / (2 * Prefs.kernelSize_ + 1);
 	 }
 }

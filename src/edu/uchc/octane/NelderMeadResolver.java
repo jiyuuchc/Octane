@@ -31,9 +31,7 @@ import ij.process.ImageProcessor;
  * A refiner using NelderMead fitting algrithm.
  */
 public class NelderMeadResolver implements SubPixelResolver, MultivariateRealFunction {
-	
-	static final int kernelSize_ = 3;
-	
+		
 	static final double defaultH_ = 200.0;
 	
 	static final double sigma2_ = 1.73;
@@ -89,20 +87,20 @@ public class NelderMeadResolver implements SubPixelResolver, MultivariateRealFun
 	 */
 	@Override
 	public int refine(double x, double y) {
-		//int w = 1 + 2 * kernelSize_;
-		if (x < kernelSize_) {
-			x0_ = kernelSize_;
-		} else if (x >= ip_.getWidth() - kernelSize_) {
-			x0_ = ip_.getWidth() - kernelSize_ - 1;
+		//int w = 1 + 2 * Prefs.kernelSize_;
+		if (x < Prefs.kernelSize_) {
+			x0_ = Prefs.kernelSize_;
+		} else if (x >= ip_.getWidth() - Prefs.kernelSize_) {
+			x0_ = ip_.getWidth() - Prefs.kernelSize_ - 1;
 		} else { 
 			x0_ = (int) x;
 		}
 		parameters_[0] = x0_ + .5 - x;
 
-		if (y < kernelSize_) {
-			y0_ = kernelSize_;
-		} else if (y >= ip_.getHeight() - kernelSize_) {
-			y0_ = ip_.getHeight() - kernelSize_ - 1;
+		if (y < Prefs.kernelSize_) {
+			y0_ = Prefs.kernelSize_;
+		} else if (y >= ip_.getHeight() - Prefs.kernelSize_) {
+			y0_ = ip_.getHeight() - Prefs.kernelSize_ - 1;
 		} else { 
 			y0_ = (int) y;
 		}
@@ -121,9 +119,9 @@ public class NelderMeadResolver implements SubPixelResolver, MultivariateRealFun
 		}
 
 		// report
-//		double hw = 0.5 + kernelSize_;
-//		for (int xi = - kernelSize_; xi <= kernelSize_; xi++) {
-//			for (int yi = - kernelSize_; yi <= kernelSize_; yi++) {
+//		double hw = 0.5 + Prefs.kernelSize_;
+//		for (int xi = - Prefs.kernelSize_; xi <= Prefs.kernelSize_; xi++) {
+//			for (int yi = - Prefs.kernelSize_; yi <= Prefs.kernelSize_; yi++) {
 //				double xp = Math.sin(parameters_[0]) * hw;
 //				double yp = Math.sin(parameters_[1]) * hw;
 //				System.out.printf("%3d(%5f)\t", ip_.get(x0_ + xi, y0_ + yi), parameters_[2] * gauss(xp + xi) * gauss( yp + yi) + parameters_[3]);
@@ -190,8 +188,8 @@ public class NelderMeadResolver implements SubPixelResolver, MultivariateRealFun
 			return 1e10;
 		}
 		
-		for (int xi = - kernelSize_; xi <= kernelSize_; xi++) {
-			for (int yi = - kernelSize_; yi <= kernelSize_; yi++) {
+		for (int xi = - Prefs.kernelSize_; xi <= Prefs.kernelSize_; xi++) {
+			for (int yi = - Prefs.kernelSize_; yi <= Prefs.kernelSize_; yi++) {
 				double g = gauss(xp + xi)* gauss(yp + yi);
 				double v = (double)(ip_.get(x0_ + xi , y0_ + yi)) - bg - h*g;
 				r += v * v;

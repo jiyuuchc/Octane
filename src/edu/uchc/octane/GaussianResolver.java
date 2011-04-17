@@ -44,8 +44,6 @@ import ij.process.ImageProcessor;
  */
 public class GaussianResolver implements SubPixelResolver, DifferentiableMultivariateRealFunction {
 	
-	static final int kernelSize_ = 3;
-	
 	static final double defaultH_ = 200.0;
 	
 	static final double sigma2_ = 1.73;
@@ -53,9 +51,9 @@ public class GaussianResolver implements SubPixelResolver, DifferentiableMultiva
 	//static double [] gaussLookupTable_;
 	
 //	static {
-//		gaussLookupTable_ = new double[(kernelSize_ * 2 + 1) * 100];
+//		gaussLookupTable_ = new double[(Prefs.kernelSize_ * 2 + 1) * 100];
 //		//IJ.log("starting building index...");
-//		for (int i = 0 ; i < (kernelSize_ * 2 + 1) * 100; i ++ ) {
+//		for (int i = 0 ; i < (Prefs.kernelSize_ * 2 + 1) * 100; i ++ ) {
 //			gaussLookupTable_[i] = Math.exp(- (i * i) / (sigma2_ * 10000));
 //		}
 //		//IJ.log("Finishing building index...");
@@ -103,7 +101,7 @@ public class GaussianResolver implements SubPixelResolver, DifferentiableMultiva
 		//j_ = new Jacobian();
 		
 		gradients_ = new double[parameters_.length];
-		//weight_ = new double[(kernelSize_ * 2 + 1)*(kernelSize_ * 2 + 1)];
+		//weight_ = new double[(Prefs.kernelSize_ * 2 + 1)*(Prefs.kernelSize_ * 2 + 1)];
 		//Arrays.fill(weight_,1.0);
 	}
 	
@@ -127,20 +125,20 @@ public class GaussianResolver implements SubPixelResolver, DifferentiableMultiva
 	 */
 	@Override
 	public int refine(double x, double y) {
-		//int w = 1 + 2 * kernelSize_;
-		if (x < kernelSize_) {
-			x0_ = kernelSize_;
-		} else if (x >= ip_.getWidth() - kernelSize_) {
-			x0_ = ip_.getWidth() - kernelSize_ - 1;
+		//int w = 1 + 2 * Prefs.kernelSize_;
+		if (x < Prefs.kernelSize_) {
+			x0_ = Prefs.kernelSize_;
+		} else if (x >= ip_.getWidth() - Prefs.kernelSize_) {
+			x0_ = ip_.getWidth() - Prefs.kernelSize_ - 1;
 		} else { 
 			x0_ = (int) x;
 		}
 		parameters_[0] = x0_ + .5 - x;
 
-		if (y < kernelSize_) {
-			y0_ = kernelSize_;
-		} else if (y >= ip_.getHeight() - kernelSize_) {
-			y0_ = ip_.getHeight() - kernelSize_ - 1;
+		if (y < Prefs.kernelSize_) {
+			y0_ = Prefs.kernelSize_;
+		} else if (y >= ip_.getHeight() - Prefs.kernelSize_) {
+			y0_ = ip_.getHeight() - Prefs.kernelSize_ - 1;
 		} else { 
 			y0_ = (int) y;
 		}
@@ -160,9 +158,9 @@ public class GaussianResolver implements SubPixelResolver, DifferentiableMultiva
 		}
 
 		// report
-//		double hw = 0.5 + kernelSize_;
-//		for (int xi = - kernelSize_; xi <= kernelSize_; xi++) {
-//			for (int yi = - kernelSize_; yi <= kernelSize_; yi++) {
+//		double hw = 0.5 + Prefs.kernelSize_;
+//		for (int xi = - Prefs.kernelSize_; xi <= Prefs.kernelSize_; xi++) {
+//			for (int yi = - Prefs.kernelSize_; yi <= Prefs.kernelSize_; yi++) {
 //				double xp = Math.sin(parameters_[0]) * hw;
 //				double yp = Math.sin(parameters_[1]) * hw;
 //				System.out.printf("%3d(%5f)\t", ip_.get(x0_ + xi, y0_ + yi), parameters_[2] * gauss(xp + xi) * gauss( yp + yi) + parameters_[3]);
@@ -226,7 +224,7 @@ public class GaussianResolver implements SubPixelResolver, DifferentiableMultiva
 	 */
 	@Override
 	public double value(double[] p) throws FunctionEvaluationException,IllegalArgumentException {
-		//double hw = 0.5 + kernelSize_;
+		//double hw = 0.5 + Prefs.kernelSize_;
 		double xp = p[0];
 		double yp = p[1];
 		double h = p[2];
@@ -234,8 +232,8 @@ public class GaussianResolver implements SubPixelResolver, DifferentiableMultiva
 		
 		double r = 0;
 		Arrays.fill(gradients_, 0);
-		for (int xi = - kernelSize_; xi <= kernelSize_; xi++) {
-			for (int yi = - kernelSize_; yi <= kernelSize_; yi++) {
+		for (int xi = - Prefs.kernelSize_; xi <= Prefs.kernelSize_; xi++) {
+			for (int yi = - Prefs.kernelSize_; yi <= Prefs.kernelSize_; yi++) {
 				double g = gauss(xp + xi)* gauss(yp + yi);
 				double delta = bg + h*g - ip_.get(x0_ + xi , y0_ + yi);
 				r += delta * delta;
