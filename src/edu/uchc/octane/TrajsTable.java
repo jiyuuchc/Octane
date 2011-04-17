@@ -27,6 +27,9 @@ import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableRowSorter;
 import javax.swing.RowFilter;
 
+/**
+ * A table listing trajectories.
+ */
 public class TrajsTable extends JTable {
 
 	private static String[] ColumnNames_ = { "Frame", "Len", "Marked","Notes"};
@@ -51,7 +54,7 @@ public class TrajsTable extends JTable {
 
 		@Override
 		public Object getValueAt(int rowIndex, int colIndex) {
-			Trajectory traj = data_.getTrjectoryByIndex(rowIndex);
+			Trajectory traj = data_.getTrajectoryByIndex(rowIndex);
 			switch (colIndex) {
 			case 0:
 				return traj.get(0).frame;
@@ -87,14 +90,19 @@ public class TrajsTable extends JTable {
 		@Override
 		public void setValueAt(Object value, int row, int col) {
 			if (col == 3) {
-				data_.getTrjectoryByIndex(row).note = (String) value;
+				data_.getTrajectoryByIndex(row).note = (String) value;
 			} else if (col == 2) {
-				data_.getTrjectoryByIndex(row).marked = (Boolean)value;
+				data_.getTrajectoryByIndex(row).marked = (Boolean)value;
 			}
 		}
 
 	}
 
+	/**
+	 * Constructor.
+	 *
+	 * @param data the associated dataset
+	 */
 	public TrajsTable(TrajDataset data) {
 		super();
 
@@ -114,7 +122,7 @@ public class TrajsTable extends JTable {
 			@Override
 			public boolean include(
 					javax.swing.RowFilter.Entry<? extends Model, ? extends Integer> entry) {
-				return isVisible_[entry.getIdentifier()] && !data_.getTrjectoryByIndex(entry.getIdentifier()).deleted;
+				return isVisible_[entry.getIdentifier()] && !data_.getTrajectoryByIndex(entry.getIdentifier()).deleted;
 			}
 		});
 
@@ -123,6 +131,11 @@ public class TrajsTable extends JTable {
 		getColumnModel().getColumn(2).setPreferredWidth(30);
 	}
 
+	/**
+	 * Sets the data.
+	 *
+	 * @param data the new dataset
+	 */
 	public void setData(TrajDataset data) {
 		data_ = data;
 		isVisible_ = new boolean[data.getSize()];
@@ -131,12 +144,18 @@ public class TrajsTable extends JTable {
 		tableDataChanged();
 	}
 
+	/**
+	 * Update table to reflect new data.
+	 */
 	public void tableDataChanged() {
 		if (model_ != null ) {
 			model_.fireTableDataChanged();
 		}		
 	}
 
+	/**
+	 * Reverse marks of all selected trjectories.
+	 */
 	public void reverseMarkOfSelected() {
 		boolean acted = false;
 		int [] rows = getSelectedRows();
@@ -144,7 +163,7 @@ public class TrajsTable extends JTable {
 			rows[i] = convertRowIndexToModel(rows[i]);
 		}
 		for (int i = 0; i < rows.length; i++) {		
-			Trajectory v = data_.getTrjectoryByIndex(rows[i]);
+			Trajectory v = data_.getTrajectoryByIndex(rows[i]);
 			if (v.marked == false) {
 				v.marked = true;
 				acted = true;
@@ -152,20 +171,26 @@ public class TrajsTable extends JTable {
 		}
 		if (!acted) {
 			for (int i = 0; i < rows.length; i++) {
-				data_.getTrjectoryByIndex(rows[i]).marked = false;
+				data_.getTrajectoryByIndex(rows[i]).marked = false;
 			}
 		}
 		model_.fireTableRowsUpdated(0,model_.getRowCount()-1);
 	}
 
+	/**
+	 * Hide all unmarked trajectories.
+	 */
 	public void hideUnmarked() {
 		int cnt = 0;
 		for (int i=0; i < data_.getSize(); i++) {
-			isVisible_[cnt ++] = data_.getTrjectoryByIndex(i).marked; 
+			isVisible_[cnt ++] = data_.getTrajectoryByIndex(i).marked; 
 		}
 		model_.fireTableDataChanged();
 	}
 
+	/**
+	 * Show all trajectories.
+	 */
 	public void showAll() {
 		Arrays.fill(isVisible_, true);
 		model_.fireTableDataChanged();

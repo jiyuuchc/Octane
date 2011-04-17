@@ -19,11 +19,26 @@ package edu.uchc.octane;
 
 import java.util.Vector;
 
+/**
+ * Represents a trajectory.
+ * It is a vector.
+ */
 public class Trajectory extends Vector<SmNode> {
+   
+   /** Whether it is marked. */
    public boolean marked = false;
+   
+   /** Whether it is already deleted. */
    public boolean deleted = false;
+   
+   /** A text note. */
    public String note = null;
 
+   /**
+    * Gets the length of the trajectory.
+    *
+    * @return the length
+    */
    public int getLength() {
 	   return get(size() - 1).frame - get(0).frame + 1;
    }

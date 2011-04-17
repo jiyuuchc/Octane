@@ -25,7 +25,12 @@ import java.awt.geom.GeneralPath;
 import java.util.Timer;
 import java.util.TimerTask;
 
+/**
+ * Manage trajectory animation.
+ */
 public class Animator {
+	
+	/** Time delay between each frame during animation */
 	final long ANIMATIONDELAY_ = 100;
 		
 	private boolean loop_;
@@ -34,10 +39,18 @@ public class Animator {
 	private int increment_ = 1; 
 	private Overlay overlay_;
 
+	/**
+	 * Constructor.
+	 *
+	 * @param imp the image to be animated
+	 */
 	public Animator(ImagePlus imp) {
 		imp_ = imp;
 	}
 	
+	/**
+	 * The animation task.
+	 */
 	class AnimateTimerTask extends TimerTask {
 		private Trajectory trajectory_;
 		private int firstFrame_;
@@ -54,6 +67,9 @@ public class Animator {
 			curIndex_ = 0;
 		}
 		
+		/* (non-Javadoc)
+		 * @see java.util.TimerTask#run()
+		 */
 		@Override
 		public void run() {
 			if (curFrame_ < firstFrame_){
@@ -90,10 +106,20 @@ public class Animator {
 		}
 	}
 
+	/**
+	 * Control whether animation loops.
+	 *
+	 * @param loop 
+	 */
 	void setLoop(boolean loop) {
 		loop_ = loop;
 	}	
 
+	/**
+	 * Start animation.
+	 *
+	 * @param traj the trajectory to be animated
+	 */
 	public void animate(Trajectory traj) {
 		stopAnimation();
 		increment_ = 1;
@@ -101,6 +127,9 @@ public class Animator {
 		animateTimer_.schedule(new AnimateTimerTask(traj), ANIMATIONDELAY_, ANIMATIONDELAY_);
 	}
 
+	/**
+	 * Stop animation.
+	 */
 	public void stopAnimation() {
 		if (animateTimer_ != null) {
 			animateTimer_.cancel();

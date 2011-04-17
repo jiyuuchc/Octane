@@ -23,6 +23,9 @@ import javax.swing.ListSelectionModel;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 
+/**
+ * Class NodesTable dispalys the individual nodes (positon, frame etc) of a trajectory.
+ */
 public class NodesTable extends JTable{
 
 	private static String[] ColumnNames_ = { "Frame", "X", "Y", "Q"};
@@ -30,6 +33,12 @@ public class NodesTable extends JTable{
 	
 	private Trajectory traj_ = null;
 	private Model model_;
+	
+	/**
+	 * Instantiates a new nodes table.
+	 *
+	 * @param traj the trajectory
+	 */
 	public NodesTable(Trajectory traj) {
 		super();
 
@@ -46,6 +55,11 @@ public class NodesTable extends JTable{
 		//getColumnModel().getColumn(2).setPreferredWidth(70);		
 	}
 
+	/**
+	 * Sets the trajectory data.
+	 *
+	 * @param traj the new trajectory data
+	 */
 	public void setData(Trajectory traj) {
 		traj_ = traj;
 		clearSelection();
@@ -53,6 +67,11 @@ public class NodesTable extends JTable{
 		//setRowSelectionInterval(0,0);
 	}
 
+	/**
+	 * Gets the data.
+	 *
+	 * @return the trajectory data
+	 */
 	public Trajectory getData() {
 		return traj_;
 	}
@@ -68,11 +87,17 @@ public class NodesTable extends JTable{
 	class Model extends AbstractTableModel {
 		private static final long serialVersionUID = 4995248712107810654L;
 
+		/* (non-Javadoc)
+		 * @see javax.swing.table.TableModel#getColumnCount()
+		 */
 		@Override
 		public int getColumnCount() {
 			return ColumnNames_.length;
 		}
 
+		/* (non-Javadoc)
+		 * @see javax.swing.table.TableModel#getRowCount()
+		 */
 		@Override
 		public int getRowCount() {
 			if (traj_ != null) {

@@ -1,3 +1,4 @@
+package edu.uchc.octane;
 //FILE:          OctanePlugin.java
 //PROJECT:       Octane
 //-----------------------------------------------------------------------------
@@ -31,17 +32,21 @@ import ij.WindowManager;
 import ij.io.FileInfo;
 import ij.plugin.PlugIn;
 
-import edu.uchc.octane.Browser;
-import edu.uchc.octane.PrefDialog;
-import edu.uchc.octane.Prefs;
-import edu.uchc.octane.ThresholdDialog;
-import edu.uchc.octane.TrajDataset;
 
+/**
+ * The PlugIn adaptor.
+ *
+ */
 public class OctanePlugin implements PlugIn{
 
 	ImagePlus imp_;
+
 	static HashMap<ImagePlus, Browser> dict_ = new HashMap<ImagePlus,Browser>();
 	
+	
+	/**
+	 * Constructor
+	 */
 	public OctanePlugin() {
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -51,6 +56,13 @@ public class OctanePlugin implements PlugIn{
 		}
 	}
 
+	/**
+	 * Open browser.
+	 *
+	 * @param dataset a prior built dataset or null to load from disk
+	 * @throws IOException 
+	 * @throws ClassNotFoundException 
+	 */
 	public void openBrowser(TrajDataset dataset) throws IOException, ClassNotFoundException {
 		Browser browser = new Browser(imp_);
 		if (dataset == null) {
@@ -68,6 +80,9 @@ public class OctanePlugin implements PlugIn{
 
 	}
 	
+	/**
+	 * Analyze current image stack
+	 */
 	public void analyze() {
 		ThresholdDialog dlg = new ThresholdDialog(imp_);
 		if (dlg.openDialog() == true) {
@@ -84,6 +99,10 @@ public class OctanePlugin implements PlugIn{
 			dict_.remove(imp_);
 		}
 	}
+	
+	/* (non-Javadoc)
+	 * @see ij.plugin.PlugIn#run(java.lang.String)
+	 */
 	@Override
 	public void run(String cmd) {
 		String path;		

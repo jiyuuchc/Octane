@@ -20,12 +20,52 @@ package edu.uchc.octane;
 
 import ij.process.ImageProcessor;
 
+/**
+ * The subpixel fitter interface.
+ */
 public interface SubPixelRefiner {
 
+	/**
+	 * Sets the image data.
+	 *
+	 * @param ip the new image data
+	 */
 	public void setImageData(ImageProcessor ip);
+	
+	/**
+	 * Refine the peak position.
+	 *
+	 * @param x the initial x value
+	 * @param y the initial y value
+	 * @return positive or 0 for succucess, negative value for failure.
+	 */
 	public int refine(double x, double y);
+	
+	/**
+	 * Subpixel X.
+	 *
+	 * @return x
+	 */
 	public double getXOut();
+	
+	/**
+	 * Subpixel y .
+	 *
+	 * @return y
+	 */
 	public double getYOut();
+	
+	/**
+	 * Height of the peak.
+	 *
+	 * @return height 
+	 */
 	public double getHeightOut();
+	
+	/**
+	 * The residue.
+	 *
+	 * @return residue
+	 */
 	public double getResidue(); 
 }

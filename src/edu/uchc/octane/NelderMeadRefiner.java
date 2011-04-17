@@ -33,25 +33,43 @@ import org.apache.commons.math.optimization.general.GaussNewtonOptimizer;
 
 import ij.process.ImageProcessor;
 
+/**
+ * A refiner using NelderMead fitting algrithm.
+ */
 public class NelderMeadRefiner implements SubPixelRefiner, MultivariateRealFunction {
 	
 	static final int kernelSize_ = 3;
+	
 	static final double defaultH_ = 200.0;
+	
 	static final double sigma2_ = 1.73;
 	
 	int blocks_;
 
 	int x0_,y0_;
+	
 	ImageProcessor ip_;
+	
 	double [] parameters_; 
+	
 	double residue_;
+	
 	double bg_ ;
+	
 	boolean zeroBg_;
 	
+	/**
+	 * Default constructor.
+	 */
 	public NelderMeadRefiner() {
 		this(false);
 	}
 	
+	/**
+	 * Constructor.
+	 *
+	 * @param b Is zero-background
+	 */
 	public NelderMeadRefiner(boolean b) {
 		zeroBg_ = b;
 		if (b) 
@@ -60,6 +78,9 @@ public class NelderMeadRefiner implements SubPixelRefiner, MultivariateRealFunct
 			parameters_ = new double[4];
 	}
 
+	/* (non-Javadoc)
+	 * @see edu.uchc.octane.SubPixelRefiner#setImageData(ij.process.ImageProcessor)
+	 */
 	public void setImageData(ImageProcessor ip){
 		ip_ = ip;
 		bg_ = ip.getAutoThreshold();		
@@ -69,6 +90,9 @@ public class NelderMeadRefiner implements SubPixelRefiner, MultivariateRealFunct
 		return Math.exp(- x*x/sigma2_);
 	}
 
+	/* (non-Javadoc)
+	 * @see edu.uchc.octane.SubPixelRefiner#refine(double, double)
+	 */
 	@Override
 	public int refine(double x, double y) {
 		//int w = 1 + 2 * kernelSize_;
@@ -126,26 +150,41 @@ public class NelderMeadRefiner implements SubPixelRefiner, MultivariateRealFunct
 		residue_ = vp.getValue() / parameters_[2] / parameters_[2]; // normalized to H^2
 	}
 
+	/* (non-Javadoc)
+	 * @see edu.uchc.octane.SubPixelRefiner#getXOut()
+	 */
 	@Override
 	public double getXOut() {
 		return (x0_ + .5 - parameters_[0]);
 	}
 
+	/* (non-Javadoc)
+	 * @see edu.uchc.octane.SubPixelRefiner#getYOut()
+	 */
 	@Override
 	public double getYOut() {
 		return (y0_ + .5 - parameters_[1]);
 	}
 
+	/* (non-Javadoc)
+	 * @see edu.uchc.octane.SubPixelRefiner#getHeightOut()
+	 */
 	@Override
 	public double getHeightOut() {
 		return parameters_[2];
 	}
 
+	/* (non-Javadoc)
+	 * @see edu.uchc.octane.SubPixelRefiner#getResidue()
+	 */
 	@Override
 	public double getResidue() {
 		return residue_ ;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.apache.commons.math.analysis.MultivariateRealFunction#value(double[])
+	 */
 	@Override
 	public double value(double[] p) throws FunctionEvaluationException,IllegalArgumentException {
 		double xp = p[0];

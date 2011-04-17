@@ -39,10 +39,15 @@ import org.apache.commons.math.optimization.general.NonLinearConjugateGradientOp
 
 import ij.process.ImageProcessor;
 
+/**
+ * Subpixel refiner by Gaussian fit.
+ */
 public class GaussianRefiner implements SubPixelRefiner, DifferentiableMultivariateRealFunction {
 	
 	static final int kernelSize_ = 3;
+	
 	static final double defaultH_ = 200.0;
+	
 	static final double sigma2_ = 1.73;
 	
 	//static double [] gaussLookupTable_;
@@ -56,24 +61,37 @@ public class GaussianRefiner implements SubPixelRefiner, DifferentiableMultivari
 //		//IJ.log("Finishing building index...");
 //	}
 	
-	int blocks_;
-
 	int x0_,y0_;
+	
 	ImageProcessor ip_;
+	
 	double [] parameters_; 
+	
 	double residue_;
+	
 	double bg_ = 1700.0;
 
 	double [] gradients_;
-	double [] weight_;
+	
+	
 	int k_;
 
 	boolean zeroBg_;
+	
 	double x_in, y_in; 
+	
+	/**
+	 * Default constructor assuming nonzero background.
+	 */
 	public GaussianRefiner() {
 		this(false);
 	}
 	
+	/**
+	 * Constructor.
+	 *
+	 * @param b whether the data is zero-background
+	 */
 	public GaussianRefiner(boolean b) {
 		zeroBg_ = b;
 		if (!b) {
@@ -85,10 +103,13 @@ public class GaussianRefiner implements SubPixelRefiner, DifferentiableMultivari
 		//j_ = new Jacobian();
 		
 		gradients_ = new double[parameters_.length];
-		weight_ = new double[(kernelSize_ * 2 + 1)*(kernelSize_ * 2 + 1)];
-		Arrays.fill(weight_,1.0);
+		//weight_ = new double[(kernelSize_ * 2 + 1)*(kernelSize_ * 2 + 1)];
+		//Arrays.fill(weight_,1.0);
 	}
 	
+	/* (non-Javadoc)
+	 * @see edu.uchc.octane.SubPixelRefiner#setImageData(ij.process.ImageProcessor)
+	 */
 	public void setImageData(ImageProcessor ip){
 		ip_ = ip;
 		bg_ = ip.getAutoThreshold();
@@ -101,6 +122,9 @@ public class GaussianRefiner implements SubPixelRefiner, DifferentiableMultivari
 		return Math.exp(- x*x/sigma2_);
 	}
 
+	/* (non-Javadoc)
+	 * @see edu.uchc.octane.SubPixelRefiner#refine(double, double)
+	 */
 	@Override
 	public int refine(double x, double y) {
 		//int w = 1 + 2 * kernelSize_;
@@ -162,26 +186,41 @@ public class GaussianRefiner implements SubPixelRefiner, DifferentiableMultivari
 		residue_ = vp.getValue() / parameters_[2] / parameters_[2] ; // normalized to H^2
 	}
 
+	/* (non-Javadoc)
+	 * @see edu.uchc.octane.SubPixelRefiner#getXOut()
+	 */
 	@Override
 	public double getXOut() {
 		return (x0_ + .5 - parameters_[0]) ;
 	}
 
+	/* (non-Javadoc)
+	 * @see edu.uchc.octane.SubPixelRefiner#getYOut()
+	 */
 	@Override
 	public double getYOut() {
 		return (y0_ + .5 - parameters_[1]);
 	}
 
+	/* (non-Javadoc)
+	 * @see edu.uchc.octane.SubPixelRefiner#getHeightOut()
+	 */
 	@Override
 	public double getHeightOut() {
 		return parameters_[2];
 	}
 
+	/* (non-Javadoc)
+	 * @see edu.uchc.octane.SubPixelRefiner#getResidue()
+	 */
 	@Override
 	public double getResidue() {
 		return residue_ ;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.apache.commons.math.analysis.MultivariateRealFunction#value(double[])
+	 */
 	@Override
 	public double value(double[] p) throws FunctionEvaluationException,IllegalArgumentException {
 		//double hw = 0.5 + kernelSize_;
@@ -208,6 +247,9 @@ public class GaussianRefiner implements SubPixelRefiner, DifferentiableMultivari
 		return r;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.apache.commons.math.analysis.DifferentiableMultivariateRealFunction#partialDerivative(int)
+	 */
 	@Override
 	public MultivariateRealFunction partialDerivative(int k) {
 //		k_ = k;
@@ -222,6 +264,9 @@ public class GaussianRefiner implements SubPixelRefiner, DifferentiableMultivari
 		return null;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.apache.commons.math.analysis.DifferentiableMultivariateRealFunction#gradient()
+	 */
 	@Override
 	public MultivariateVectorialFunction gradient() {
 		return new MultivariateVectorialFunction() {

@@ -39,13 +39,24 @@ import ij.gui.NonBlockingGenericDialog;
 import ij.io.FileInfo;
 import ij.process.ImageProcessor;
 
+/**
+ * The dialog to set peak detection threshold.
+ */
 public class ThresholdDialog implements ImageListener {
+	
 	ImagePlus imp_;
+	
 	PeakFinder finder_;
+	
 	NonBlockingGenericDialog dlg_;
 
 	SmNode[][] nodes_; 
 	
+	/**
+	 * Instantiates a new dialog.
+	 *
+	 * @param imp the ImageJ image
+	 */
 	public ThresholdDialog(ImagePlus imp) {
 		imp_ = imp;
 
@@ -56,6 +67,11 @@ public class ThresholdDialog implements ImageListener {
 		dlg_ = new NonBlockingGenericDialog("Set Threshold:" + imp.getTitle());
 	}
 
+	/**
+	 * Open dialog.
+	 *
+	 * @return true, if OKed
+	 */
 	public boolean openDialog() {
 		dlg_.addSlider("Threshold", 0, 40000.0, finder_.getTolerance());
 
@@ -103,13 +119,13 @@ public class ThresholdDialog implements ImageListener {
 		}
 	}
 
-	public void updateMaximum() {
+	void updateMaximum() {
 		imp_.killRoi();
 		finder_.findMaxima();
 		imp_.setRoi(finder_.markMaxima());
 	}
 
-	public boolean processStack() {
+	boolean processStack() {
 		imp_.killRoi();
 		int nFound = 0;
 		int nMissed = 0;
@@ -135,6 +151,11 @@ public class ThresholdDialog implements ImageListener {
 		return true;
 	}
 
+	/**
+	 * Sets the image data.
+	 *
+	 * @param ip the new image data
+	 */
 	public void setImageProcessor(ImageProcessor ip) {
 		if (dlg_.isVisible()) {
 			finder_.setImageProcessor(ip);
@@ -142,18 +163,32 @@ public class ThresholdDialog implements ImageListener {
 		}
 	}
 
+	/**
+	 * Gets the processed nodes.
+	 *
+	 * @return the processed nodes.
+	 */
 	public SmNode[][] getProcessedNodes() {
 		return nodes_;
 	}
 
+	/* (non-Javadoc)
+	 * @see ij.ImageListener#imageOpened(ij.ImagePlus)
+	 */
 	@Override
 	public void imageOpened(ImagePlus imp) {
 	}
 
+	/* (non-Javadoc)
+	 * @see ij.ImageListener#imageClosed(ij.ImagePlus)
+	 */
 	@Override
 	public void imageClosed(ImagePlus imp) {
 	}
 
+	/* (non-Javadoc)
+	 * @see ij.ImageListener#imageUpdated(ij.ImagePlus)
+	 */
 	@Override
 	public void imageUpdated(ImagePlus imp) {
 		if (imp == imp_) {

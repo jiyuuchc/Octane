@@ -19,7 +19,14 @@ package edu.uchc.octane;
 
 import ij.gui.GenericDialog;
 
+/**
+ * The Preferences dialog .
+ */
 public class PrefDialog {
+	
+	/**
+	 * Open dialog.
+	 */
 	static public void openDialog() {
 		GenericDialog dlg = new GenericDialog("Options");
 		dlg.addNumericField("Max Displacement", Prefs.trackerMaxDsp_, 1);

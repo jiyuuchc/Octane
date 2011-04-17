@@ -27,14 +27,19 @@ import java.io.Writer;
 import java.util.Arrays;
 import java.util.Vector;
 
+/**
+ * PeakFinder class detect and subpixel fit signal from a image.
+ */
 public class PeakFinder {
 	private double tol_;
 	private int[] dirOffset_;
 	private int[] dirXoffset_;
 	private int[] dirYoffset_;
+	
 	final static byte LISTED = (byte) 1;
 	final static byte OWNED = (byte) 2;
 	final static byte MAX = (byte) 4;
+
 	private ImageProcessor ip_;
 	private int width_;
 	private int height_;
@@ -47,13 +52,21 @@ public class PeakFinder {
 	private double[] residue_;
 	private short nMaxima_;
 
+	/**
+	 * Sets the roi.
+	 *
+	 * @param roi the roi to be analyzed
+	 */
 	public void setRoi(Roi roi) {
 		roi_ = roi;
 	}
 
 	class Pixel implements Comparable<Pixel> {
+		
 		public float value;
+		
 		public int x;
+		
 		public int y;
 
 		Pixel(int x, int y, float value) {
@@ -67,15 +80,29 @@ public class PeakFinder {
 		}
 	}
 
+	/**
+	 * Constructor.
+	 */
 	public PeakFinder() {
 		tol_ = 2000;
 		refiner_ = null;
 	}
 
+	/**
+	 * Sets the image data.
+	 *
+	 * @param ip the new image data
+	 */
 	public void setImageProcessor(ImageProcessor ip) {
 		setImageProcessor(ip, false);
 	}
 
+	/**
+	 * Sets the image data.
+	 *
+	 * @param ip the image data
+	 * @param bSmooth if the image shoudl be smoothed before analysis
+	 */
 	public void setImageProcessor(ImageProcessor ip, boolean bSmooth) {
 		ip_ = ip.duplicate();
 		if (bSmooth)
@@ -85,14 +112,29 @@ public class PeakFinder {
 		makeDirectionOffsets();
 	}
 
+	/**
+	 * Gets the peak detection tolerance.
+	 *
+	 * @return the tolerance
+	 */
 	public double getTolerance() {
 		return tol_;
 	}
 
+	/**
+	 * Sets the peak detection tolerance.
+	 *
+	 * @param tol the new tolerance
+	 */
 	public void setTolerance(double tol) {
 		tol_ = tol;
 	}
 
+	/**
+	 * Sets the subpixel fitting refiner.
+	 *
+	 * @param refiner the new refiner
+	 */
 	public void setRefiner(SubPixelRefiner refiner) {
 		refiner_ = refiner;
 	}
@@ -104,6 +146,11 @@ public class PeakFinder {
 		dirYoffset_ = new int[] { -1, -1, 0, 1, 1, 1, 0, -1 };
 	}
 
+	/**
+	 * Detect all peaks.
+	 *
+	 * @return number of peaks detected 
+	 */
 	public int findMaxima() {
 		Rectangle bbox;
 		if (roi_ != null) {
@@ -233,6 +280,11 @@ public class PeakFinder {
 		return nMaxima_;
 	}
 
+	/**
+	 * Subpixel fit the peaks.
+	 *
+	 * @return number of peaks that can't be fit
+	 */
 	public short refineMaxima() {
 		if (refiner_ == null ) {
 			switch (Prefs.refiner_) {
@@ -275,6 +327,11 @@ public class PeakFinder {
 		return nMissed;
 	}
 
+	/**
+	 * Mark all peaks in the ImageJ window.
+	 *
+	 * @return the PointRoi
+	 */
 	public Roi markMaxima() {
 		if (nMaxima_ > 0) {
 			int[] xpoints = new int[nMaxima_];
@@ -289,6 +346,13 @@ public class PeakFinder {
 		}
 	}
 
+	/**
+	 * Export peak data to text.
+	 *
+	 * @param writer a java writer
+	 * @param frame the frame number
+	 * @throws IOException 
+	 */
 	public void exportCurrentMaxima(Writer writer, int frame) throws IOException {
 		if (nMaxima_ > 0) {
 			for (int i = 0; i < nMaxima_; i++) {
@@ -299,6 +363,12 @@ public class PeakFinder {
 		}
 	}
 
+	/**
+	 * Returns an array of nodes representing detected peaks.
+	 *
+	 * @param frame the frame number
+	 * @return the array of nodes
+	 */
 	public SmNode[] getCurrentNodes(int frame) {
 		SmNode [] nodes;
 		nodes = new SmNode[nMaxima_];

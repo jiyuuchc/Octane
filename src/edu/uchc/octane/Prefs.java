@@ -19,10 +19,12 @@ package edu.uchc.octane;
 
 import java.util.prefs.Preferences;
 
+/**
+ * The Prefences.
+ */
 public class Prefs {
 
 	final static String LAST_WORKING_DIR_KEY = "LastWorkingDir";
-
 	final static String VIRTUAL_STACK_KEY = "VirtualStack";
 	final static String DIC_XOFFSET_KEY = "DicXOffset";
 	final static String DIC_YOFFSET_KEY = "DicYOffset";
@@ -42,8 +44,8 @@ public class Prefs {
 	final static String RESIDUETHRESHOLD_KEY = "histogramBins";
 	final static String SLOPPYNESS_KEY = "sloppyness";
 	//static String lastWorkingDir;
-	static boolean initialized = false;
 
+	static boolean initialized = false;
 	static boolean virtualStack_ = true;
 	static int dicXOffset_ = -9;
 	static int dicYOffset_ = 0;
@@ -62,9 +64,11 @@ public class Prefs {
 	static int histogramBins_ = 20;
 	static double residueThreshold_ = 100;
 	static int sloppyness_ = 1;
-
 	static Preferences pref_;
 
+	/**
+	 * Load preferences.
+	 */
 	public static void loadPrefs() {
 		if (initialized)
 			return;
@@ -94,6 +98,9 @@ public class Prefs {
 		initialized = true;
 	}
 
+	/**
+	 * Save preferences.
+	 */
 	public static void savePrefs() {
 		//pref_.put(LAST_WORKING_DIR_KEY, lastWorkingDir);
 

@@ -26,34 +26,76 @@ import java.util.ListIterator;
 import java.util.Stack;
 import java.util.Vector;
 
+// TODO: Auto-generated Javadoc
+/**
+ * The Class Tracker.
+ */
 @SuppressWarnings("unchecked")
 public class Tracker {
+	
+	/** The dataset_. */
 	TrajDataset dataset_;
 	
+	/** The cur frame_. */
 	int curFrame_;
+	
+	/** The max blinking_. */
 	int maxBlinking_;
+	
+	/** The tracks_. */
 	LinkedList<LinkedList<Integer>> tracks_;
+	
+	/** The stopped tracks_. */
 	LinkedList<LinkedList<Integer>> stoppedTracks_;
+	
+	/** The backward bonds_. */
 	LinkedList<Integer> [] backwardBonds_;
+	
+	/** The forward bonds_. */
 	LinkedList<Integer> [] forwardBonds_;
+	
+	/** The bond lengths_. */
 	LinkedList<Double> [] bondLengths_;
+	
+	/** The distances_. */
 	double distances_[][]; // numOfTracks x numOfNodesInNextFrame
+	
+	/** The threshold_. */
 	double threshold_;
+	
+	/** The threshold2_. */
 	double threshold2_;
 
+	/** The xyt data_. */
 	XytData xytData_;
 
+	/**
+	 * The Class XytData.
+	 */
 	public class XytData {
 		
 		//double [][][] data_;
+		/** The data_. */
 		SmNode [][] data_;
+		
+		/** The frame length_. */
 		int [] frameLength_;
+		
+		/** The Constant MAX_PARTICLES_PER_FRAME. */
 		static final int MAX_PARTICLES_PER_FRAME = 10000;
 		
+		/**
+		 * Instantiates a new xyt data.
+		 */
 		public XytData() {
 			// 
 		}
 
+		/**
+		 * Builds the from nodes.
+		 *
+		 * @param nodes the nodes
+		 */
 		public void buildFromNodes(SmNode [] nodes) {
 			int maxFrame = -1;
 			for ( int i = 0; i < nodes.length; i ++) {
@@ -165,14 +207,33 @@ public class Tracker {
 //			}
 //		}
 
-		public int getFirstOfFrame(int frame) {
+		/**
+ * Gets the first of frame.
+ *
+ * @param frame the frame
+ * @return the first of frame
+ */
+public int getFirstOfFrame(int frame) {
 			return MAX_PARTICLES_PER_FRAME * frame;
 		}
 
+		/**
+		 * Gets the length of frame.
+		 *
+		 * @param frame the frame
+		 * @return the length of frame
+		 */
 		public int getLengthOfFrame(int frame) {
 			return data_[frame].length;
 		}
 
+		/**
+		 * Gets the distance2.
+		 *
+		 * @param idx1 the idx1
+		 * @param idx2 the idx2
+		 * @return the distance2
+		 */
 		public double getDistance2(int idx1, int idx2) {
 			int f1 = idx2Frame(idx1);
 			int f2 = idx2Frame(idx2);
@@ -190,10 +251,21 @@ public class Tracker {
 			return (c1.x - c2.x)*(c1.x - c2.x) + (c1.y - c2.y)*(c1.y - c2.y); 
 		}
 
+		/**
+		 * Gets the num frames.
+		 *
+		 * @return the num frames
+		 */
 		public int getNumFrames() {
 			return data_.length;
 		}
 
+		/**
+		 * Idx2 frame.
+		 *
+		 * @param idx the idx
+		 * @return the int
+		 */
 		int idx2Frame(int idx) {
 			return idx / MAX_PARTICLES_PER_FRAME;
 		}
@@ -216,7 +288,12 @@ public class Tracker {
 //			bw.close(); 
 //		} // writeToDisk
 		
-		public Vector<Trajectory> createTrajs() {
+		/**
+ * Creates the trajs.
+ *
+ * @return the vector
+ */
+public Vector<Trajectory> createTrajs() {
 			Vector<Trajectory> trajs = new Vector<Trajectory>() ;
 			
 			for (Iterator <LinkedList<Integer>> it = stoppedTracks_.iterator(); it.hasNext(); ) {
@@ -237,6 +314,11 @@ public class Tracker {
 		}
 	}
 
+	/**
+	 * Instantiates a new tracker.
+	 *
+	 * @param nodes the nodes
+	 */
 	public Tracker(SmNode [] nodes) {
 		xytData_ = new XytData();
 		xytData_.buildFromNodes(nodes);
@@ -260,7 +342,10 @@ public class Tracker {
 //		xytData_ = new XytData(f);
 //	}
 
-	void trivialBonds() {
+	/**
+ * Trivial bonds.
+ */
+void trivialBonds() {
 		int firstPos = xytData_.getFirstOfFrame(curFrame_);
 		int nPos = xytData_.getLengthOfFrame(curFrame_);
 		
@@ -309,6 +394,11 @@ public class Tracker {
 
 	} // TrivialBonds()
 
+	/**
+	 * Cluster and optimize.
+	 *
+	 * @param seed the seed
+	 */
 	void clusterAndOptimize(int seed) {
 		LinkedList<Integer> headList = new LinkedList<Integer>();
 		LinkedList<Integer> tailList = new LinkedList<Integer>();
@@ -345,6 +435,12 @@ public class Tracker {
 		optimizeSubnetwork(headList, tailList);
 	}
 	
+	/**
+	 * Optimize subnetwork.
+	 *
+	 * @param headList the head list
+	 * @param tailList the tail list
+	 */
 	void optimizeSubnetwork(LinkedList<Integer> headList, LinkedList<Integer> tailList) {
 		double bestDistanceSum = 1e20;
 		int curBondIdx = -1;
@@ -423,6 +519,9 @@ public class Tracker {
 	
 	}
 	
+	/**
+	 * Do tracking.
+	 */
 	public void doTracking() {
 		threshold_ = Prefs.trackerMaxDsp_;
 		threshold2_ = threshold_ * threshold_;
@@ -488,6 +587,11 @@ public class Tracker {
 
 	} //doTracking
 	
+	/**
+	 * Gets the tracks.
+	 *
+	 * @return the tracks
+	 */
 	public Vector<Trajectory> getTracks() {
 		return xytData_.createTrajs();
 	}

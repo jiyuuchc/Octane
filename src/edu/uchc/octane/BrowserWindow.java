@@ -54,12 +54,24 @@ import javax.swing.JButton;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+/**
+ * The browser window.
+ */
 public class BrowserWindow extends JFrame {
+	
 	String path_;
+	
 	Browser browser_;
+	
 	TrajsTable trajsTable_;
+	
 	NodesTable nodesTable_;
 
+	/**
+	 * Instantiates a new browser window.
+	 *
+	 * @param b the browser controller
+	 */
 	public BrowserWindow(Browser b) {
 		super();
 		if (IJ.isLinux()) setBackground(ImageJ.backgroundColor);
@@ -410,7 +422,7 @@ public class BrowserWindow extends JFrame {
 	void populateNodesTable() {
 		if (trajsTable_.getSelectedRowCount() > 0) {
 			int index = getSelectedTrajectoryIndex();
-			nodesTable_.setData(browser_.getData().getTrjectoryByIndex(index));
+			nodesTable_.setData(browser_.getData().getTrajectoryByIndex(index));
 		} else {
 			nodesTable_.setData(null);
 		}
@@ -419,6 +431,11 @@ public class BrowserWindow extends JFrame {
 		}
 	}
 
+	/**
+	 * Returns the index of currently selected trajectory.
+	 *
+	 * @return the index
+	 */
 	public int getSelectedTrajectoryIndex() {
 		int row = trajsTable_.getSelectedRow();
 		if (row >= 0) {
@@ -428,6 +445,11 @@ public class BrowserWindow extends JFrame {
 		}
 	}
 	
+	/**
+	 * Returns the indices of all selected trajectories.
+	 *
+	 * @return array of indices
+	 */
 	public int[] getSelectedTrajectories() {
 		int [] selected = trajsTable_.getSelectedRows();
 		for (int i = 0; i < selected.length; i++) {
@@ -436,6 +458,12 @@ public class BrowserWindow extends JFrame {
 		return selected;				
 	}
 	
+	/**
+	 * Returns the indices of multiple selected trajectories or all trajectories.
+	 * If none or one trajectory is selected, the indices of all trajectories are returned.
+	 *
+	 * @return the indices
+	 */
 	public int[] getSelectedTrajectoriesOrAll() {
 		if (trajsTable_.getSelectedRowCount() <= 1) {
 			int [] selected = new int[trajsTable_.getRowCount()];
@@ -448,6 +476,11 @@ public class BrowserWindow extends JFrame {
 		}		
 	}
 	
+	/**
+	 * Select a trajectory in the trajectory table by its index.
+	 *
+	 * @param index the index
+	 */
 	public void selectTrajectoriesByIndex(int index) {
 		if (index < 0) {
 			trajsTable_.clearSelection();
@@ -458,11 +491,21 @@ public class BrowserWindow extends JFrame {
 		trajsTable_.scrollRectToVisible(r);
 	}
 	
+	/**
+	 * Adds a trajectories to the current selection in the trajectory table.
+	 *
+	 * @param index the index
+	 */
 	public void addTrajectoriesToSelection(int index) {
 		int row = trajsTable_.convertRowIndexToView(index);
 		trajsTable_.addRowSelectionInterval(row,row);
 	}
 
+	/**
+	 * Returns the current selected molecule node (position) in node table.
+	 *
+	 * @return the current node
+	 */
 	public SmNode getCurrentNode() {
 		int row = nodesTable_.getSelectedRow();
 		if (row >=0 && nodesTable_.getData() != null) {
@@ -473,10 +516,16 @@ public class BrowserWindow extends JFrame {
 		}				
 	}
 
+	/**
+	 * Update window to reflect new data.
+	 */
 	public void updateNewData() {
 		trajsTable_.setData(browser_.getData());
 	}
 	
+	/* (non-Javadoc)
+	 * @see java.awt.Window#dispose()
+	 */
 	@Override
 	public void dispose() {
 		browser_.saveDataset();

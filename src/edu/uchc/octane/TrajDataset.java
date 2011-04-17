@@ -38,35 +38,59 @@ import java.util.ListIterator;
 import java.util.Stack;
 import java.util.Vector;
 
+/**
+ * The Trajectory Dataset.
+ */
 public class TrajDataset{
 	
 	private static final long serialVersionUID = -4434499638684956916L;
 	
 	Vector<Trajectory> trajectories_;
+	
 	SmNode [][] nodes_; //nodes_[frame][offset]
 
 	LinkedList<Integer> [] backwardBonds_;
+	
 	LinkedList<Integer> [] forwardBonds_;
+	
 	LinkedList<Double> [] bondLengths_;
+	
 	boolean [] isTrackedParticle_; 
 	
 	LinkedList<Trajectory> activeTracks_;
+	
 	Trajectory wasted_;
 
 	double threshold_;
+	
 	double threshold2_;
+	
 	int maxBlinking_;
 
 	int curFrame_;
 
+	/**
+	 * Constructor.
+	 */
 	public TrajDataset() {
 		trajectories_ = new Vector<Trajectory>();
 	}
 
-	public Trajectory getTrjectoryByIndex(int i) {
+	/**
+	 * Returns a trajectory by index.
+	 *
+	 * @param i the index
+	 * @return the trajectory by index
+	 */
+	public Trajectory getTrajectoryByIndex(int i) {
 		return trajectories_.get(i);
 	}
 
+	/**
+	 * Number of trajectories.
+	 *
+	 * @return the size
+	 */
 	public int getSize() {
 		return trajectories_.size();
 	}
@@ -93,11 +117,20 @@ public class TrajDataset{
 		}
 	}
 	
+	/**
+	 * Rebuilt trajectories.
+	 */
 	public void reTrack() {
 		rebuildNodes();
 		doTracking();
 	}
 
+	/**
+	 * Write peak positions to text.
+	 *
+	 * @param file the file
+	 * @throws IOException 
+	 */
 	public void writePositionsToText(File file) throws IOException {
 		rebuildNodes();
 		BufferedWriter bw = new BufferedWriter(new FileWriter(file));
@@ -111,6 +144,12 @@ public class TrajDataset{
 		nodes_ = null;
 	}
 
+	/**
+	 * Write trajectories to text.
+	 *
+	 * @param w Java writer
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 */
 	public void writeTrajectoriesToText(Writer w)throws IOException {
 		//BufferedWriter bw = new BufferedWriter(new FileWriter(file));
 		for (int i = 0; i < trajectories_.size(); i ++ ) {
@@ -122,6 +161,12 @@ public class TrajDataset{
 		w.close(); 		
 	}
 
+	/**
+	 * Save dataset to disk.
+	 *
+	 * @param file the file
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 */
 	public void saveDataset(File file) throws IOException {
 		ObjectOutputStream out;
 		BufferedOutputStream fs;
@@ -132,6 +177,14 @@ public class TrajDataset{
 		fs.close();
 	}
 
+	/**
+	 * Load dataset from disk.
+	 *
+	 * @param file the file
+	 * @return a new dataset
+	 * @throws IOException 
+	 * @throws ClassNotFoundException
+	 */
 	static public TrajDataset loadDataset(File file) throws IOException, ClassNotFoundException {
 		ObjectInputStream in;
 		FileInputStream fs;
@@ -145,6 +198,13 @@ public class TrajDataset{
 		return dataset;
 	}
 
+	/**
+	 * Import dataset from peak position text file.
+	 *
+	 * @param file the file
+	 * @return a new dataset
+	 * @throws IOException
+	 */
 	static public TrajDataset importDatasetFromPositionsText(File file) throws IOException {
 		BufferedReader br;
 		String line;
@@ -169,6 +229,13 @@ public class TrajDataset{
 		return createDatasetFromNodes((SmNode[][]) nodes.toArray());
 	}
 	
+	/**
+	 * Import dataset from trajectories text file.
+	 *
+	 * @param file the file
+	 * @return a new dataset
+	 * @throws IOException
+	 */
 	static public TrajDataset importDatasetFromTrajectoriesText(File file) throws IOException {
 		
 		TrajDataset dataset;
@@ -199,6 +266,12 @@ public class TrajDataset{
 		return dataset;
 	}
 	
+	/**
+	 * Creates the dataset from array of node lists.
+	 *
+	 * @param nodes the 2D array of nodes
+	 * @return a new dataset
+	 */
 	static public TrajDataset createDatasetFromNodes(SmNode[][] nodes) {
 		TrajDataset dataset;
 		dataset = new TrajDataset();
@@ -376,7 +449,8 @@ public class TrajDataset{
 		}
 	} // TrivialBonds()
 
-	public void doTracking() {
+
+	void doTracking() {
 		threshold_ = Prefs.trackerMaxDsp_;
 		threshold2_ = threshold_ * threshold_;
 		maxBlinking_ = Prefs.trackerMaxBlinking_;

@@ -20,16 +20,42 @@ package edu.uchc.octane;
 
 import java.io.Serializable;
 
+/**
+ * A node contains information of a detected peak.
+ */
 public class SmNode implements Serializable {
+	
+	/** x position */
 	double x;
+	
+	/** y position */
 	double y;
+	
+	/** The frame number */
 	int frame;
+	
+	/** residue of fitting. */
 	double reserved;
 
+	/**
+	 * Instantiates a new node.
+	 *
+	 * @param x the x
+	 * @param y the y
+	 * @param f the frame number
+	 */
 	public SmNode(double x, double y, int f) {
 		this(x, y, f, 0.0);
 	}
 
+	/**
+	 * Instantiates a new node.
+	 *
+	 * @param x the x
+	 * @param y the y
+	 * @param f the frame number
+	 * @param q the residue
+	 */
 	public SmNode(double x, double y, int f, double q) {
 		this.x = x;
 		this.y = y;
@@ -37,6 +63,11 @@ public class SmNode implements Serializable {
 		reserved = q;
 	}
 
+	/**
+	 * Instantiates a new node.
+	 *
+	 * @param line Comma separated text data.
+	 */
 	public SmNode(String line) {
 		String[] items = line.split(",");
 		x = Double.parseDouble(items[0]);
@@ -47,14 +78,29 @@ public class SmNode implements Serializable {
 		}
 	}
 
+	/** 
+	 * Convert to comma separated text data.
+	 */
 	public String toString() {
 		return (x + ", " + y + ", " + frame + ", " + reserved);
 	}
 	
+	/**
+	 * Calculate square distance between two nodes
+	 *
+	 * @param n another node
+	 * @return distance^2
+	 */
 	public double distance2(SmNode n) {
 		return (x - n.x)*(x - n.x) + (y - n.y)*(y - n.y);
 	}
 	
+	/**
+	 * Calculate distance between two nodes.
+	 *
+	 * @param n another node
+	 * @return the distance
+	 */
 	public double distance(SmNode n) {
 		return Math.sqrt(distance2(n));
 	}
