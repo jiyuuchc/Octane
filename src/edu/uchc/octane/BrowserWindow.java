@@ -59,12 +59,10 @@ import javax.swing.event.ListSelectionListener;
  */
 public class BrowserWindow extends JFrame {
 	
-	String path_;
+	//private String path_;
 	
 	Browser browser_;
-	
 	TrajsTable trajsTable_;
-	
 	NodesTable nodesTable_;
 
 	/**
@@ -79,7 +77,7 @@ public class BrowserWindow extends JFrame {
 		SetupWindow();
 	}
 
-	JMenuBar createMenuBar() {
+	private JMenuBar createMenuBar() {
 		JMenuBar menuBar = new JMenuBar();
 		
 		JMenu fileMenu = new JMenu("File");
@@ -258,7 +256,7 @@ public class BrowserWindow extends JFrame {
 		return menuBar;
 	}
 	
-	JPanel createButtonBox() {
+	private JPanel createButtonBox() {
 		final JPanel buttonBox = new JPanel(); // button box
 		JButton button;
 
@@ -305,7 +303,7 @@ public class BrowserWindow extends JFrame {
 	}
 	
 	
-	void Layout(){
+	private void Layout(){
 		
 		setBounds(100, 100, 660, 495);
 		
@@ -396,7 +394,7 @@ public class BrowserWindow extends JFrame {
 		}
 	}
 	
-	void SetupWindow() {
+	private void SetupWindow() {
 		Layout();
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		ImagePlus imp = browser_.getImp();
@@ -420,7 +418,7 @@ public class BrowserWindow extends JFrame {
 		}
 	}
 	
-	void populateNodesTable() {
+	protected void populateNodesTable() {
 		if (trajsTable_.getSelectedRowCount() > 0) {
 			int index = getSelectedTrajectoryIndex();
 			nodesTable_.setData(browser_.getData().getTrajectoryByIndex(index));

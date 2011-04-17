@@ -61,7 +61,7 @@ public class PeakFinder {
 		roi_ = roi;
 	}
 
-	class Pixel implements Comparable<Pixel> {
+	private class Pixel implements Comparable<Pixel> {
 		
 		public float value;
 		

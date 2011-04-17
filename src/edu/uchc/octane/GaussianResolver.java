@@ -44,9 +44,8 @@ import ij.process.ImageProcessor;
  */
 public class GaussianResolver implements SubPixelResolver, DifferentiableMultivariateRealFunction {
 	
-	static final double defaultH_ = 200.0;
-	
-	static final double sigma2_ = 1.73;
+	private static final double defaultH_ = 200.0;
+	private static final double sigma2_ = 1.73;
 	
 	//static double [] gaussLookupTable_;
 	
@@ -59,24 +58,17 @@ public class GaussianResolver implements SubPixelResolver, DifferentiableMultiva
 //		//IJ.log("Finishing building index...");
 //	}
 	
-	int x0_,y0_;
+	private int x0_,y0_;
 	
 	ImageProcessor ip_;
 	
-	double [] parameters_; 
-	
-	double residue_;
-	
-	double bg_ = 1700.0;
-
-	double [] gradients_;
-	
-	
-	int k_;
-
-	boolean zeroBg_;
-	
-	double x_in, y_in; 
+	private double [] parameters_; 
+	private double residue_;
+	private double bg_ = 1700.0;
+	private double [] gradients_;
+	//int k_;
+	protected boolean zeroBg_;
+	private double x_in, y_in; 
 	
 	/**
 	 * Default constructor assuming nonzero background.

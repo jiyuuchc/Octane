@@ -32,23 +32,19 @@ import ij.process.ImageProcessor;
  */
 public class NelderMeadResolver implements SubPixelResolver, MultivariateRealFunction {
 		
-	static final double defaultH_ = 200.0;
-	
-	static final double sigma2_ = 1.73;
-	
-	int blocks_;
+	//private static final double defaultH_ = 200.0;
+	private static final double sigma2_ = 1.73;
 
-	int x0_,y0_;
+	//int blocks_;
+	private int x0_,y0_;
 	
 	ImageProcessor ip_;
 	
-	double [] parameters_; 
+	private double [] parameters_; 
+	private double residue_;
+	private double bg_ ;
 	
-	double residue_;
-	
-	double bg_ ;
-	
-	boolean zeroBg_;
+	protected boolean zeroBg_;
 	
 	/**
 	 * Default constructor.

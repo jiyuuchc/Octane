@@ -31,7 +31,7 @@ import java.util.TimerTask;
 public class Animator {
 	
 	/** Time delay between each frame during animation */
-	final long ANIMATIONDELAY_ = 100;
+	protected long ANIMATIONDELAY_ = 100;
 		
 	private boolean loop_;
 	private Timer animateTimer_;
@@ -51,7 +51,7 @@ public class Animator {
 	/**
 	 * The animation task.
 	 */
-	class AnimateTimerTask extends TimerTask {
+	protected class AnimateTimerTask extends TimerTask {
 		private Trajectory trajectory_;
 		private int firstFrame_;
 		private int lastFrame_;
@@ -111,7 +111,7 @@ public class Animator {
 	 *
 	 * @param loop 
 	 */
-	void setLoop(boolean loop) {
+	public void setLoop(boolean loop) {
 		loop_ = loop;
 	}	
 

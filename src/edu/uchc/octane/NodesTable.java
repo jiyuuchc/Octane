@@ -76,7 +76,7 @@ public class NodesTable extends JTable{
 		return traj_;
 	}
 
-	class CellRenderer extends DefaultTableCellRenderer {
+	protected class CellRenderer extends DefaultTableCellRenderer {
 		private static final long serialVersionUID = 1539239439156768797L;
 
 		protected void setValue(Object obj) {
@@ -84,7 +84,7 @@ public class NodesTable extends JTable{
 		}
 	}
 
-	class Model extends AbstractTableModel {
+	protected class Model extends AbstractTableModel {
 		private static final long serialVersionUID = 4995248712107810654L;
 
 		/* (non-Javadoc)

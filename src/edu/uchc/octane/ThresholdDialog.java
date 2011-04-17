@@ -46,11 +46,11 @@ public class ThresholdDialog implements ImageListener {
 	
 	ImagePlus imp_;
 	
-	PeakFinder finder_;
+	protected PeakFinder finder_;
 	
-	NonBlockingGenericDialog dlg_;
+	protected NonBlockingGenericDialog dlg_;
 
-	SmNode[][] nodes_; 
+	private SmNode[][] nodes_; 
 	
 	/**
 	 * Instantiates a new dialog.
@@ -119,13 +119,13 @@ public class ThresholdDialog implements ImageListener {
 		}
 	}
 
-	void updateMaximum() {
+	protected void updateMaximum() {
 		imp_.killRoi();
 		finder_.findMaxima();
 		imp_.setRoi(finder_.markMaxima());
 	}
 
-	boolean processStack() {
+	protected boolean processStack() {
 		imp_.killRoi();
 		int nFound = 0;
 		int nMissed = 0;

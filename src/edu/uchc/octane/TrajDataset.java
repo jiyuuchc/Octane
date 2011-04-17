@@ -42,32 +42,23 @@ import java.util.Vector;
  * The Trajectory Dataset.
  */
 public class TrajDataset{
-	
+
 	private static final long serialVersionUID = -4434499638684956916L;
-	
 	Vector<Trajectory> trajectories_;
-	
-	SmNode [][] nodes_; //nodes_[frame][offset]
 
-	LinkedList<Integer> [] backwardBonds_;
-	
-	LinkedList<Integer> [] forwardBonds_;
-	
-	LinkedList<Double> [] bondLengths_;
-	
-	boolean [] isTrackedParticle_; 
-	
-	LinkedList<Trajectory> activeTracks_;
-	
-	Trajectory wasted_;
 
-	double threshold_;
-	
-	double threshold2_;
-	
-	int maxBlinking_;
+	protected SmNode [][] nodes_; //nodes_[frame][offset]
 
-	int curFrame_;
+	private LinkedList<Integer> [] backwardBonds_;
+	private LinkedList<Integer> [] forwardBonds_;
+	private LinkedList<Double> [] bondLengths_;
+	private boolean [] isTrackedParticle_; 
+	private LinkedList<Trajectory> activeTracks_;	
+	private Trajectory wasted_;
+	private double threshold_;
+	private double threshold2_;
+	private int maxBlinking_;
+	private int curFrame_;
 
 	/**
 	 * Constructor.
@@ -98,7 +89,7 @@ public class TrajDataset{
 	void rebuildNodes() {
 		if (trajectories_ == null || trajectories_.size() == 0) 
 			return;
-		
+
 		ArrayList<ArrayList<SmNode>> framelist = new ArrayList<ArrayList<SmNode>>();
 		for (int i = 0; i < trajectories_.size(); i++) {
 			Trajectory t = trajectories_.get(i);
@@ -110,13 +101,13 @@ public class TrajDataset{
 				framelist.get(n.frame-1).add(n);
 			}
 		}
-		
+
 		nodes_ = new SmNode[framelist.size()][];
 		for (int i = 0 ; i < nodes_.length; i++) {
 			nodes_[i] = (SmNode[]) framelist.get(i).toArray();
 		}
 	}
-	
+
 	/**
 	 * Rebuilt trajectories.
 	 */
@@ -225,10 +216,10 @@ public class TrajDataset{
 		}
 		nodes.add(curFrameNodes.toArray(new SmNode[curFrameNodes.size()]));
 		br.close();
-		
+
 		return createDatasetFromNodes((SmNode[][]) nodes.toArray());
 	}
-	
+
 	/**
 	 * Import dataset from trajectories text file.
 	 *
@@ -237,9 +228,9 @@ public class TrajDataset{
 	 * @throws IOException
 	 */
 	static public TrajDataset importDatasetFromTrajectoriesText(File file) throws IOException {
-		
+
 		TrajDataset dataset;
-		
+
 		Trajectory oneTraj = new Trajectory();
 		int cur_cnt = -1;
 		String line;
@@ -262,10 +253,10 @@ public class TrajDataset{
 
 		br.close();
 		assert (dataset.trajectories_.size() > 0);	
-		
+
 		return dataset;
 	}
-	
+
 	/**
 	 * Creates the dataset from array of node lists.
 	 *
@@ -279,8 +270,8 @@ public class TrajDataset{
 		dataset.doTracking();
 		return dataset;		
 	}
-	
-	void clusterAndOptimize(int seed) {
+
+	private void clusterAndOptimize(int seed) {
 		LinkedList<Integer> headList = new LinkedList<Integer>();
 		LinkedList<Integer> tailList = new LinkedList<Integer>();
 
@@ -300,7 +291,7 @@ public class TrajDataset{
 				}
 			}
 			//lastHeadListEnd = headList.size();	
-			
+
 			while (itTail.hasPrevious()) {
 				int posIdx = itTail.previous();
 				for (int j = 0; j < backwardBonds_[posIdx].size(); j++) {
@@ -312,11 +303,11 @@ public class TrajDataset{
 			}
 			//lastTailListEnd = tailList.size();
 		}
-		
+
 		optimizeSubnetwork(headList, tailList);
 	}
 
-	void optimizeSubnetwork(LinkedList<Integer> headList, LinkedList<Integer> tailList) {
+	private void optimizeSubnetwork(LinkedList<Integer> headList, LinkedList<Integer> tailList) {
 		double bestDistanceSum = 1e20;
 		int curBondIdx = -1;
 		double curDistanceSum = 0;
@@ -395,12 +386,12 @@ public class TrajDataset{
 	}
 
 
-	void buildAllPossibleBonds() {
+	private void buildAllPossibleBonds() {
 		forwardBonds_ = (LinkedList<Integer> []) new LinkedList[activeTracks_.size()];
 		bondLengths_ = (LinkedList<Double> []) new LinkedList[activeTracks_.size()];
 		backwardBonds_ = (LinkedList<Integer> []) new LinkedList[nodes_[curFrame_].length];
 		isTrackedParticle_ = new boolean[nodes_[curFrame_].length];
-		
+
 		for ( int i = 0; i < activeTracks_.size(); i ++) {
 			forwardBonds_[i] = new LinkedList<Integer>();
 			bondLengths_[i] = new LinkedList<Double>();
@@ -429,7 +420,7 @@ public class TrajDataset{
 		}
 	}
 
-	void trivialBonds() {
+	private void trivialBonds() {
 		// search all trivial bonds
 		for (int i = 0; i < forwardBonds_.length; i++ ) {
 			if (forwardBonds_[i].size() == 1) {
@@ -450,11 +441,11 @@ public class TrajDataset{
 	} // TrivialBonds()
 
 
-	void doTracking() {
+	protected void doTracking() {
 		threshold_ = Prefs.trackerMaxDsp_;
 		threshold2_ = threshold_ * threshold_;
 		maxBlinking_ = Prefs.trackerMaxBlinking_;
-		
+
 		activeTracks_ = new LinkedList<Trajectory>();
 		trajectories_ = new Vector<Trajectory>();
 		wasted_ = new Trajectory();
@@ -466,7 +457,7 @@ public class TrajDataset{
 			t.add(nodes_[0][i]);
 			activeTracks_.add(t);
 		}
-		
+
 		curFrame_ = 1;
 		while (curFrame_ < nodes_.length) {
 			buildAllPossibleBonds();
@@ -520,8 +511,10 @@ public class TrajDataset{
 			Trajectory track = it.next();
 			trajectories_.add(track);
 		}
-		wasted_.deleted = true;
-		trajectories_.add(wasted_);
+		if (wasted_ != null && wasted_.size() > 0) {
+			wasted_.deleted = true;
+			trajectories_.add(wasted_);
+		}
 		activeTracks_.clear();
 		activeTracks_ = null;
 		nodes_ = null;

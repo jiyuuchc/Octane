@@ -62,9 +62,9 @@ public class Browser implements ClipboardOwner{
 	//TrajsTable trajsTable_;
 	//NodesTable nodesTable_;
 
-	String path_;
+	protected String path_;
 	
-	Animator animator_ = null;
+	protected Animator animator_ = null;
 	
 	BrowserWindow browserWindow_ = null;
 
@@ -109,12 +109,12 @@ public class Browser implements ClipboardOwner{
 		createWindow();
 	}
 
-	void createWindow() {
+	protected void createWindow() {
 		browserWindow_ = new BrowserWindow(this);
 		browserWindow_.setVisible(true);
 	}
 
-	void setupPath(ImagePlus imp) {
+	private void setupPath(ImagePlus imp) {
 		path_ = null;
 		imp_ = imp;
 		FileInfo fi = imp.getOriginalFileInfo();
@@ -150,7 +150,7 @@ public class Browser implements ClipboardOwner{
 		return dataset_;
 	}
 
-	void selectTrajectoriesWithinRoi() {
+	protected void selectTrajectoriesWithinRoi() {
 		Roi roi = imp_.getRoi();
 		if (roi == null) {
 			return;
@@ -179,7 +179,7 @@ public class Browser implements ClipboardOwner{
 		}
 	}
 	
-	void copySelectedTrajectories() {
+	protected void copySelectedTrajectories() {
 		StringBuilder buf = new StringBuilder();
 		int [] selected = browserWindow_.getSelectedTrajectories();
 		Trajectory traj;
@@ -194,7 +194,7 @@ public class Browser implements ClipboardOwner{
 		clipboard.setContents(contents, this);		
 	}
 
-	void findMolecule(int x, int y, int f) {
+	protected void findMolecule(int x, int y, int f) {
 		int index = 0;
 		int fi = 0;
 		boolean found = false;
@@ -222,7 +222,7 @@ public class Browser implements ClipboardOwner{
 		}		
 	}
 	
-	void findMolecule() {
+	protected void findMolecule() {
 		ImageCanvas canvas = imp_.getCanvas();
 		Point p = canvas.getCursorLoc();
 		int frame = imp_.getSlice();
@@ -245,7 +245,7 @@ public class Browser implements ClipboardOwner{
 		return ip;
 	}*/
 
-	void drawOverlay() {
+	protected void drawOverlay() {
 		if (!Prefs.showOverlay_) {
 			imp_.setOverlay(null);
 			return;
@@ -262,7 +262,7 @@ public class Browser implements ClipboardOwner{
 		imp_.setOverlay(path, Color.yellow, new BasicStroke(1f));			
 	}
 	
-	void drawBox() {
+	protected void drawBox() {
 		SmNode node = browserWindow_.getCurrentNode();
 		int x,y;
 		if (node != null && imp_ != null) {
@@ -665,7 +665,7 @@ public class Browser implements ClipboardOwner{
 	 *
 	 * @return the pathname
 	 */
-	String defaultSaveFilename() {
+	protected String defaultSaveFilename() {
 		final String s = path_ + File.separator + imp_.getTitle() + ".dataset";
 		return s;
 	}

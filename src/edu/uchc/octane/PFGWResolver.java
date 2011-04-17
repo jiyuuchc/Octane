@@ -33,35 +33,21 @@ public class PFGWResolver implements SubPixelResolver {
 
 	ImageProcessor frame_;
 
-	RealVector p_;
-
-	double x_out, y_out, h_out;
-
-	final double sigma_2 = 2;
-
-	final int poly_order = 2;
-
-	final int max_iter = 5;
-
-	final double tol = 0.005;
-
-	final double max_step = 1;
-
-	final double cuvLimit = 1.8;
-
-	double residue_;
-
-	double bg_;
-
-	int numPixels = (Prefs.kernelSize_ * 2 + 1) * (Prefs.kernelSize_ * 2 + 1);
-
-	ArrayRealVector xps = new ArrayRealVector(numPixels);
-
-	ArrayRealVector yps = new ArrayRealVector(numPixels);
-
-	Array2DRowRealMatrix V = new Array2DRowRealMatrix(numPixels, (poly_order + 1) * (poly_order + 2) / 2);
-
-	ArrayRealVector z = new ArrayRealVector(numPixels);
+	private RealVector p_;
+	private double x_out, y_out, h_out;
+	private final double sigma_2 = 2;
+	private final int poly_order = 2;
+	private final int max_iter = 5;
+	private final double tol = 0.005;
+	private final double max_step = 1;
+	private final double cuvLimit = 1.8;
+	private double residue_;
+	private double bg_;
+	private int numPixels = (Prefs.kernelSize_ * 2 + 1) * (Prefs.kernelSize_ * 2 + 1);
+	private ArrayRealVector xps = new ArrayRealVector(numPixels);
+	private ArrayRealVector yps = new ArrayRealVector(numPixels);
+	private Array2DRowRealMatrix V = new Array2DRowRealMatrix(numPixels, (poly_order + 1) * (poly_order + 2) / 2);
+	private ArrayRealVector z = new ArrayRealVector(numPixels);
 
 	/* (non-Javadoc)
 	 * @see edu.uchc.octane.SubPixelRefiner#setImageData(ij.process.ImageProcessor)
@@ -125,7 +111,7 @@ public class PFGWResolver implements SubPixelResolver {
 		 residue_ = r.dotProduct(r);
 	 }
 
-	 double p(int i) {
+	 private double p(int i) {
 		 return p_.getEntry(i);
 	 }
 

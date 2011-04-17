@@ -40,7 +40,7 @@ public class TrajsTable extends JTable {
 	private boolean [] isVisible_;
 	private Model model_;
 
-	class Model extends AbstractTableModel {
+	protected class Model extends AbstractTableModel {
 
 		@Override
 		public int getColumnCount() {

@@ -1,4 +1,3 @@
-package edu.uchc.octane;
 //FILE:          OctanePlugin.java
 //PROJECT:       Octane
 //-----------------------------------------------------------------------------
@@ -16,6 +15,8 @@ package edu.uchc.octane;
 //               CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
 //               INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES./**
 //
+
+package edu.uchc.octane;
 
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -41,7 +42,7 @@ public class OctanePlugin implements PlugIn{
 
 	ImagePlus imp_;
 
-	static HashMap<ImagePlus, Browser> dict_ = new HashMap<ImagePlus,Browser>();
+	protected static HashMap<ImagePlus, Browser> dict_ = new HashMap<ImagePlus,Browser>();
 	
 	
 	/**
