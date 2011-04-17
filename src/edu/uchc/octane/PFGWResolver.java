@@ -30,7 +30,7 @@ import org.apache.commons.math.linear.RealVector;
 /**
  * Subpixel fitting the peak using polynomial functions with Guassian weighting function.
  */
-public class PFGWRefiner2 implements SubPixelRefiner {
+public class PFGWResolver implements SubPixelResolver {
 
 	ImageProcessor frame_;
 

@@ -3,11 +3,11 @@ package edu.uchc.octane.test;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 
-import edu.uchc.octane.GaussianRefiner;
-import edu.uchc.octane.NelderMeadRefiner;
-import edu.uchc.octane.PFGWRefiner2;
+import edu.uchc.octane.GaussianResolver;
+import edu.uchc.octane.NelderMeadResolver;
+import edu.uchc.octane.PFGWResolver;
 import edu.uchc.octane.PeakFinder;
-import edu.uchc.octane.SubPixelRefiner;
+import edu.uchc.octane.SubPixelResolver;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.process.FloatProcessor;
@@ -20,7 +20,7 @@ public class RefinerTest {
 	final static int bg = 50;
 	final static double sigma2 = 1.8;
 
-	static SubPixelRefiner refiner;
+	static SubPixelResolver refiner;
 
 	static double noise;
 
@@ -136,7 +136,7 @@ public class RefinerTest {
 
 	public static void main(String[] args) {
 		noise = 0;
-		refiner = new NelderMeadRefiner();
+		refiner = new NelderMeadResolver();
 
 //		initValueTest();
 		

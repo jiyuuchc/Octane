@@ -18,25 +18,19 @@
 
 package edu.uchc.octane;
 
-import java.util.Arrays;
-
 import org.apache.commons.math.FunctionEvaluationException;
-import org.apache.commons.math.analysis.DifferentiableMultivariateVectorialFunction;
-import org.apache.commons.math.analysis.MultivariateMatrixFunction;
 import org.apache.commons.math.analysis.MultivariateRealFunction;
 import org.apache.commons.math.ConvergenceException;
 import org.apache.commons.math.optimization.GoalType;
 import org.apache.commons.math.optimization.RealPointValuePair;
-import org.apache.commons.math.optimization.VectorialPointValuePair;
 import org.apache.commons.math.optimization.direct.NelderMead;
-import org.apache.commons.math.optimization.general.GaussNewtonOptimizer;
 
 import ij.process.ImageProcessor;
 
 /**
  * A refiner using NelderMead fitting algrithm.
  */
-public class NelderMeadRefiner implements SubPixelRefiner, MultivariateRealFunction {
+public class NelderMeadResolver implements SubPixelResolver, MultivariateRealFunction {
 	
 	static final int kernelSize_ = 3;
 	
@@ -61,7 +55,7 @@ public class NelderMeadRefiner implements SubPixelRefiner, MultivariateRealFunct
 	/**
 	 * Default constructor.
 	 */
-	public NelderMeadRefiner() {
+	public NelderMeadResolver() {
 		this(false);
 	}
 	
@@ -70,7 +64,7 @@ public class NelderMeadRefiner implements SubPixelRefiner, MultivariateRealFunct
 	 *
 	 * @param b Is zero-background
 	 */
-	public NelderMeadRefiner(boolean b) {
+	public NelderMeadResolver(boolean b) {
 		zeroBg_ = b;
 		if (b) 
 			parameters_ = new double[3];
