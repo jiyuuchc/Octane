@@ -31,47 +31,60 @@ public class PFGWRefiner2 implements SubPixelRefiner {
 	   ImageProcessor frame_;
 	   RealVector p_;
 	   double x_out, y_out, h_out;
-	   final double sigma_2 = 3;
-	   final int fit_area = 3;
+	   final double sigma_2 = 2;
+	   final int kernelSize_ = 2;
 	   final int poly_order = 2;
-	   final int max_iter = 20;
-	   final double tol = 0.00005;
-	   final double max_step = 1.0;
+	   final int max_iter = 5;
+	   final double tol = 0.005;
+	   final double max_step = 1;
 	   final double cuvLimit = 1.8;
 	   double residue_;
+	   double bg_;
+	   int numPixels = (kernelSize_ * 2 + 1) * (kernelSize_ * 2 + 1);
+	   ArrayRealVector xps = new ArrayRealVector(numPixels);
+	   ArrayRealVector yps = new ArrayRealVector(numPixels);
+	   Array2DRowRealMatrix V = new Array2DRowRealMatrix(numPixels, (poly_order + 1) * (poly_order + 2) / 2);
+	   ArrayRealVector z = new ArrayRealVector(numPixels);
 
-	   public PFGWRefiner2(ImageProcessor ip) {
+	   @Override
+	   public void setImageData(ImageProcessor ip) {
 	      frame_ = ip;
+		  bg_ = frame_.getAutoThreshold();
 	   }
 
 	   // This is adapted from Salman Roger's method
 	   // ref: Salman S Rogers et al 2007 Phys. Biol. 4 220-227   doi: 10.1088/1478-3975/4/3/008
-	   protected void polyfitgaussweight(double x_in, double y_in) {
-	      int x_int = (int) (x_in + 0.5);
-	      int y_int = (int) (y_in + 0.5);
-	      int x1 = Math.max(x_int - fit_area, 0);
-	      int y1 = Math.max(y_int - fit_area, 0);
-	      int x2 = Math.min(x_int + fit_area, frame_.getWidth() - 1);
-	      int y2 = Math.min(y_int + fit_area, frame_.getHeight() - 1);
+	   protected void polyfitgaussweight(double x, double y) {
+		    int x0_ , y0_;
+		    double xp, yp;
+			if (x < kernelSize_) {
+				x0_ = kernelSize_;
+			} else if (x >= frame_.getWidth() - kernelSize_) {
+				x0_ = frame_.getWidth() - kernelSize_ - 1;
+			} else { 
+				x0_ = (int) x;
+			}
+			xp = x0_ + .5 - x;
 
-	      int numPixels = (x2 - x1 + 1) * (y2 - y1 + 1);
-
-	      ArrayRealVector xp = new ArrayRealVector(numPixels);
-	      ArrayRealVector yp = new ArrayRealVector(numPixels);
-	      Array2DRowRealMatrix V = new Array2DRowRealMatrix(numPixels, (poly_order + 1) * (poly_order + 2) / 2);
-	      ArrayRealVector z = new ArrayRealVector(numPixels);
-
+			if (y < kernelSize_) {
+				y0_ = kernelSize_;
+			} else if (y >= frame_.getHeight() - kernelSize_) {
+				y0_ = frame_.getHeight() - kernelSize_ - 1;
+			} else { 
+				y0_ = (int) y;
+			}
+			yp = y0_ + .5 - y;
+	
 	      int i = 0;
-
-	      for (int x = x1; x <= x2; x++) {
-	         double xd = x - x_in;
-	         for (int y = y1; y <= y2; y++) {
-	            double yd = y - y_in;
+	      for (int xi = -kernelSize_; xi <= kernelSize_; xi++) {
+	         double xd = xp + xi;
+	         for (int yi = -kernelSize_; yi <= kernelSize_; yi++) {
+	            double yd = yp + yi;
 	            double w = Math.exp(-(xd * xd + yd * yd) / sigma_2);
-	            xp.setEntry(i, xd);
-	            yp.setEntry(i, yd);
+	            xps.setEntry(i, xd);
+	            yps.setEntry(i, yd);
 	            V.setEntry(i, 0, w);
-	            z.setEntry(i, frame_.getf(x, y) * w);
+	            z.setEntry(i, frame_.getf(x0_ + xi, y0_ + yi) * w);
 	            i++;
 	         }
 	      }
@@ -80,10 +93,10 @@ public class PFGWRefiner2 implements SubPixelRefiner {
 	      for (int order = 1; order <= poly_order; order++) {
 	         for (int sub_order = 1; sub_order <= order; sub_order++) {
 	            column++;
-	            V.setColumnVector(column, xp.ebeMultiply(V.getColumn(column - order)));
+	            V.setColumnVector(column, xps.ebeMultiply(V.getColumn(column - order)));
 	         }
 	         column++;
-	         V.setColumnVector(column, yp.ebeMultiply(V.getColumn(column - order - 1)));
+	         V.setColumnVector(column, yps.ebeMultiply(V.getColumn(column - order - 1)));
 	      }
 
 	      QRDecompositionImpl qr = new QRDecompositionImpl(V);
@@ -98,13 +111,16 @@ public class PFGWRefiner2 implements SubPixelRefiner {
 
 	   @Override
 	   public int refine(double x_in, double y_in){
-		  double bg = frame_.getAutoThreshold();
 	      int iter_n = 1;
 	      x_out = x_in;
 	      y_out = y_in;
 
 	      while (iter_n < max_iter) {
-	         polyfitgaussweight(x_out, y_out);
+	    	 try {
+	    		 polyfitgaussweight(x_out, y_out);
+	    	 } catch (Exception e) { //
+	    		 return -4;
+	    	 }
 
 	         // a=p(3); b=p(4)/2; c=p(5); 
 	         // J=a*c-b^2;
@@ -116,13 +132,13 @@ public class PFGWRefiner2 implements SubPixelRefiner {
 	         x_out = x_out + Math.signum(xc) * Math.min(Math.abs(xc), max_step);
 	         y_out = y_out + Math.signum(yc) * Math.min(Math.abs(yc), max_step);
 
-	         if (Math.abs(x_out - x_in) > 5 * max_step || Math.abs(y_out - y_in) > 5 * max_step) {
+	         if (Math.abs(x_out - x_in) > 3 * max_step || Math.abs(y_out - y_in) > 3 * max_step) {
 	        	return -1;
 	         }
 
 	         if ((xc * xc + yc * yc) < tol) {
 
-	            h_out = p(0) + p(1)*xc + p(2)*yc + p(3)*xc*xc + p(4)*xc*yc + p(5)*yc*yc - bg;
+	            h_out = p(0) + p(1)*xc + p(2)*yc + p(3)*xc*xc + p(4)*xc*yc + p(5)*yc*yc - bg_;
 	            if (h_out < 0) {
 	            	return -2;
 	            }
@@ -136,7 +152,7 @@ public class PFGWRefiner2 implements SubPixelRefiner {
 
 	         iter_n = iter_n + 1;
 	      }
-	      return -1;
+	      return -3;
 	   }
 
 	   @Override
@@ -156,6 +172,6 @@ public class PFGWRefiner2 implements SubPixelRefiner {
 	   
 	   @Override
 	   public double getResidue() {
-	      return residue_ /(2 * fit_area + 1) / (2 * fit_area + 1);
+	      return residue_ /(2 * kernelSize_ + 1) / (2 * kernelSize_ + 1);
 	   }
 }

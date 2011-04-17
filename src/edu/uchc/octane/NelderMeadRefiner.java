@@ -35,20 +35,9 @@ import ij.process.ImageProcessor;
 
 public class NelderMeadRefiner implements SubPixelRefiner, MultivariateRealFunction {
 	
-	static final int kernelSize_ = 2;
+	static final int kernelSize_ = 3;
 	static final double defaultH_ = 200.0;
 	static final double sigma2_ = 1.73;
-	
-	//static double [] gaussLookupTable_;
-	
-//	static {
-//		gaussLookupTable_ = new double[(kernelSize_ * 2 + 1) * 100];
-//		//IJ.log("starting building index...");
-//		for (int i = 0 ; i < (kernelSize_ * 2 + 1) * 100; i ++ ) {
-//			gaussLookupTable_[i] = Math.exp(- (i * i) / (sigma2_ * 10000));
-//		}
-//		//IJ.log("Finishing building index...");
-//	}
 	
 	int blocks_;
 
@@ -57,17 +46,26 @@ public class NelderMeadRefiner implements SubPixelRefiner, MultivariateRealFunct
 	double [] parameters_; 
 	double residue_;
 	double bg_ ;
+	boolean zeroBg_;
+	
+	public NelderMeadRefiner() {
+		this(false);
+	}
+	
+	public NelderMeadRefiner(boolean b) {
+		zeroBg_ = b;
+		if (b) 
+			parameters_ = new double[3];
+		else
+			parameters_ = new double[4];
+	}
 
 	public void setImageData(ImageProcessor ip){
 		ip_ = ip;
-		parameters_ = new double[4];
 		bg_ = ip.getAutoThreshold();		
 	}
 
 	double gauss(double x) {
-//		int x100 = (int) Math.round(Math.abs(x * 100)); 
-//		//return gaussLookupTable_[x100] * (x100 + 1 - x * 100) + gaussLookupTable_[x100+1] * (x * 100 - x100);
-//		return gaussLookupTable_[x100];
 		return Math.exp(- x*x/sigma2_);
 	}
 
@@ -92,7 +90,8 @@ public class NelderMeadRefiner implements SubPixelRefiner, MultivariateRealFunct
 		}
 		parameters_[1] = y0_ + .5 - y;
 
-		parameters_[3] = bg_;
+		if (! zeroBg_)
+			parameters_[3] = bg_;
 
 		try {
 			fit();
@@ -149,13 +148,12 @@ public class NelderMeadRefiner implements SubPixelRefiner, MultivariateRealFunct
 
 	@Override
 	public double value(double[] p) throws FunctionEvaluationException,IllegalArgumentException {
-		//double hw = 0.5 + kernelSize_;
 		double xp = p[0];
 		double yp = p[1];
 		double h = p[2];
-		double bg = p[3];
+		double bg = zeroBg_?0:p[3];
 		double r = 0;
-		if (bg < 0 || h < 0) {
+		if (h < 0) {
 			return 1e10;
 		}
 		

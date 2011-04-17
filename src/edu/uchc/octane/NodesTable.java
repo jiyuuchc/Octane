@@ -61,7 +61,7 @@ public class NodesTable extends JTable{
 		private static final long serialVersionUID = 1539239439156768797L;
 
 		protected void setValue(Object obj) {
-			setText(String.format("%4.2f", (Double) obj));
+			setText(String.format("%4.3f", (Double) obj));
 		}
 	}
 

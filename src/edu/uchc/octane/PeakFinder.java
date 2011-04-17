@@ -17,6 +17,7 @@
 //
 package edu.uchc.octane;
 
+import ij.IJ;
 import ij.gui.PointRoi;
 import ij.gui.Roi;
 import ij.process.ImageProcessor;
@@ -236,16 +237,18 @@ public class PeakFinder {
 		if (refiner_ == null ) {
 			switch (Prefs.refiner_) {
 			case 0: 
-				refiner_ = new PFGWRefiner2(ip_);
+				refiner_ = new PFGWRefiner2();
 				break;
 			case 1:
-				refiner_ = new GaussianRefiner(ip_);
+				refiner_ = new GaussianRefiner();
 				break;
 			case 2:
-				refiner_ = new ZeroBgGaussianRefiner(ip_);
+				refiner_ = new NelderMeadRefiner(true);
 				break;
 			}
 		}
+
+		refiner_.setImageData(ip_);
 
 		short nMissed = 0;
 		short nNewMaxima = 0;
@@ -253,7 +256,7 @@ public class PeakFinder {
 		if (nMaxima_ > 0 && Prefs.refinePeak_ ) {
 			for (int i = 0; i < nMaxima_; i++) {
 				int rtmp;
-				rtmp = refiner_.refine(xArray_[i], yArray_[i]);
+				rtmp = refiner_.refine(.5 + xArray_[i], .5 + yArray_[i]);
 				if (rtmp >= 0) {
 					xArray_[nNewMaxima] = refiner_.getXOut();
 					yArray_[nNewMaxima] = refiner_.getYOut();

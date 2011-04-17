@@ -40,7 +40,7 @@ import edu.uchc.octane.TrajDataset;
 public class OctanePlugin implements PlugIn{
 
 	ImagePlus imp_;
-	static HashMap<String, Browser> dict_ = new HashMap<String,Browser>();
+	static HashMap<ImagePlus, Browser> dict_ = new HashMap<ImagePlus,Browser>();
 	
 	public OctanePlugin() {
 		try {
@@ -58,33 +58,32 @@ public class OctanePlugin implements PlugIn{
 		} else {
 			browser.setup(dataset);
 		}
-		dict_.put(imp_.getTitle(), browser);
+		dict_.put(imp_, browser);
 		browser.getWindow().addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosed(WindowEvent e) {
-				dict_.remove(imp_.getTitle());
+				dict_.remove(imp_);
 			}
 		});
 
 	}
 	
 	public void analyze() {
-		ThresholdDialog finderDlg = new ThresholdDialog(imp_);
-		if (finderDlg.openDialog() == true) {
+		ThresholdDialog dlg = new ThresholdDialog(imp_);
+		if (dlg.openDialog() == true) {
 			Browser browser = new Browser(imp_);
-			browser.setup(finderDlg.getProcessedNodes());
-			dict_.put(imp_.getTitle(), browser);
+			browser.setup(dlg.getProcessedNodes());
+			dict_.put(imp_, browser);
 			browser.getWindow().addWindowListener(new WindowAdapter() {
 				@Override
 				public void windowClosed(WindowEvent e) {
-					dict_.remove(imp_.getTitle());
+					dict_.remove(imp_);
 				}
 			});
 		} else {
-			dict_.remove(imp_.getTitle());
+			dict_.remove(imp_);
 		}
 	}
-
 	@Override
 	public void run(String cmd) {
 		String path;		
@@ -108,7 +107,7 @@ public class OctanePlugin implements PlugIn{
 		if (! dict_.containsKey(imp_.getTitle())) { // do not open multiple window for the same image
 			try {
 				if (cmd.equals("browser")) {
-					dict_.put(imp_.getTitle(), null);
+					dict_.put(imp_, null);
 					analyze();
 				} else if (cmd.equals("load")){
 					if (path != null && new File(path + File.separator + imp_.getTitle() + ".dataset").exists()) {

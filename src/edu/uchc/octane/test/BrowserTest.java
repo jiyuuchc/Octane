@@ -9,10 +9,11 @@ import edu.uchc.octane.ThresholdDialog;
 
 public class BrowserTest {
 	public static ImagePlus imp;
+	final static String p = "testdata"; // test data
+	final static String path = p + "/cell1.avi";
 	
 	public static void main(String[] args) throws IOException, ClassNotFoundException {
-		String p= "C:\\Users\\Ji-Yu\\workspace\\Octane\\testdata\\sh2";
-		imp = ij.IJ.openImage(p+"\\sh2_eos_egf_70min_0.avi");
+		imp = ij.IJ.openImage(path);
 		imp.show();
 		//TrajDataset data = new TrajDataset(p);
 		File file = new File(p + File.separator + imp.getTitle()+".dataset");
@@ -24,7 +25,10 @@ public class BrowserTest {
 			if (finderDlg.openDialog() == true) {
 				Browser b= new Browser(imp);
 				b.setup(finderDlg.getProcessedNodes());
-			} 
+			} else {
+				imp.close();
+			}
 		}
+
 	}
 }

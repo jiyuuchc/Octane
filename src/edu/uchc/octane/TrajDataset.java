@@ -30,6 +30,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -110,15 +111,15 @@ public class TrajDataset{
 		nodes_ = null;
 	}
 
-	public void writeTrajectoriesToText(File file)throws IOException {
-		BufferedWriter bw = new BufferedWriter(new FileWriter(file));
+	public void writeTrajectoriesToText(Writer w)throws IOException {
+		//BufferedWriter bw = new BufferedWriter(new FileWriter(file));
 		for (int i = 0; i < trajectories_.size(); i ++ ) {
 			for (int j = 0; j < trajectories_.get(i).size(); j++) {
 				SmNode s = trajectories_.get(i).get(j);
-				bw.write(String.format("%f, %f, %d, %f, %d\n", s.x, s.y, s.frame, s.reserved, i));				
+				w.write(String.format("%f, %f, %d, %f, %d\n", s.x, s.y, s.frame, s.reserved, i));				
 			}
 		}
-		bw.close(); 		
+		w.close(); 		
 	}
 
 	public void saveDataset(File file) throws IOException {

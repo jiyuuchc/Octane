@@ -18,8 +18,11 @@
 
 package edu.uchc.octane;
 
+import ij.process.ImageProcessor;
+
 public interface SubPixelRefiner {
 
+	public void setImageData(ImageProcessor ip);
 	public int refine(double x, double y);
 	public double getXOut();
 	public double getYOut();

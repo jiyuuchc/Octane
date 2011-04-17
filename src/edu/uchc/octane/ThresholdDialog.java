@@ -110,42 +110,28 @@ public class ThresholdDialog implements ImageListener {
 	}
 
 	public boolean processStack() {
-		//String path_ = null;			
-
 		imp_.killRoi();
-		//BufferedWriter writer = null;
-
-		//FileInfo fi = imp_.getOriginalFileInfo();
-		//path_ = fi.directory;
-		//String fn = path_ + "analysis" + File.separator + "positions";
-		//File file = new File(fn);
 		int nFound = 0;
 		int nMissed = 0;
 		IJ.log(imp_.getTitle() + ": Processing");
-		//try {
-			//(new File(path_ + "analysis")).mkdirs();
-			//writer = new BufferedWriter(new FileWriter(file));
-			ImageStack stack = imp_.getImageStack();
-			nodes_ = new SmNode[stack.getSize()][];
-			for (int frame = 1; frame <= stack.getSize(); frame++) {
-				if ((frame % 50) == 0) {
-					IJ.log("Processed: "+ frame + "frames.");
-				}
-				IJ.showProgress(frame, stack.getSize());
-				ImageProcessor ip = stack.getProcessor(frame);
-				finder_.setImageProcessor(ip);
-				nFound += finder_.findMaxima();
-				nMissed += finder_.refineMaxima();
-				//finder_.exportCurrentMaxima(writer, frame);
-				nodes_[frame - 1] = finder_.getCurrentNodes(frame);
+
+		ImageStack stack = imp_.getImageStack();
+		nodes_ = new SmNode[stack.getSize()][];
+		for (int frame = 1; frame <= stack.getSize(); frame++) {
+			if ((frame % 50) == 0) {
+				IJ.log("Processed: "+ frame + "frames.");
 			}
-			//writer.close();
-		//} catch (IOException e) {
-		//	IJ.showMessage("IO error: " + e.getMessage());
-		//	return false;
-		//}
+			IJ.showProgress(frame, stack.getSize());
+			ImageProcessor ip = stack.getProcessor(frame);
+			finder_.setImageProcessor(ip);
+			nFound += finder_.findMaxima();
+			nMissed += finder_.refineMaxima();
+			//finder_.exportCurrentMaxima(writer, frame);
+			nodes_[frame - 1] = finder_.getCurrentNodes(frame);
+		}
+
 		IJ.showMessage(imp_.getTitle() + "- Tested:" + nFound + " Missed:" + nMissed);
-		
+
 		return true;
 	}
 
