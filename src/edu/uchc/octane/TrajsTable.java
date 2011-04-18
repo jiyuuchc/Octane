@@ -32,7 +32,7 @@ import javax.swing.RowFilter;
  */
 public class TrajsTable extends JTable {
 
-	private static String[] ColumnNames_ = { "Frame", "Len", "Marked","Notes"};
+	private static String[] ColumnNames_ = { "Frame", "Len", "Mobility", "Marked","Notes"};
 	private static Class<?> [] ColumnClasses_ = {Integer.class, Integer.class, Boolean.class, String.class};
 	
 	private TrajDataset data_ = null;
@@ -61,8 +61,10 @@ public class TrajsTable extends JTable {
 			case 1:
 				return traj.getLength();
 			case 2:
-				return traj.marked;
+				return traj.getAvgSquareStepSize();
 			case 3:
+				return traj.marked;
+			case 4:
 				return traj.note;
 			}
 			return null;
