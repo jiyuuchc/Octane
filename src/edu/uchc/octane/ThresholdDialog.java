@@ -112,6 +112,7 @@ public class ThresholdDialog implements ImageListener {
 		ImagePlus.addImageListener(this);
 		updateMaximum();
 		dlg_.showDialog();
+		ImagePlus.removeImageListener(this);
 		if (dlg_.wasOKed()) {
 			return processStack();
 		} else {

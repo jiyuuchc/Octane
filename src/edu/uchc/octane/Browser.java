@@ -20,7 +20,6 @@ package edu.uchc.octane;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
@@ -34,10 +33,7 @@ import java.awt.geom.GeneralPath;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Vector;
 
 import ij.IJ;
 import ij.ImagePlus;

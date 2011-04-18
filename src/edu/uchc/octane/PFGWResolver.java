@@ -35,7 +35,7 @@ public class PFGWResolver implements SubPixelResolver {
 
 	private RealVector p_;
 	private double x_out, y_out, h_out;
-	private final double sigma_2 = 2;
+	private double sigma_2 = 2;
 	private final int poly_order = 2;
 	private final int max_iter = 5;
 	private final double tol = 0.005;
@@ -120,6 +120,8 @@ public class PFGWResolver implements SubPixelResolver {
 	  */
 	 @Override
 	 public int refine(double x_in, double y_in){
+		 sigma_2 = Prefs.sigma_ * Prefs.sigma_ * 2 * 1.5; // use a slightly broader gaussian function
+		 
 		 int iter_n = 1;
 		 x_out = x_in;
 		 y_out = y_in;

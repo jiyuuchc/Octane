@@ -33,6 +33,7 @@ public class PrefDialog {
 		String [] choices = {"Polyfit Gaussian Weight","Gaussian Fit", "Zeor Background Gaussian"};
 		dlg.addChoice("Algrithm", choices, choices[Prefs.refiner_]);
 		dlg.addNumericField("Kernel Size", Prefs.kernelSize_, 0);
+		dlg.addNumericField("PSD sigma", Prefs.sigma_, 2);
 
 		dlg.addMessage("- Tracking -");
 		dlg.addNumericField("Max Displacement", Prefs.trackerMaxDsp_, 1);
@@ -41,7 +42,7 @@ public class PrefDialog {
 
 		dlg.addMessage("- Analysis -");
 		dlg.addNumericField("PALM Ratio", Prefs.palmRatio_, 1);
-		dlg.addNumericField("PALM PSD", Prefs.palmPSDWidth_, 3);
+		dlg.addNumericField("PALM PSD sigma", Prefs.palmPSDWidth_, 3);
 		dlg.addNumericField("PALM Threshold", Prefs.palmThreshold_, 1);		
 		dlg.addNumericField("Histogram Bins", Prefs.histogramBins_, 0);
 
@@ -50,6 +51,7 @@ public class PrefDialog {
 			return;
 		Prefs.refiner_ = dlg.getNextChoiceIndex();
 		Prefs.kernelSize_ = (int) dlg.getNextNumber();
+		Prefs.sigma_ = dlg.getNextNumber();
 		Prefs.trackerMaxDsp_ = dlg.getNextNumber();
 		Prefs.trackerMaxBlinking_ = (int) dlg.getNextNumber();
 		Prefs.residueThreshold_ = dlg.getNextNumber();

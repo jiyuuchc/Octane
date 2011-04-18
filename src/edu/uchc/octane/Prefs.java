@@ -44,6 +44,7 @@ public class Prefs {
 	final static String RESIDUETHRESHOLD_KEY = "histogramBins";
 	final static String SLOPPYNESS_KEY = "sloppyness";
 	final static String KERNELSIZE_KEY = "kernelSize";
+	final static String SIGMA_KEY = "sigma";
 	//static String lastWorkingDir;
 
 	static boolean initialized = false;
@@ -66,6 +67,7 @@ public class Prefs {
 	static double residueThreshold_ = 100;
 	static int sloppyness_ = 1;
 	static int kernelSize_ = 2;
+	static double sigma_ = 0.94;
 	
 	static Preferences pref_;
 
@@ -97,6 +99,7 @@ public class Prefs {
 		residueThreshold_ = pref.getDouble(RESIDUETHRESHOLD_KEY, residueThreshold_);
 		sloppyness_ = pref.getInt(SLOPPYNESS_KEY, sloppyness_);
 		kernelSize_ = pref.getInt(KERNELSIZE_KEY, kernelSize_);
+		sigma_ = pref.getDouble(SIGMA_KEY, sigma_);
 
 		pref_ = pref;
 		initialized = true;
@@ -130,6 +133,7 @@ public class Prefs {
 		pref_.putDouble(RESIDUETHRESHOLD_KEY , residueThreshold_);
 		pref_.putInt(SLOPPYNESS_KEY, sloppyness_);
 		pref_.putInt(KERNELSIZE_KEY, kernelSize_);
+		pref_.putDouble(SIGMA_KEY, sigma_);
 	}
 
 }

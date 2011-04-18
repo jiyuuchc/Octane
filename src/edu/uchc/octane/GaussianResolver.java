@@ -45,7 +45,7 @@ import ij.process.ImageProcessor;
 public class GaussianResolver implements SubPixelResolver, DifferentiableMultivariateRealFunction {
 	
 	private static final double defaultH_ = 200.0;
-	private static final double sigma2_ = 1.73;
+	double sigma2_ = 1.73;
 	
 	//static double [] gaussLookupTable_;
 	
@@ -100,7 +100,7 @@ public class GaussianResolver implements SubPixelResolver, DifferentiableMultiva
 	/* (non-Javadoc)
 	 * @see edu.uchc.octane.SubPixelRefiner#setImageData(ij.process.ImageProcessor)
 	 */
-	public void setImageData(ImageProcessor ip){
+	public void setImageData(ImageProcessor ip) {
 		ip_ = ip;
 		bg_ = ip.getAutoThreshold();
 	}
@@ -118,6 +118,7 @@ public class GaussianResolver implements SubPixelResolver, DifferentiableMultiva
 	@Override
 	public int refine(double x, double y) {
 		//int w = 1 + 2 * Prefs.kernelSize_;
+		sigma2_ = Prefs.sigma_ * Prefs.sigma_ * 2;
 		if (x < Prefs.kernelSize_) {
 			x0_ = Prefs.kernelSize_;
 		} else if (x >= ip_.getWidth() - Prefs.kernelSize_) {

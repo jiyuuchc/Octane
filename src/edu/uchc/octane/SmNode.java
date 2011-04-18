@@ -25,6 +25,8 @@ import java.io.Serializable;
  */
 public class SmNode implements Serializable {
 	
+	private static final long serialVersionUID = -4326247654894087222L;
+
 	/** x position */
 	double x;
 	

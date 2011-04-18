@@ -33,7 +33,7 @@ import ij.process.ImageProcessor;
 public class NelderMeadResolver implements SubPixelResolver, MultivariateRealFunction {
 		
 	//private static final double defaultH_ = 200.0;
-	private static final double sigma2_ = 1.73;
+	private double sigma2_ = 1.73;
 
 	//int blocks_;
 	private int x0_,y0_;
@@ -84,6 +84,7 @@ public class NelderMeadResolver implements SubPixelResolver, MultivariateRealFun
 	@Override
 	public int refine(double x, double y) {
 		//int w = 1 + 2 * Prefs.kernelSize_;
+		sigma2_ = 2 * Prefs.sigma_ * Prefs.sigma_;
 		if (x < Prefs.kernelSize_) {
 			x0_ = Prefs.kernelSize_;
 		} else if (x >= ip_.getWidth() - Prefs.kernelSize_) {

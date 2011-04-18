@@ -25,7 +25,9 @@ import java.util.Vector;
  */
 public class Trajectory extends Vector<SmNode> {
    
-   /** Whether it is marked. */
+	private static final long serialVersionUID = 8187158272341013922L;
+
+/** Whether it is marked. */
    public boolean marked = false;
    
    /** Whether it is already deleted. */
