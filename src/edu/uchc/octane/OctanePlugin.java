@@ -124,7 +124,7 @@ public class OctanePlugin implements PlugIn{
 			return;
 		}
 
-		if (! dict_.containsKey(imp_.getTitle())) { // do not open multiple window for the same image
+		if (! dict_.containsKey(imp_)) { // do not open multiple window for the same image
 			try {
 				if (cmd.equals("browser")) {
 					dict_.put(imp_, null);
@@ -151,6 +151,8 @@ public class OctanePlugin implements PlugIn{
 			} catch (Exception e) {
 				IJ.showMessage("Can't load the file! " + e.getMessage()); 
 			} 				
+		} else if (dict_.get(imp_) != null ) {
+			dict_.get(imp_).getWindow().setVisible(true);
 		}
 	}
 }
