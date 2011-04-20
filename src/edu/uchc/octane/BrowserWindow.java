@@ -54,6 +54,8 @@ import javax.swing.JButton;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import edu.uchc.octane.Browser.IFSType;
+
 /**
  * The browser window.
  */
@@ -199,12 +201,30 @@ public class BrowserWindow extends JFrame {
 			}
 		});
 
-		item = new JMenuItem("IFS");
-		processMenu.add(item);
+		JMenu ifsMenu = new JMenu("IFS");
+		processMenu.add(ifsMenu);
+		item = new JMenuItem("Gaussian Spot");
+		ifsMenu.add(item);
 		item.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e){
-				browser_.constructIFS();
+				browser_.constructIFS(IFSType.GaussianSpot);
+			}
+		});
+		item = new JMenuItem("Line Overlay");
+		ifsMenu.add(item);
+		item.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e){
+				browser_.constructIFS(IFSType.LineOverlay);
+			}
+		});
+		item = new JMenuItem("Square Overlay");
+		ifsMenu.add(item);
+		item.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e){
+				browser_.constructIFS(IFSType.SquareOverlay);
 			}
 		});
 		

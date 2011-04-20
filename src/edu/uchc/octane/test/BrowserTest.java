@@ -9,8 +9,8 @@ import edu.uchc.octane.ThresholdDialog;
 
 public class BrowserTest {
 	public static ImagePlus imp;
-	final static String p = "testdata"; // test data
-	final static String path = p + "/cell1.avi";
+	final static String p = "../testdata"; // test data
+	final static String path = p + "/1.tif";
 	
 	public static void main(String[] args) throws IOException, ClassNotFoundException {
 		imp = ij.IJ.openImage(path);
@@ -29,6 +29,5 @@ public class BrowserTest {
 				imp.close();
 			}
 		}
-
 	}
 }

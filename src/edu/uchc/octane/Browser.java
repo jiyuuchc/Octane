@@ -42,9 +42,12 @@ import ij.gui.HistogramWindow;
 import ij.gui.ImageCanvas;
 import ij.gui.Plot;
 import ij.gui.PointRoi;
+import ij.gui.PolygonRoi;
 import ij.gui.Roi;
+import ij.gui.Toolbar;
 import ij.io.FileInfo;
 import ij.process.FloatProcessor;
+import ij.process.ImageProcessor;
 import ij.process.ShortProcessor;
 
 /**
@@ -63,6 +66,8 @@ public class Browser implements ClipboardOwner{
 	protected Animator animator_ = null;
 	
 	BrowserWindow browserWindow_ = null;
+	
+	public enum IFSType {GaussianSpot, LineOverlay, SquareOverlay};
 
 	/**
 	 * Constructor
@@ -226,20 +231,14 @@ public class Browser implements ClipboardOwner{
 		findMolecule(p.x, p.y, frame);
 	}
 
-/*	private FloatProcessor gaussianImage(ImageProcessor img) {
-		int width = img.getWidth();
-		int height = img.getHeight();
-		double psdWidth = Prefs.palmPSDWidth_ * Prefs.palmRatio_;
-		FloatProcessor ip = new FloatProcessor(width, height);
-		for (int x = 0; x < width; x ++) {
-			for (int y = 0; y < height; y++) {
-				double v = Math.exp( -((x*2-width) * (x*2-width) + (y*2-height)*(y*2-height))/(8.0*psdWidth*psdWidth) );
-				ip.setf(x, y, (float)v);
+	private void gaussianImage(ImageProcessor ip, double xs, double ys, double w) {
+		for (int x = Math.max(0, (int)(xs - 3*w)); x < Math.min(ip.getWidth(), (int)(xs + 3*w)); x ++) {
+			for (int y = Math.max(0, (int)(ys - 3*w)); y < Math.min(ip.getHeight(), (int)(ys + 3*w)); y++) {
+				double v = Math.exp( -((x-xs) * (x-xs) + (y-ys)*(y-ys))/(2.0*w*w) );
+				ip.setf(x, y, (float)v + ip.getf(x,y));
 			}
 		}
-
-		return ip;
-	}*/
+	}
 
 	protected void drawOverlay() {
 		if (!Prefs.showOverlay_) {
@@ -284,37 +283,112 @@ public class Browser implements ClipboardOwner{
 			}
 		}
 	}
-	
+
+	void drawIFSGaussianSpots(Trajectory traj, ImagePlus imp) {
+		ImageStack stack = imp.getStack();
+		Rectangle rect = imp_.getProcessor().getRoi();
+
+		for (int i = 0; i < traj.size(); i++ ) {
+			ImageProcessor ip = stack.getProcessor(traj.get(i).frame);
+			double xs = (traj.get(i).x - rect.x) * Prefs.IFSScaleFactor_;
+			double ys = (traj.get(i).y - rect.y) * Prefs.IFSScaleFactor_;
+			gaussianImage(ip, xs, ys, Prefs.palmPSDWidth_ * Prefs.IFSScaleFactor_);
+		}
+	}
+		
+	void drawIFSLineOverlay(Trajectory traj, ImagePlus imp) {
+		if (traj == null || traj.size() < 2) 
+			return;
+		ImageStack stack = imp.getStack();
+		Rectangle rect = imp_.getProcessor().getRoi();
+
+		int [] xs = new int[traj.size()];
+		int [] ys = new int[traj.size()];
+		for (int i = 0; i < traj.size(); i ++) {
+			xs[i] = (int)((traj.get(i).x - rect.x) * Prefs.IFSScaleFactor_);
+			ys[i] = (int)((traj.get(i).y - rect.y) * Prefs.IFSScaleFactor_);			
+		}
+		
+		PolygonRoi roi = null;
+		int frame = traj.get(0).frame;
+		ImageProcessor ip;
+		for (int i = 0; i < traj.size(); i++) {
+			while (frame < traj.get(i).frame) {
+				ip = stack.getProcessor(frame ++);
+				ip.setColor(Toolbar.getForegroundColor());
+				roi.drawPixels(ip);
+			}
+			roi = new PolygonRoi(xs, ys, i + 1, Roi.POLYLINE);
+			ip = stack.getProcessor(frame ++);
+			ip.setColor(Toolbar.getForegroundColor());
+			roi.drawPixels(ip);
+		}
+	}
+
+	void drawIFSSquareOverlay(Trajectory traj, ImagePlus imp) {
+		if (traj == null || traj.size() < 2) 
+			return;
+		int frame = traj.get(0).frame;
+		Rectangle rect = imp_.getProcessor().getRoi();
+		Roi roi = null;
+		ImageProcessor ip;
+		ImageStack stack = imp.getStack();
+		for ( int i = 0; i < traj.size(); i ++ ) {
+			if (frame < traj.get(i).frame) {
+				ip = stack.getProcessor(frame ++);
+				ip.setColor(Toolbar.getForegroundColor());
+				roi.drawPixels(ip);
+			}
+			int nx = (int)((traj.get(0).x - rect.x - 4) * Prefs.IFSScaleFactor_);
+			int ny = (int)((traj.get(0).y - rect.y - 4) * Prefs.IFSScaleFactor_);
+			roi = new Roi(nx,ny, 9 * Prefs.IFSScaleFactor_, 9 * Prefs.IFSScaleFactor_);
+			ip = stack.getProcessor(frame ++);
+			ip.setColor(Toolbar.getForegroundColor());
+			roi.drawPixels(ip);
+		}
+	}
+
 	/**
 	 * Construct ifs stack.
 	 */
-	public void constructIFS() {
+	public void constructIFS(IFSType type) {
 		Rectangle rect;
-		imp_.killRoi();
+		Roi roi = imp_.getRoi();
+		if (roi!=null && !roi.isArea())
+			imp_.killRoi(); 
 		rect = imp_.getProcessor().getRoi();
 
-		ImageStack is =  new ImageStack(rect.width, rect.height);
+		ImageStack is =  new ImageStack(rect.width * Prefs.IFSScaleFactor_, rect.height * Prefs.IFSScaleFactor_);
+		ImageProcessor ip;
 		for (int i = 0; i < imp_.getNSlices(); i++) {
-			is.addSlice(""+i, new FloatProcessor(rect.width, rect.height));
+			if (type != IFSType.GaussianSpot) {
+				ip = imp_.getImageStack().getProcessor(i+1);
+				ip.setRoi(rect);
+				ip = ip.crop().convertToRGB();
+				is.addSlice(""+i, ip.resize(rect.width * Prefs.IFSScaleFactor_) );
+			} else {
+				ip = new FloatProcessor(rect.width * Prefs.IFSScaleFactor_, rect.height * Prefs.IFSScaleFactor_);
+				is.addSlice(""+i, ip);
+			}
 		}
-		ImagePlus img = new ImagePlus("IFS", is);
-		double psdWidth = 0.85;
+		ImagePlus img = imp_.createImagePlus();
+		img.setStack("IFS", is);
 
 		int [] selected = browserWindow_.getSelectedTrajectoriesOrAll();
 		for ( int i = 0; i < selected.length; i ++) {
 			Trajectory traj = dataset_.getTrajectoryByIndex(selected[i]);
-			for (int j = 0; j < traj.size(); j++ ) {
-				double xs = (traj.get(j).x - rect.x);
-				double ys = (traj.get(j).y- rect.y);
-				//IJ.log(String.format("%5d%6d%6d", rowIndex, x, y));
-				for (int x = Math.max(0, (int)(xs - 3*psdWidth)); x < Math.min(rect.width, (int)(xs + 3*psdWidth)); x ++) {
-					for (int y = Math.max(0, (int)(ys - 3*psdWidth)); y < Math.min(rect.height, (int)(ys + 3*psdWidth)); y++) {
-						double v = Math.exp( -((x-xs) * (x-xs) + (y-ys)*(y-ys))/(2.0*psdWidth*psdWidth) );
-						FloatProcessor ip = (FloatProcessor) is.getProcessor(traj.get(j).frame);
-						ip.setf(x, y, (float)v + ip.getf(x,y));
-					}
-				}
-			} 
+			switch (type) {
+			case GaussianSpot:
+				drawIFSGaussianSpots(traj, img);
+				break;
+			case LineOverlay:
+				drawIFSLineOverlay(traj, img);
+				break;
+			case SquareOverlay:
+				drawIFSSquareOverlay(traj, img);
+				break;
+			}
+			IJ.showProgress(i, selected.length);
 		}
 		img.show();
 		
@@ -324,8 +398,8 @@ public class Browser implements ClipboardOwner{
 	 * Construct PALM image.
 	 */
 	public void constructPalm() {
-		FloatProcessor ip = new FloatProcessor((int) (imp_.getProcessor().getWidth() * Prefs.palmRatio_) + 1, (int) (imp_.getProcessor().getHeight() * Prefs.palmRatio_) + 1);
-		double psdWidth = Prefs.palmPSDWidth_ * Prefs.palmRatio_;
+		FloatProcessor ip = new FloatProcessor((int) (imp_.getProcessor().getWidth() * Prefs.palmScaleFactor_) + 1, (int) (imp_.getProcessor().getHeight() * Prefs.palmScaleFactor_) + 1);
+		double psdWidth = Prefs.palmPSDWidth_ * Prefs.palmScaleFactor_;
 		int nPlotted = 0;
 		int nSkipped = 0;
 		int [] selected = browserWindow_.getSelectedTrajectoriesOrAll();
@@ -345,15 +419,9 @@ public class Browser implements ClipboardOwner{
 			if (converge) {
 				xx /= traj.size();
 				yy /= traj.size();
-				double xs = xx * Prefs.palmRatio_;
-				double ys = yy * Prefs.palmRatio_;
-
-				for (int x = Math.max(0, (int)(xs - 3*psdWidth)); x < Math.min(ip.getWidth(), (int)(xs + 3*psdWidth)); x ++) {
-					for (int y = Math.max(0, (int)(ys - 3*psdWidth)); y < Math.min(ip.getHeight(), (int)(ys + 3*psdWidth)); y++) {
-						double v = Math.exp( -((x-xs) * (x-xs) + (y-ys)*(y-ys))/(2.0*psdWidth*psdWidth) );
-						ip.setf(x, y, (float)v + ip.getf(x,y));
-					}
-				}
+				double xs = xx * Prefs.palmScaleFactor_;
+				double ys = yy * Prefs.palmScaleFactor_;
+				gaussianImage(ip, xs, ys, psdWidth);
 				nPlotted ++;
 			} else {
 				nSkipped ++;
@@ -380,8 +448,8 @@ public class Browser implements ClipboardOwner{
 			Trajectory t = dataset_.getTrajectoryByIndex(selected[i]);
 			for (j = 1; j < t.size(); j++) {
 				if ( rect.contains(t.get(j-1).x, t.get(j-1).y)) {
-					int x = (int) t.get(j-1).x - rect.x + 1;
-					int y = (int) t.get(j-1).y - rect.y + 1;
+					int x = (int) t.get(j-1).x - rect.x ;
+					int y = (int) t.get(j-1).y - rect.y ;
 					double dx = (t.get(j).x - t.get(j-1).x)/(t.get(j).frame-t.get(j-1).frame);
 					double dy = (t.get(j).y - t.get(j-1).y)/(t.get(j).frame-t.get(j-1).frame);
 					double dr = Math.sqrt(dx*dx+dy*dy);
@@ -423,8 +491,8 @@ public class Browser implements ClipboardOwner{
 			Trajectory t = dataset_.getTrajectoryByIndex(selected[i]);
 			for (j = 1; j < t.size(); j++) {
 				if ( rect.contains(t.get(j-1).x, t.get(j-1).y)) {
-					int x = (int) t.get(j-1).x - rect.x + 1;
-					int y = (int) t.get(j-1).y - rect.y + 1;
+					int x = (int) t.get(j-1).x - rect.x ;
+					int y = (int) t.get(j-1).y - rect.y ;
 					double dx = (t.get(j).x - t.get(j-1).x)/(t.get(j).frame-t.get(j-1).frame);
 					double dy = (t.get(j).y - t.get(j-1).y)/(t.get(j).frame-t.get(j-1).frame);
 					dxs[x][y] += dx;

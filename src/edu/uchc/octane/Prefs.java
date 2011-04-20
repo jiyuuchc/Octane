@@ -32,7 +32,7 @@ public class Prefs {
 	final static String POINT_INDICATOR_KEY = "PointIndicator";
 	final static String SHOW_OVERLAY_KEY = "ShowOverlay";
 	final static String OMIT_SINGLE_FRAME_TRAJS = "OmitSingleFrame";
-	final static String PALM_RATIO = "PalmRatio";
+	final static String PALM_SCALE_FACTOR = "PalmRatio";
 	final static String MAX_PEAK_AREA = "MaxPeakArea";
 	final static String PALM_PSD_WIDTH = "PalmPSDWidth";
 	final static String TRACKER_MAX_BLINKING = "trackerMaxBlinking";
@@ -45,6 +45,7 @@ public class Prefs {
 	final static String SLOPPYNESS_KEY = "sloppyness";
 	final static String KERNELSIZE_KEY = "kernelSize";
 	final static String SIGMA_KEY = "sigma";
+	final static String IFS_SCALE_FACTOR = "IFSRatio";
 	//static String lastWorkingDir;
 
 	static boolean initialized = false;
@@ -55,7 +56,7 @@ public class Prefs {
 	static boolean pointIndicator_ = true;
 	static boolean showOverlay_ = true;
 	static boolean omitSingleFrameTrajs_ = false;
-	static double palmRatio_ = 10.0;
+	static double palmScaleFactor_ = 10.0;
 	static double palmPSDWidth_ = 0.1875;
 	static int maxPeakArea_ = 300;
 	static double trackerMaxDsp_ = 1;
@@ -68,6 +69,7 @@ public class Prefs {
 	static int sloppyness_ = 1;
 	static int kernelSize_ = 2;
 	static double sigma_ = 0.94;
+	static int IFSScaleFactor_ = 3;
 	
 	static Preferences pref_;
 
@@ -87,7 +89,7 @@ public class Prefs {
 		pointIndicator_ = pref.getBoolean(POINT_INDICATOR_KEY, pointIndicator_);
 		showOverlay_ = pref.getBoolean(SHOW_OVERLAY_KEY, showOverlay_);
 		omitSingleFrameTrajs_ = pref.getBoolean(OMIT_SINGLE_FRAME_TRAJS, omitSingleFrameTrajs_);
-		palmRatio_ = pref.getDouble(PALM_RATIO, palmRatio_);
+		palmScaleFactor_ = pref.getDouble(PALM_SCALE_FACTOR, palmScaleFactor_);
 		palmPSDWidth_ = pref.getDouble(PALM_PSD_WIDTH, palmPSDWidth_);
 		maxPeakArea_ = pref.getInt(MAX_PEAK_AREA, maxPeakArea_);
 		trackerMaxBlinking_ = pref.getInt(TRACKER_MAX_BLINKING, trackerMaxBlinking_ );
@@ -100,7 +102,7 @@ public class Prefs {
 		sloppyness_ = pref.getInt(SLOPPYNESS_KEY, sloppyness_);
 		kernelSize_ = pref.getInt(KERNELSIZE_KEY, kernelSize_);
 		sigma_ = pref.getDouble(SIGMA_KEY, sigma_);
-
+		IFSScaleFactor_ = pref.getInt(IFS_SCALE_FACTOR, IFSScaleFactor_);
 		pref_ = pref;
 		initialized = true;
 	}
@@ -121,7 +123,7 @@ public class Prefs {
 		pref_.putBoolean(POINT_INDICATOR_KEY, pointIndicator_);
 		pref_.putBoolean(SHOW_OVERLAY_KEY, showOverlay_);
 		pref_.putBoolean(OMIT_SINGLE_FRAME_TRAJS, omitSingleFrameTrajs_);
-		pref_.putDouble(PALM_RATIO, palmRatio_);
+		pref_.putDouble(PALM_SCALE_FACTOR, palmScaleFactor_);
 		pref_.putDouble(PALM_PSD_WIDTH, palmPSDWidth_);
 		pref_.putInt(MAX_PEAK_AREA, maxPeakArea_);
 		pref_.putInt(TRACKER_MAX_BLINKING,trackerMaxBlinking_);
@@ -134,6 +136,7 @@ public class Prefs {
 		pref_.putInt(SLOPPYNESS_KEY, sloppyness_);
 		pref_.putInt(KERNELSIZE_KEY, kernelSize_);
 		pref_.putDouble(SIGMA_KEY, sigma_);
+		pref_.putInt(IFS_SCALE_FACTOR, IFSScaleFactor_);		
 	}
 
 }

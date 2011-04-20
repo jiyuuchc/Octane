@@ -22,20 +22,13 @@ import java.util.Arrays;
 
 import org.apache.commons.math.FunctionEvaluationException;
 import org.apache.commons.math.analysis.DifferentiableMultivariateRealFunction;
-import org.apache.commons.math.analysis.DifferentiableMultivariateVectorialFunction;
-import org.apache.commons.math.analysis.MultivariateMatrixFunction;
 import org.apache.commons.math.analysis.MultivariateRealFunction;
 import org.apache.commons.math.analysis.MultivariateVectorialFunction;
 import org.apache.commons.math.ConvergenceException;
 import org.apache.commons.math.optimization.DifferentiableMultivariateRealOptimizer;
 import org.apache.commons.math.optimization.GoalType;
 import org.apache.commons.math.optimization.RealPointValuePair;
-import org.apache.commons.math.optimization.VectorialPointValuePair;
 import org.apache.commons.math.optimization.direct.PowellOptimizer;
-import org.apache.commons.math.optimization.general.ConjugateGradientFormula;
-import org.apache.commons.math.optimization.general.GaussNewtonOptimizer;
-import org.apache.commons.math.optimization.general.LevenbergMarquardtOptimizer;
-import org.apache.commons.math.optimization.general.NonLinearConjugateGradientOptimizer;
 
 import ij.process.ImageProcessor;
 

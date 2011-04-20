@@ -150,9 +150,9 @@ public class PFGWResolver implements SubPixelResolver {
 			 if ((xc * xc + yc * yc) < tol) {
 
 				 h_out = p(0) + p(1)*xc + p(2)*yc + p(3)*xc*xc + p(4)*xc*yc + p(5)*yc*yc - bg_;
-				 if (h_out < 0) {
-					 return -2;
-				 }
+//				 if (h_out < 0) {
+//					 return -2;
+//				 }
 				 double h = -(p(3) + p(5)) / 2 * cuvLimit; // should be around 1/2*sigma^2
 				 //	        	if ( - cuv < cuvLimit) {
 					 //	        		return -2;

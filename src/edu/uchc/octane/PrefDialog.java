@@ -41,7 +41,7 @@ public class PrefDialog {
 		dlg.addNumericField("Residue Threshold", Prefs.residueThreshold_, 1);
 
 		dlg.addMessage("- Analysis -");
-		dlg.addNumericField("PALM Ratio", Prefs.palmRatio_, 1);
+		dlg.addNumericField("PALM Ratio", Prefs.palmScaleFactor_, 1);
 		dlg.addNumericField("PALM PSD sigma", Prefs.palmPSDWidth_, 3);
 		dlg.addNumericField("PALM Threshold", Prefs.palmThreshold_, 1);		
 		dlg.addNumericField("Histogram Bins", Prefs.histogramBins_, 0);
@@ -55,7 +55,7 @@ public class PrefDialog {
 		Prefs.trackerMaxDsp_ = dlg.getNextNumber();
 		Prefs.trackerMaxBlinking_ = (int) dlg.getNextNumber();
 		Prefs.residueThreshold_ = dlg.getNextNumber();
-		Prefs.palmRatio_ = dlg.getNextNumber();
+		Prefs.palmScaleFactor_ = dlg.getNextNumber();
 		Prefs.palmPSDWidth_ = dlg.getNextNumber();
 		Prefs.palmThreshold_ = dlg.getNextNumber();
 		Prefs.histogramBins_ = (int) dlg.getNextNumber();

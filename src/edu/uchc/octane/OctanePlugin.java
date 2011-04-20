@@ -80,7 +80,7 @@ public class OctanePlugin implements PlugIn{
 		});
 
 	}
-	
+
 	/**
 	 * Analyze current image stack
 	 */

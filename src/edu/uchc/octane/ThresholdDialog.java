@@ -22,11 +22,6 @@ import java.awt.AWTEvent;
 import java.awt.Scrollbar;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.Arrays;
 import java.util.Vector;
 
 import ij.IJ;
@@ -36,7 +31,6 @@ import ij.ImageStack;
 import ij.gui.DialogListener;
 import ij.gui.GenericDialog;
 import ij.gui.NonBlockingGenericDialog;
-import ij.io.FileInfo;
 import ij.process.ImageProcessor;
 
 /**

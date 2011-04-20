@@ -19,8 +19,6 @@ package edu.uchc.octane;
 
 import java.awt.Font;
 import java.util.Arrays;
-import java.util.Iterator;
-import java.util.Vector;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.table.AbstractTableModel;
@@ -33,7 +31,7 @@ import javax.swing.RowFilter;
 public class TrajsTable extends JTable {
 
 	private static String[] ColumnNames_ = { "Frame", "Len", "Mobility", "Marked","Notes"};
-	private static Class<?> [] ColumnClasses_ = {Integer.class, Integer.class, Boolean.class, String.class};
+	private static Class<?> [] ColumnClasses_ = {Integer.class, Integer.class, Double.class, Boolean.class, String.class};
 	
 	private TrajDataset data_ = null;
 //	private Vector<Trajectory> data_ = null;

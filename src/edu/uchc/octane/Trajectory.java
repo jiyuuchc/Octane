@@ -64,8 +64,9 @@ public class Trajectory extends Vector<SmNode> {
 				stepSize2_ += get(i+1).distance2(get(i));
 				cnt ++;
 			}
-		} 
-		stepSize2_ /= cnt;
+		}
+		if (cnt > 0) 
+			stepSize2_ /= cnt;
 		return stepSize2_;
 	}
 }
