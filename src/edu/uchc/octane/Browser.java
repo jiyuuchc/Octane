@@ -398,7 +398,13 @@ public class Browser implements ClipboardOwner{
 	 * Construct PALM image.
 	 */
 	public void constructPalm() {
-		FloatProcessor ip = new FloatProcessor((int) (imp_.getProcessor().getWidth() * Prefs.palmScaleFactor_) + 1, (int) (imp_.getProcessor().getHeight() * Prefs.palmScaleFactor_) + 1);
+		Rectangle rect;
+		Roi roi = imp_.getRoi();
+		if (roi!=null && !roi.isArea())
+			imp_.killRoi(); 
+		rect = imp_.getProcessor().getRoi();
+
+		FloatProcessor ip = new FloatProcessor((int) (rect.width * Prefs.palmScaleFactor_), (int) (rect.height * Prefs.palmScaleFactor_));
 		double psdWidth = Prefs.palmPSDWidth_ * Prefs.palmScaleFactor_;
 		int nPlotted = 0;
 		int nSkipped = 0;
@@ -419,8 +425,8 @@ public class Browser implements ClipboardOwner{
 			if (converge) {
 				xx /= traj.size();
 				yy /= traj.size();
-				double xs = xx * Prefs.palmScaleFactor_;
-				double ys = yy * Prefs.palmScaleFactor_;
+				double xs = (xx - rect.x)* Prefs.palmScaleFactor_;
+				double ys = (yy - rect.y)* Prefs.palmScaleFactor_;
 				gaussianImage(ip, xs, ys, psdWidth);
 				nPlotted ++;
 			} else {

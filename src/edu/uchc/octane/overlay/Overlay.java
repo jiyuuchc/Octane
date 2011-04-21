@@ -46,7 +46,7 @@ public class Overlay implements PlugIn, DialogListener, ImageListener{
 	ColorProcessor ip0cache;
 	ColorProcessor [] ipcache = new ColorProcessor[3];
 	double [] xoffset = new double[3], yoffset = new double[3];
-	NonBlockingGenericDialog gd;
+	NonBlockingClosableDialog gd;
 	
 	@Override
 	public void run(String cmd) {
@@ -91,7 +91,7 @@ public class Overlay implements PlugIn, DialogListener, ImageListener{
 			return;
 		}
 		
-		gd = new NonBlockingGenericDialog("Overlay");
+		gd = new NonBlockingClosableDialog("Overlay");
 		gd.addChoice("Image1:", Arrays.copyOfRange(titles,1,titles.length), titles[1]);
 		gd.addChoice("Image2:", titles, titles[0]);
 		gd.addSlider("XOffset:", -100, 100, 0);
@@ -107,12 +107,12 @@ public class Overlay implements PlugIn, DialogListener, ImageListener{
 		overlayImp = new ImagePlus("Overlay");
 		ImagePlus.addImageListener(this);
 		gd.showDialog();
+		ImagePlus.removeImageListener(this);		
 		if (!gd.wasOKed()) {
 			if (overlayImp != null)
 				overlayImp.close();
 		}
 		gd.dispose();
-		ImagePlus.removeImageListener(this);
 	}
 
 	@Override
@@ -168,6 +168,9 @@ public class Overlay implements PlugIn, DialogListener, ImageListener{
 	
 	@Override
 	public void imageClosed(ImagePlus imp) {
+		if (imp == this.overlayImp)
+			return;
+
 		Vector<Choice> choices = gd.getChoices();
 
 		if (implist.size() == 1 || imp == this.overlayImp) {
