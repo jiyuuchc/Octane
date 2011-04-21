@@ -30,7 +30,7 @@ public class PrefDialog {
 	static public void openDialog() {
 		GenericDialog dlg = new GenericDialog("Options");
 		dlg.addMessage("- Subpixel Fitting -");
-		String [] choices = {"Polyfit Gaussian Weight","Gaussian Fit", "Zeor Background Gaussian"};
+		String [] choices = {"Weighted Polynomial fit","Gaussian Fit", "Zeor Background Gaussian"};
 		dlg.addChoice("Algrithm", choices, choices[Prefs.refiner_]);
 		dlg.addNumericField("Kernel Size", Prefs.kernelSize_, 0);
 		dlg.addNumericField("PSD sigma", Prefs.sigma_, 2);
@@ -41,7 +41,8 @@ public class PrefDialog {
 		dlg.addNumericField("Residue Threshold", Prefs.residueThreshold_, 1);
 
 		dlg.addMessage("- Analysis -");
-		dlg.addNumericField("PALM Ratio", Prefs.palmScaleFactor_, 1);
+		dlg.addNumericField("PALM Scale Factor", Prefs.palmScaleFactor_, 1);
+		dlg.addNumericField("IFS Scale Factor", Prefs.palmScaleFactor_, 0);
 		dlg.addNumericField("PALM PSD sigma", Prefs.palmPSDWidth_, 3);
 		dlg.addNumericField("PALM Threshold", Prefs.palmThreshold_, 1);		
 		dlg.addNumericField("Histogram Bins", Prefs.histogramBins_, 0);
@@ -56,6 +57,7 @@ public class PrefDialog {
 		Prefs.trackerMaxBlinking_ = (int) dlg.getNextNumber();
 		Prefs.residueThreshold_ = dlg.getNextNumber();
 		Prefs.palmScaleFactor_ = dlg.getNextNumber();
+		Prefs.IFSScaleFactor_ = (int)dlg.getNextNumber();
 		Prefs.palmPSDWidth_ = dlg.getNextNumber();
 		Prefs.palmThreshold_ = dlg.getNextNumber();
 		Prefs.histogramBins_ = (int) dlg.getNextNumber();
