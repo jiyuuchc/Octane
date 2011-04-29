@@ -339,8 +339,8 @@ public class Browser implements ClipboardOwner{
 				ip.setColor(Toolbar.getForegroundColor());
 				roi.drawPixels(ip);
 			}
-			int nx = (int)((traj.get(0).x - rect.x - 4) * Prefs.IFSScaleFactor_);
-			int ny = (int)((traj.get(0).y - rect.y - 4) * Prefs.IFSScaleFactor_);
+			int nx = (int)((traj.get(i).x - rect.x - 4) * Prefs.IFSScaleFactor_);
+			int ny = (int)((traj.get(i).y - rect.y - 4) * Prefs.IFSScaleFactor_);
 			roi = new Roi(nx,ny, 9 * Prefs.IFSScaleFactor_, 9 * Prefs.IFSScaleFactor_);
 			ip = stack.getProcessor(frame ++);
 			ip.setColor(Toolbar.getForegroundColor());
@@ -443,24 +443,44 @@ public class Browser implements ClipboardOwner{
 	 */
 	public void constructMobilityMap() {
 		Rectangle rect;
-		imp_.killRoi();
+		Roi roi = imp_.getRoi();
+		if (roi!=null && !roi.isArea())
+			imp_.killRoi(); 
 		rect = imp_.getProcessor().getRoi();
-
-		float [][] m = new float[rect.width][rect.height];
-		float [][] n = new float[rect.width][rect.height];
+ 
+		int w = (int)(rect.width*Prefs.palmScaleFactor_);
+		int h = (int)(rect.height*Prefs.palmScaleFactor_);
+		
+		int smoothArea = (int) (Prefs.palmScaleFactor_ / 2);
+		int[] dx = new int[4 * (smoothArea * smoothArea + 1) + 1];
+		int[] dy = new int[4 * (smoothArea * smoothArea + 1) + 1];
+		int cnt = 0;
+		for (int i = - smoothArea; i <= smoothArea; i++) {
+			for (int j = - smoothArea; j <= smoothArea; j++) {
+				if (Math.sqrt(i*i + j*j) <= smoothArea) {
+					dx[cnt] = i; dy[cnt] = j; cnt++;
+				}
+			}
+		}
+		
+		float [][] m = new float[w][h];
+		float [][] n = new float[w][h];
 		int [] selected = browserWindow_.getSelectedTrajectoriesOrAll();
 		int i,j;
 		for (i =0; i < selected.length; i++) {
 			Trajectory t = dataset_.getTrajectoryByIndex(selected[i]);
 			for (j = 1; j < t.size(); j++) {
 				if ( rect.contains(t.get(j-1).x, t.get(j-1).y)) {
-					int x = (int) t.get(j-1).x - rect.x ;
-					int y = (int) t.get(j-1).y - rect.y ;
-					double dx = (t.get(j).x - t.get(j-1).x)/(t.get(j).frame-t.get(j-1).frame);
-					double dy = (t.get(j).y - t.get(j-1).y)/(t.get(j).frame-t.get(j-1).frame);
-					double dr = Math.sqrt(dx*dx+dy*dy);
-					n[x][y] += 1.0f;
-					m[x][y] += dr;
+					int x = (int) ((t.get(j-1).x - rect.x) * Prefs.palmScaleFactor_);
+					int y = (int) ((t.get(j-1).y - rect.y) * Prefs.palmScaleFactor_) ;
+					for ( int k = 0; k < cnt; k++) {
+						int nx = x+dx[k];
+						int ny = y+dy[k];
+						if (nx>=0 && ny>=0 && nx < w && ny < h) {
+							n[x+dx[k]][y+dy[k]] += 1.0f;
+							m[x+dx[k]][y+dy[k]] += t.get(j).distance2(t.get(j-1));
+						}
+					}
 				}
 			}
 		}
@@ -475,9 +495,10 @@ public class Browser implements ClipboardOwner{
 		
 		FloatProcessor fp = new FloatProcessor(m);
 		FloatProcessor np = new FloatProcessor(n);
-		
-		new ImagePlus(imp_.getTitle() + " MobilityMap", fp).show();
-		new ImagePlus(imp_.getTitle() + " MobilityCnt", np).show();
+		ImageStack stack = new ImageStack(w, h);
+		stack.addSlice("MobilityMap", fp);
+		stack.addSlice("MobilityCnt", np);
+		new ImagePlus(imp_.getTitle() + " MobilityMap", stack).show();
 	}
 	
 	/**
@@ -485,7 +506,9 @@ public class Browser implements ClipboardOwner{
 	 */
 	public void constructFlowMap() {
 		Rectangle rect;
-		imp_.killRoi();
+		Roi roi = imp_.getRoi();
+		if (roi!=null && !roi.isArea())
+			imp_.killRoi(); 
 		rect = imp_.getProcessor().getRoi();
 
 		float [][] dxs = new float[rect.width][rect.height];
@@ -507,7 +530,7 @@ public class Browser implements ClipboardOwner{
 				}
 			}
 		}
-		
+
 		float maxDx = -1.0f, maxDy = -1.0f;
 		for (i = 0; i < rect.width; i ++) {
 			for (j = 0; j < rect.height; j++) {
@@ -522,16 +545,27 @@ public class Browser implements ClipboardOwner{
 			}
 		}
 		
-		
 		GeneralPath gp = new GeneralPath();
 		float max = (maxDx > maxDy? maxDx:maxDy) * 2.0f;
 		for (i = 0; i < rect.width; i ++) {
 			for (j = 0; j < rect.height; j++) {
 				if (n[i][j] > 0) {
-					dxs[i][j] = dxs[i][j] / max;
-					dys[i][j] = dys[i][j] / max;
-					gp.moveTo(rect.x + i + 0.5f, rect.y + j + 0.5f);
-					gp.lineTo(rect.x + i + 0.5f + dxs[i][j], rect.y + j + 0.5f + dys[i][j]);					
+					double x1 = dxs[i][j] / max;
+					double y1 = dys[i][j] / max;
+					double r1 = Math.sqrt(x1*x1 + y1 * y1);
+					gp.moveTo(i + 0.5f, j + 0.5f);
+					gp.lineTo(i + 0.5f + x1, j + 0.5f + y1);
+					if (r1 > 0.2) {
+						double x3 = x1 - x1 / r1 * 0.3;
+						double y3 = y1 - y1 / r1 * 0.3;
+						double x4 = x3 + y1 / r1 * 0.3 * 0.45;
+						double y4 = y3 - x1 / r1 * 0.3 * 0.45;
+						double x5 = x3 - y1 / r1 * 0.3 * 0.45;
+						double y5 = y3 + x1 / r1 * 0.3 * 0.45;
+						gp.moveTo(i + 0.5f + x4, j + 0.5f + y4);
+						gp.lineTo(i + 0.5f + x1, j + 0.5f + y1);
+						gp.lineTo(i + 0.5f + x5, j + 0.5f + y5);
+					}
 				}
 			}
 		}
