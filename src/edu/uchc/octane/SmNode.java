@@ -28,16 +28,16 @@ public class SmNode implements Serializable {
 	private static final long serialVersionUID = -4326247654894087222L;
 
 	/** x position */
-	double x;
+	public double x;
 	
 	/** y position */
-	double y;
+	public double y;
 	
 	/** The frame number */
-	int frame;
+	public int frame;
 	
 	/** residue of fitting. */
-	double reserved;
+	public double reserved;
 
 	/**
 	 * Instantiates a new node.
