@@ -1,4 +1,4 @@
-//FILE:          PFGWRefiner2.java
+//FILE:          PFGWResolver.java
 //PROJECT:       Octane
 //-----------------------------------------------------------------------------
 //

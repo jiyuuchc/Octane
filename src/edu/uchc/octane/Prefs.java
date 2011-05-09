@@ -55,19 +55,20 @@ public class Prefs {
 	static boolean pointIndicator_ = true;
 	static boolean showOverlay_ = true;
 	static boolean omitSingleFrameTrajs_ = false;
-	static double palmRatio_ = 10.0;
+	static double palmRatio_ = 10;
 	static double palmPSDWidth_ = 0.1875;
 	static int maxPeakArea_ = 300;
-	static double trackerMaxDsp_ = 1;
-	static int trackerMaxBlinking_ = 2;
+	static double trackerMaxDsp_ = 6;
+	static int trackerMaxBlinking_ = 0;
 	static double palmThreshold_ = 100; 
 	static boolean refinePeak_ = true;
-	static int refiner_ = 0;
+	static int refiner_ = 1;
 	static int histogramBins_ = 20;
 	static double residueThreshold_ = 100;
 	static int sloppyness_ = 1;
 	static int kernelSize_ = 2;
 	static double sigma_ = 0.94;
+	static double trackerLowerBound_ = 1.0;
 	
 	static Preferences pref_;
 

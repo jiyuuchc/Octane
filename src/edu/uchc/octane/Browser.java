@@ -53,7 +53,7 @@ import ij.process.ShortProcessor;
 public class Browser implements ClipboardOwner{
 
 	ImagePlus imp_ = null;
-	
+
 	TrajDataset dataset_ = null;
 	//TrajsTable trajsTable_;
 	//NodesTable nodesTable_;

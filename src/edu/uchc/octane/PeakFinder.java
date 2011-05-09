@@ -288,24 +288,27 @@ public class PeakFinder {
 	public short refineMaxima() {
 		if (refiner_ == null ) {
 			switch (Prefs.refiner_) {
-			case 0: 
+			case 0:
+				refiner_ = new NullResolver();
+				break;
+			case 1: 
 				refiner_ = new PFGWResolver();
 				break;
-			case 1:
+			case 2:
 				refiner_ = new GaussianResolver();
 				break;
-			case 2:
+			case 3:
 				refiner_ = new NelderMeadResolver(true);
 				break;
 			}
 		}
 
-		refiner_.setImageData(ip_);
-
 		short nMissed = 0;
 		short nNewMaxima = 0;
+		refiner_.setImageData(ip_);
+
 		residue_ = new double[nMaxima_];
-		if (nMaxima_ > 0 && Prefs.refinePeak_ ) {
+		if (nMaxima_ > 0 ) {
 			for (int i = 0; i < nMaxima_; i++) {
 				int rtmp;
 				rtmp = refiner_.refine(.5 + xArray_[i], .5 + yArray_[i]);
@@ -319,9 +322,7 @@ public class PeakFinder {
 					nMissed++;
 				}
 			}
-		} else if (nMaxima_ > 0) {
-			nNewMaxima = nMaxima_;
-		}
+		} 
 		assert (nMissed + nNewMaxima == nMaxima_);
 		nMaxima_ = nNewMaxima;
 		return nMissed;

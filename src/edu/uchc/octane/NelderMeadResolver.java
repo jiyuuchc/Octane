@@ -1,4 +1,4 @@
-//FILE:          NelderMeadRefiner.java
+//FILE:          NelderMeadResolver.java
 //PROJECT:       Octane
 //-----------------------------------------------------------------------------
 //

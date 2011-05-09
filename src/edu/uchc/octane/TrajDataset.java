@@ -334,7 +334,7 @@ public class TrajDataset{
 		double nextBondLength;
 		double [] minExtraLength = new double[headList.size()];
 
-		if (headList.size() + tailList.size() > 80) {
+		if (headList.size() + tailList.size() > 400) {
 			IJ.log("Optimizing a very large network: " + headList.size() + "," + tailList.size() + ". This might take for ever.");
 		}
 		
@@ -526,7 +526,7 @@ public class TrajDataset{
 		curFrame_ = 1;
 		while (curFrame_ < nodes_.length) {
 			
-			if (curFrame_ % 1 == 0 ) {
+			if (curFrame_ % 50 == 0 ) {
 				IJ.log("Frame " + curFrame_ + ", "
 						+ activeTracks_.size() + " active tracks, " 
 						+ trajectories_.size() + " stopped tracks."
