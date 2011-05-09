@@ -115,7 +115,23 @@ public class BrowserWindow extends JFrame {
 		
 		fileMenu.addSeparator();
 		
-		item = new JMenuItem("Export Trajectories");
+		item = new JMenuItem("Export All Nodes");
+		fileMenu.add(item);
+		item.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent ev) {
+				try {
+					JFileChooser fc = new JFileChooser();
+					if (fc.showSaveDialog(browser_.getWindow()) == JFileChooser.APPROVE_OPTION) {
+						browser_.exportNodes(fc.getSelectedFile());
+					}
+				} catch (IOException e) {
+					IJ.showMessage("Can't save file! " + e.getMessage()); 
+				}
+			}			
+		});		
+
+		item = new JMenuItem("Export Selected Trajectories");
 		fileMenu.add(item);
 		item.addActionListener(new ActionListener() {
 			@Override
@@ -289,7 +305,7 @@ public class BrowserWindow extends JFrame {
 
 		buttonBox.add(Box.createRigidArea(new Dimension(10,0)));
 
-		button = new JButton("Export");
+		button = new JButton("CopySelected");
 		buttonBox.add(button);
 
 		button.addActionListener(new ActionListener() {

@@ -25,7 +25,7 @@ import java.io.Serializable;
  */
 public class SmNode implements Serializable {
 	
-	private static final long serialVersionUID = -4326247654894087222L;
+	private static final long serialVersionUID = -8876493729593706510L;
 
 	/** x position */
 	public double x;
@@ -35,6 +35,9 @@ public class SmNode implements Serializable {
 	
 	/** The frame number */
 	public int frame;
+	
+	/** The peak value */
+	public int height;
 	
 	/** residue of fitting. */
 	public double reserved;
@@ -47,7 +50,7 @@ public class SmNode implements Serializable {
 	 * @param f the frame number
 	 */
 	public SmNode(double x, double y, int f) {
-		this(x, y, f, 0.0);
+		this(x, y, f, 0, 0.0);
 	}
 
 	/**
@@ -58,10 +61,11 @@ public class SmNode implements Serializable {
 	 * @param f the frame number
 	 * @param q the residue
 	 */
-	public SmNode(double x, double y, int f, double q) {
+	public SmNode(double x, double y, int f, int h,  double q) {
 		this.x = x;
 		this.y = y;
 		frame = f;
+		height = h;
 		reserved = q;
 	}
 
@@ -76,7 +80,10 @@ public class SmNode implements Serializable {
 		y = Double.parseDouble(items[1]);
 		frame = Integer.parseInt(items[2].trim());
 		if (items.length > 3) {
-			reserved = Double.parseDouble(items[3]);
+			height = Integer.parseInt(items[3]);
+		}
+		if (items.length > 4) {
+			reserved = Double.parseDouble(items[4]);
 		}
 	}
 
@@ -84,7 +91,7 @@ public class SmNode implements Serializable {
 	 * Convert to comma separated text data.
 	 */
 	public String toString() {
-		return (x + ", " + y + ", " + frame + ", " + reserved);
+		return (x + ", " + y + ", " + frame + ", " + height + "," + reserved);
 	}
 	
 	/**

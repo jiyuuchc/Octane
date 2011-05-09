@@ -374,7 +374,7 @@ public class PeakFinder {
 		SmNode [] nodes;
 		nodes = new SmNode[nMaxima_];
 		for ( int i = 0; i < nMaxima_; i ++) {
-			nodes[i] = new SmNode(xArray_[i], yArray_[i], frame, residue_[i]);
+			nodes[i] = new SmNode(xArray_[i], yArray_[i], frame, peakSize_[i], residue_[i]);
 		}
 		return nodes;
 	}

@@ -153,11 +153,13 @@ public class TrajDataset{
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	public void writeTrajectoriesToText(Writer w)throws IOException {
-		//BufferedWriter bw = new BufferedWriter(new FileWriter(file));
+		//
 		for (int i = 0; i < trajectories_.size(); i ++ ) {
 			for (int j = 0; j < trajectories_.get(i).size(); j++) {
 				SmNode s = trajectories_.get(i).get(j);
-				w.write(String.format("%f, %f, %d, %f, %d\n", s.x, s.y, s.frame, s.reserved, i));				
+				w.append(s.toString());
+				w.append(", " + i + "\n");
+//				w.write(String.format("%f, %f, %d, %f, %d\n", s.x, s.y, s.frame, s.reserved, i));				
 			}
 		}
 		w.close(); 		
@@ -532,7 +534,7 @@ public class TrajDataset{
 						+ trajectories_.size() + " stopped tracks."
 						+ nodes_[curFrame_].length + "new nodes");
 			}
-			
+			IJ.showProgress(curFrame_, nodes_.length);
 			buildAllPossibleBonds();
 			trivialBonds();
 
