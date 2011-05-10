@@ -80,7 +80,7 @@ public class SmNode implements Serializable {
 		y = Double.parseDouble(items[1]);
 		frame = Integer.parseInt(items[2].trim());
 		if (items.length > 3) {
-			height = Integer.parseInt(items[3]);
+			height = Integer.parseInt(items[3].trim());
 		}
 		if (items.length > 4) {
 			reserved = Double.parseDouble(items[4]);

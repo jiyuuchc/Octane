@@ -22,6 +22,7 @@ import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
 import ij.gui.GenericDialog;
+import ij.gui.Plot;
 
 import java.awt.Dimension;
 import java.awt.GridBagLayout;
@@ -188,6 +189,25 @@ public class BrowserWindow extends JFrame {
 			}
 		});
 
+		viewMenu.addSeparator();
+		item = new JMenuItem("Intensity Transients");
+		viewMenu.add(item);
+		item.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e){
+				int [] selected = getSelectedTrajectories();
+				Trajectory t = browser_.getData().getTrajectoryByIndex(selected[0]);
+				float [] x = new float[t.size()];
+				float [] y = new float[t.size()];
+				for (int i = 0; i < t.size(); i++) {
+					x[i] = t.get(i).frame;
+					y[i] = t.get(i).height;
+				}
+				Plot plotWin = new Plot("Transient", "Frame", "Intensity", x, y);
+				plotWin.show();
+			}
+		});
+		
 		item = new JMenuItem("Flow Map");
 		processMenu.add(item);
 		item.addActionListener(new ActionListener() {

@@ -752,4 +752,12 @@ public class Browser implements ClipboardOwner{
 		}
 		bw.close();
 	}
+
+	/**
+	 * Plot intensity transients of selected trajectories
+	 * 
+	 */
+	public void plotTransients() {
+		
+	}
 }
