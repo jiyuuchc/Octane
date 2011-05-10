@@ -111,8 +111,17 @@ public class BrowserWindow extends JFrame {
 		fileMenu.add(item);
 		item.addActionListener(new ActionListener() {
 			@Override
-			public void actionPerformed(ActionEvent ev) { 
-				browser_.rebuildTrajectories();
+			public void actionPerformed(ActionEvent ev) {
+				setVisible(false);
+				Thread thread = new Thread() {
+					public void run() {
+						browser_.rebuildTrajectories();
+						if (isDisplayable()) {
+							setVisible(true);
+						}
+					}
+				};
+				thread.start();
 			}			
 		});
 		
@@ -456,14 +465,16 @@ public class BrowserWindow extends JFrame {
 		ImagePlus imp = browser_.getImp();
 		if (imp != null ) {
 			imp.getWindow().addWindowListener(new WindowAdapter() {
+				boolean isVisible;
 				@Override
 				public void windowIconified(WindowEvent e) {
+					isVisible = isVisible();
 					setVisible(false);
 				}
 				
 				@Override
 				public void windowDeiconified(WindowEvent e) {
-					setVisible(true);
+					setVisible(isVisible);
 				}
 				
 				@Override

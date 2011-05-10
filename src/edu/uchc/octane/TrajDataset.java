@@ -115,7 +115,8 @@ public class TrajDataset{
 
 		nodes_ = new SmNode[framelist.size()][];
 		for (int i = 0 ; i < nodes_.length; i++) {
-			nodes_[i] = (SmNode[]) framelist.get(i).toArray();
+			nodes_[i] = new SmNode[framelist.get(i).size()];
+			framelist.get(i).toArray(nodes_[i]);
 		}
 	}
 

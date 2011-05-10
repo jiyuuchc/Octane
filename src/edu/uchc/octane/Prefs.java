@@ -59,7 +59,7 @@ public class Prefs {
 	static double palmScaleFactor_ = 10.0;
 	static double palmPSDWidth_ = 0.1875;
 	static int maxPeakArea_ = 300;
-	static double trackerMaxDsp_ = 6;
+	static double trackerMaxDsp_ = 5;
 	static int trackerMaxBlinking_ = 0;
 	static double palmThreshold_ = 100; 
 	static boolean refinePeak_ = true;
