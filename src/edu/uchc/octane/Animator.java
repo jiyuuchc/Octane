@@ -21,6 +21,9 @@ import ij.ImagePlus;
 import ij.gui.Overlay;
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.geom.GeneralPath;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -28,7 +31,7 @@ import java.util.TimerTask;
 /**
  * Manage trajectory animation.
  */
-public class Animator {
+public class Animator extends MouseAdapter {
 	
 	/** Time delay between each frame during animation */
 	protected long ANIMATIONDELAY_ = 100;
@@ -123,6 +126,8 @@ public class Animator {
 	public void animate(Trajectory traj) {
 		stopAnimation();
 		increment_ = 1;
+		
+		imp_.getCanvas().addMouseListener(this);
 		animateTimer_ = new Timer();
 		animateTimer_.schedule(new AnimateTimerTask(traj), ANIMATIONDELAY_, ANIMATIONDELAY_);
 	}
@@ -135,6 +140,14 @@ public class Animator {
 			animateTimer_.cancel();
 			animateTimer_ = null;
 		}
-		
+		if (imp_ != null ) {
+			imp_.getCanvas().removeMouseListener(this);
+		}
 	}
+	
+	@Override
+	public void mouseClicked(MouseEvent e) {
+		stopAnimation();
+	}
+		
 }

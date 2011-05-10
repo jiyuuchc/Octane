@@ -413,6 +413,7 @@ public class BrowserWindow extends JFrame {
 		trajsTable_.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
+				browser_.stopAnimation();
 				if (e.getValueIsAdjusting())
 					return;
 				browser_.drawOverlay();

@@ -757,6 +757,16 @@ public class Browser implements ClipboardOwner{
 	}
 
 	/**
+	 * Stop the animation
+	 */
+	public void stopAnimation() {
+		if (animator_ == null )
+			return;
+		
+		animator_.stopAnimation();
+	}
+			
+	/**
 	 * Delete all selected trajectories from trajectory table.
 	 */
 	public void deleteSelectedTrajectories() {
