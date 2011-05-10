@@ -8,15 +8,11 @@ import edu.uchc.octane.Browser;
 import edu.uchc.octane.ThresholdDialog;
 
 public class BrowserTest {
-	public static ImagePlus imp;
-	final static String p = "../testdata"; // test data
-	final static String path = p + "/1.tif";
-	
 	public static void main(String[] args) throws IOException, ClassNotFoundException {
-		imp = ij.IJ.openImage(path);
+		ImagePlus imp = ij.IJ.openImage(args[0]);
 		imp.show();
 		//TrajDataset data = new TrajDataset(p);
-		File file = new File(p + File.separator + imp.getTitle()+".dataset");
+		File file = new File(args[0]+".dataset");
 		if (file.exists()) {
 			Browser b = new Browser(imp);
 			b.setup();

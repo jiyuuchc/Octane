@@ -89,10 +89,10 @@ public class TrajsTable extends JTable {
 
 		@Override
 		public void setValueAt(Object value, int row, int col) {
-			if (col == 3) {
+			if (ColumnNames_[col] == "Notes") {
 				data_.getTrajectoryByIndex(row).note = (String) value;
-			} else if (col == 2) {
-				data_.getTrajectoryByIndex(row).marked = (Boolean)value;
+			} else if (ColumnNames_[col] == "Marked") {
+				data_.getTrajectoryByIndex(row).marked = (Boolean) value;
 			}
 		}
 
