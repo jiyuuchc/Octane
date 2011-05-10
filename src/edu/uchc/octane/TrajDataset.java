@@ -32,6 +32,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.ListIterator;
@@ -49,9 +51,9 @@ public class TrajDataset{
 
 	protected SmNode [][] nodes_; //nodes_[frame][offset]
 
-	private LinkedList<Integer> [] backwardBonds_;
-	private LinkedList<Integer> [] forwardBonds_;
-	private LinkedList<Double> [] bondLengths_;
+	private Integer [][] backwardBonds_;
+	private Bond [][] forwardBonds_;
+//	private double [][] bondLengths_;
 	private boolean [] isTrackedParticle_; 
 	private LinkedList<Trajectory> activeTracks_;	
 	private Trajectory wasted_;
@@ -60,6 +62,15 @@ public class TrajDataset{
 	private int maxBlinking_;
 	private int curFrame_;
 
+	class Bond implements Comparable<Bond> {
+		int bondTo;
+		double bondLength;
+		@Override
+		public int compareTo(Bond o) {
+			return (int) Math.signum(bondLength - o.bondLength); 
+		}
+	}
+	
 	/**
 	 * Constructor.
 	 */
@@ -142,11 +153,13 @@ public class TrajDataset{
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	public void writeTrajectoriesToText(Writer w)throws IOException {
-		//BufferedWriter bw = new BufferedWriter(new FileWriter(file));
+		//
 		for (int i = 0; i < trajectories_.size(); i ++ ) {
 			for (int j = 0; j < trajectories_.get(i).size(); j++) {
 				SmNode s = trajectories_.get(i).get(j);
-				w.write(String.format("%f, %f, %d, %f, %d\n", s.x, s.y, s.frame, s.reserved, i));				
+				w.append(s.toString());
+				w.append(", " + i + "\n");
+//				w.write(String.format("%f, %f, %d, %f, %d\n", s.x, s.y, s.frame, s.reserved, i));				
 			}
 		}
 		w.close(); 		
@@ -217,7 +230,8 @@ public class TrajDataset{
 		nodes.add(curFrameNodes.toArray(new SmNode[curFrameNodes.size()]));
 		br.close();
 
-		return createDatasetFromNodes((SmNode[][]) nodes.toArray());
+		SmNode[][] n = new SmNode[nodes.size()][];
+		return createDatasetFromNodes(nodes.toArray(n));
 	}
 
 	/**
@@ -272,8 +286,8 @@ public class TrajDataset{
 	}
 
 	private void clusterAndOptimize(int seed) {
-		LinkedList<Integer> headList = new LinkedList<Integer>();
-		LinkedList<Integer> tailList = new LinkedList<Integer>();
+		Vector<Integer> headList = new Vector<Integer>();
+		Vector<Integer> tailList = new Vector<Integer>();
 
 		headList.add(seed);
 		ListIterator<Integer> itHead = headList.listIterator();
@@ -283,9 +297,9 @@ public class TrajDataset{
 		while ( itHead.hasPrevious()) {
 			while (itHead.hasPrevious()) {
 				int trackIdx = itHead.previous();
-				for (int j = 0; j < forwardBonds_[trackIdx].size(); j ++) {
-					int tail = forwardBonds_[trackIdx].get(j);
-					if ( ! tailList.contains(tail)) {
+				for (int j = 0; j < forwardBonds_[trackIdx].length; j ++) {
+					int tail = forwardBonds_[trackIdx][j].bondTo;
+					if ( !isTrackedParticle_[tail] && ! tailList.contains(tail)) {
 						itTail.add(tail); // surprising, this add _before_ the cursor.
 					}
 				}
@@ -294,9 +308,9 @@ public class TrajDataset{
 
 			while (itTail.hasPrevious()) {
 				int posIdx = itTail.previous();
-				for (int j = 0; j < backwardBonds_[posIdx].size(); j++) {
-					int head = backwardBonds_[posIdx].get(j);
-					if (! headList.contains(head)) {
+				for (int j = 0; j < backwardBonds_[posIdx].length; j++) {
+					int head = backwardBonds_[posIdx][j];
+					if (forwardBonds_[head] != null && ! headList.contains(head)) {
 						itHead.add(head);
 					}
 				}
@@ -307,63 +321,81 @@ public class TrajDataset{
 		optimizeSubnetwork(headList, tailList);
 	}
 
-	private void optimizeSubnetwork(LinkedList<Integer> headList, LinkedList<Integer> tailList) {
+	private void optimizeSubnetwork(Vector<Integer> headList, Vector<Integer> tailList) {
 		double bestDistanceSum = 1e20;
 		int curBondIdx = -1;
 		double curDistanceSum = 0;
 		Stack<Integer> stack = new Stack<Integer>();
-		Stack<Integer> occupiedTails = new Stack<Integer>();
+//		Stack<Integer> occupiedTails = new Stack<Integer>();
+		HashSet<Integer> occupiedTails = new HashSet<Integer>(headList.size());
+		Stack<HashSet<Integer>> tailStack = new Stack<HashSet<Integer>>();
 		Stack<Double> distanceStack = new Stack<Double>();
 		Stack<Integer> stack_c = null;
 		int trackIdx; 
 		int tail;
 		double nextBondLength;
+		double [] minExtraLength = new double[headList.size()];
+
+		if (headList.size() + tailList.size() > 400) {
+			IJ.log("Optimizing a very large network: " + headList.size() + "," + tailList.size() + ". This might take for ever.");
+		}
+		
+		double m = 0;
+		for (int i = headList.size()-1 ; i >=0; i--) {
+			minExtraLength[i] = m;
+			m += forwardBonds_[headList.get(i)][0].bondLength;
+		}
 
 		while (true) {
 			trackIdx = headList.get(stack.size());
 
 			// try next possible bond		
-			if (curBondIdx  < forwardBonds_[trackIdx].size()) { 
+			while (curBondIdx  < forwardBonds_[trackIdx].length) { 
 				curBondIdx ++ ;
 
 				// test if this is a good bond
-				if (curBondIdx == forwardBonds_[trackIdx].size()) { //special case, no bonding
+				if (curBondIdx == forwardBonds_[trackIdx].length) { //special case, no bonding
 					if (curDistanceSum + threshold_ >= bestDistanceSum) {
-						continue;
+						break;
 					}
 					//curDistanceSum += threshold_;
 					nextBondLength = threshold_;
 					tail = -1;
 				} else {
-					tail = forwardBonds_[trackIdx].get(curBondIdx);
+					tail = forwardBonds_[trackIdx][curBondIdx].bondTo;
 					if (occupiedTails.contains(tail)) {
-						continue; //fail
+						continue; //next bond
 					}
 
-					if (curDistanceSum + bondLengths_[trackIdx].get(curBondIdx) >= bestDistanceSum) {
-						continue; //fail
+					nextBondLength = forwardBonds_[trackIdx][curBondIdx].bondLength;
+
+					if (curDistanceSum + nextBondLength + minExtraLength[stack.size()] >= bestDistanceSum) {
+						break; //fail
 					}
 					//curDistanceSum += bondLengths_.get(trackIdx).get(curBondIdx);
-					nextBondLength = bondLengths_[trackIdx].get(curBondIdx);
 				}
 
 				//looks ok, push to stack
 				if (stack.size() < headList.size()-1) {
 					stack.push(curBondIdx);
-					occupiedTails.push(tail);
+					tailStack.push(new HashSet<Integer>(occupiedTails));
+					occupiedTails.add(tail);
 					distanceStack.push(curDistanceSum);
 					curBondIdx = -1;
 					curDistanceSum += nextBondLength;
+					trackIdx = headList.get(stack.size());
 				} else { // unless this is the last element
 					bestDistanceSum = curDistanceSum + nextBondLength;
 					stack.push(curBondIdx);
 					stack_c = (Stack<Integer>) stack.clone();
 					stack.pop();
+					break;
 				}
-
-			} else if (stack.size() > 0) {
+			} 
+			
+			if (stack.size() > 0) {
 				curBondIdx = stack.pop();
-				occupiedTails.pop();
+				occupiedTails = tailStack.pop();
 				curDistanceSum = distanceStack.pop();
 			} else { // finished here
 				break;
@@ -375,68 +407,103 @@ public class TrajDataset{
 		for (int i = 0; i < stack_c.size(); i ++) {			
 			trackIdx = headList.get(i);
 			int bondIdx = stack_c.get(i);
-			if (bondIdx < forwardBonds_[trackIdx].size()) {
-				int bondTo = forwardBonds_[trackIdx].get(bondIdx);
+			if (bondIdx < forwardBonds_[trackIdx].length) {
+				int bondTo = forwardBonds_[trackIdx][bondIdx].bondTo;
 				SmNode n = nodes_[curFrame_][bondTo];
 				activeTracks_.get(trackIdx).add(n); //might be slow if tracks_ is too big
+				assert(isTrackedParticle_[bondTo] == false);
 				isTrackedParticle_[bondTo] = true;
-			} 
-			forwardBonds_[trackIdx].clear();
+				backwardBonds_[bondTo] = null;
+			}
+			forwardBonds_[trackIdx] = null;
 		}
 	}
 
 
 	private void buildAllPossibleBonds() {
-		forwardBonds_ = (LinkedList<Integer> []) new LinkedList[activeTracks_.size()];
-		bondLengths_ = (LinkedList<Double> []) new LinkedList[activeTracks_.size()];
-		backwardBonds_ = (LinkedList<Integer> []) new LinkedList[nodes_[curFrame_].length];
+		forwardBonds_ = new Bond[activeTracks_.size()][];
+		//bondLengths_ = new double[activeTracks_.size()][];
+		backwardBonds_ = new Integer[nodes_[curFrame_].length][];
 		isTrackedParticle_ = new boolean[nodes_[curFrame_].length];
+		
+		Vector<Integer> [] backBonds = new Vector[nodes_[curFrame_].length];
 
-		for ( int i = 0; i < activeTracks_.size(); i ++) {
-			forwardBonds_[i] = new LinkedList<Integer>();
-			bondLengths_[i] = new LinkedList<Double>();
-		}
+//		for ( int i = 0; i < activeTracks_.size(); i ++) {
+//			forwardBonds_[i] = new LinkedList<Integer>();
+//			bondLengths_[i] = new LinkedList<Double>();
+//		}
 		for ( int i = 0; i < nodes_[curFrame_].length; i ++) {
-			backwardBonds_[i] = new LinkedList<Integer>();
+			backBonds[i] = new Vector<Integer>();
 		}
+
+		Bond [] bonds = new Bond[nodes_[curFrame_].length];
+		//double [] bondLengths = new double[nodes_[curFrame_].length];
+		int nBonds = 0;
 
 		// calculated all possible bonds
 		ListIterator <Trajectory> it = activeTracks_.listIterator();
 		while( it.hasNext() ) {
 			int id = it.nextIndex();
 			SmNode trackHead = it.next().lastElement();
-			if (trackHead != null) { // only for active tracks
-				for (int j = 0; j < nodes_[curFrame_].length; j ++) {
-					if (nodes_[curFrame_][j].reserved < Prefs.residueThreshold_) {
-						double d = trackHead.distance2(nodes_[curFrame_][j]);
-						if (d <= threshold2_) { // don't miss the = sign
-							forwardBonds_[id].add(j);
-							bondLengths_[id].add(d);
-							backwardBonds_[j].add(id);
-						} 
-					}
+			
+			nBonds = 0;
+
+			for (int j = 0; j < nodes_[curFrame_].length; j ++) {
+				if (nodes_[curFrame_][j].reserved < Prefs.residueThreshold_) {
+					double d = trackHead.distance2(nodes_[curFrame_][j]);
+					if (d <= threshold2_) { // don't miss the = sign
+						Bond b = new Bond();
+						b.bondLength = d;
+						b.bondTo = j;
+						bonds[nBonds++] = b;
+						backBonds[j].add(id);
+//						forwardBonds_[id].add(j);
+//						bondLengths_[id].add(d);
+//						backwardBonds_[j].add(id);
+					} 
 				}
 			}
+			
+			forwardBonds_[id] = Arrays.copyOf(bonds, nBonds);
+			if (nBonds > 1) {
+				Arrays.sort(forwardBonds_[id]);
+				if (forwardBonds_[id][0].bondLength <= Prefs.trackerLowerBound_) {
+					forwardBonds_[id] = Arrays.copyOf(forwardBonds_[id], 1);
+				}
+			}
+//			bondLengths_[id] = Arrays.copyOf(bondLengths, nBonds);
+			
 		}
+		
+		// create backward bons
+		for (int i = 0; i < backBonds.length; i ++) {
+			backwardBonds_[i] = new Integer[backBonds[i].size()];
+			backBonds[i].toArray(backwardBonds_[i]);
+		}
+
 	}
 
 	private void trivialBonds() {
 		// search all trivial bonds
 		for (int i = 0; i < forwardBonds_.length; i++ ) {
-			if (forwardBonds_[i].size() == 1) {
-				int bondTo = forwardBonds_[i].getFirst();
-				if (backwardBonds_[bondTo].size() == 1) {
+			if (forwardBonds_[i].length == 1) {
+				int bondTo = forwardBonds_[i][0].bondTo;
+				if (backwardBonds_[bondTo].length == 1) {
 					// trivial bond
-					forwardBonds_[i].clear();
+					forwardBonds_[i] = null;
+					backwardBonds_[bondTo] = null;
 					SmNode n = nodes_[curFrame_][bondTo];
 					activeTracks_.get(i).add(n);
 					isTrackedParticle_[bondTo] = true;
+					continue;
 				}
-			} else {
-				for (int j = 0; j < forwardBonds_[i].size(); j++) {
-					bondLengths_[i].set(j, Math.sqrt(bondLengths_[i].get(j)));
-				}
+			} 
+
+			for (int j = 0; j < forwardBonds_[i].length; j++) {
+				forwardBonds_[i][j].bondLength = Math.sqrt(forwardBonds_[i][j].bondLength);
+//				bondLengths_[i][j]=Math.sqrt(bondLengths_[i][j]);
 			}
+		
 		}
 	} // TrivialBonds()
 
@@ -460,11 +527,19 @@ public class TrajDataset{
 
 		curFrame_ = 1;
 		while (curFrame_ < nodes_.length) {
+			
+			if (curFrame_ % 50 == 0 ) {
+				IJ.log("Frame " + curFrame_ + ", "
+						+ activeTracks_.size() + " active tracks, " 
+						+ trajectories_.size() + " stopped tracks."
+						+ nodes_[curFrame_].length + "new nodes");
+			}
+			IJ.showProgress(curFrame_, nodes_.length);
 			buildAllPossibleBonds();
 			trivialBonds();
 
 			for ( int i = 0; i < forwardBonds_.length; i ++) {
-				if (forwardBonds_[i].size() > 0) {
+				if (forwardBonds_[i] != null && forwardBonds_[i].length > 0) {
 					clusterAndOptimize(i);
 				}
 			}
@@ -474,18 +549,17 @@ public class TrajDataset{
 			Iterator<Trajectory> it = activeTracks_.iterator(); 
 			while ( it.hasNext() ) {
 				Trajectory track = it.next();
-				if (track.lastElement() != null) {
-					int frame = track.lastElement().frame;
-					if (curFrame_ - frame > maxBlinking_) {
-						it.remove();
-						trajectories_.add(track);
-					} 
-				}
+				int frame = track.lastElement().frame;
+				if (curFrame_ - frame >= maxBlinking_) {
+					it.remove();
+					trajectories_.add(track);
+				} 
 			}
 
 			//add new particles into the track list
 			for (int i = 0; i < nodes_[curFrame_].length; i++) {
-				if (!isTrackedParticle_[i]) {
+				if (! isTrackedParticle_[i]) {
+					assert(backwardBonds_[i] != null);
 					if (nodes_[curFrame_][i].reserved < Prefs.residueThreshold_) {
 						Trajectory t;
 						t = new Trajectory();
@@ -498,11 +572,6 @@ public class TrajDataset{
 			}
 
 			curFrame_ ++;
-			if ((curFrame_ / 100) * 100 == curFrame_ ) {
-				IJ.log("Frame " + curFrame_ + ", " 
-						+ activeTracks_.size() + " active tracks, " 
-						+ trajectories_.size() + " stopped tracks.");
-			}
 		} //while
 
 		// add all tracks to stoppedTracks list

@@ -30,7 +30,7 @@ public class PrefDialog {
 	static public void openDialog() {
 		GenericDialog dlg = new GenericDialog("Options");
 		dlg.addMessage("- Subpixel Fitting -");
-		String [] choices = {"Weighted Polynomial fit","Gaussian Fit", "Zeor Background Gaussian"};
+		String [] choices = {"None", "Polyfit Gaussian Weight","Gaussian Fit", "Zeor Background Gaussian"};
 		dlg.addChoice("Algrithm", choices, choices[Prefs.refiner_]);
 		dlg.addNumericField("Kernel Size", Prefs.kernelSize_, 0);
 		dlg.addNumericField("PSD sigma", Prefs.sigma_, 2);

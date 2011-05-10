@@ -30,7 +30,9 @@ import java.awt.datatransfer.Transferable;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.geom.GeneralPath;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -56,7 +58,7 @@ import ij.process.ShortProcessor;
 public class Browser implements ClipboardOwner{
 
 	ImagePlus imp_ = null;
-	
+
 	TrajDataset dataset_ = null;
 	//TrajsTable trajsTable_;
 	//NodesTable nodesTable_;
@@ -833,7 +835,37 @@ public class Browser implements ClipboardOwner{
 	 * @param file the file
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
-	public void exportTrajectories(File file) throws IOException {
+	public void exportNodes(File file) throws IOException {
 		dataset_.writePositionsToText(file);		
+	}
+
+	/**
+	 * Export selected trajectories to text.
+	 * Each molecule occupy one line: x, y, frame, height, trackIdx
+	 * 
+	 * @param file the file
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 */
+	public void exportTrajectories(File file) throws IOException {
+		BufferedWriter bw = new BufferedWriter(new FileWriter(file));
+		int [] selected = browserWindow_.getSelectedTrajectories();
+		Trajectory traj;
+		for (int i = 0; i < selected.length; i++) {
+			traj = dataset_.getTrajectoryByIndex(selected[i]);
+			for (int j = 0; j < traj.size(); j++) {
+				SmNode n = traj.get(j);
+				bw.append(n.toString());
+				bw.append(", " + i + "\n");
+			}
+		}
+		bw.close();
+	}
+
+	/**
+	 * Plot intensity transients of selected trajectories
+	 * 
+	 */
+	public void plotTransients() {
+		
 	}
 }

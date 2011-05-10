@@ -141,7 +141,7 @@ public class ThresholdDialog implements ImageListener {
 			nodes_[frame - 1] = finder_.getCurrentNodes(frame);
 		}
 
-		IJ.showMessage(imp_.getTitle() + "- Tested:" + nFound + " Missed:" + nMissed);
+		IJ.log(imp_.getTitle() + "- Tested:" + nFound + " Missed:" + nMissed);
 
 		return true;
 	}

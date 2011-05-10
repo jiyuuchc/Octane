@@ -1,4 +1,4 @@
-//FILE:          GaussianRefiner.java
+//FILE:          GaussianResolver.java
 //PROJECT:       Octane
 //-----------------------------------------------------------------------------
 //
