@@ -67,6 +67,12 @@ public class ThresholdDialog implements ImageListener {
 	 * @return true, if OKed
 	 */
 	public boolean openDialog() {
+		final String [] choices = {"None", "Polyfit Gaussian Weight","Gaussian Fit", "Zeor Background Gaussian"};
+		dlg_.addChoice("Algrithm", choices, choices[Prefs.refiner_]);
+		dlg_.addNumericField("Kernel Size", Prefs.kernelSize_, 0);
+		dlg_.addNumericField("PSD sigma", Prefs.sigma_, 2);
+		
+		finder_.setTolerance(Prefs.peakTolerance_);
 		dlg_.addSlider("Threshold", 0, 40000.0, finder_.getTolerance());
 
 		Vector<Scrollbar> sliders = (Vector<Scrollbar>)dlg_.getSliders();
@@ -108,6 +114,10 @@ public class ThresholdDialog implements ImageListener {
 		dlg_.showDialog();
 		ImagePlus.removeImageListener(this);
 		if (dlg_.wasOKed()) {
+			Prefs.refiner_ = dlg_.getNextChoiceIndex();
+			Prefs.kernelSize_ = (int) dlg_.getNextNumber();
+			Prefs.sigma_ = dlg_.getNextNumber();
+			Prefs.savePrefs();
 			return processStack();
 		} else {
 			return false;
@@ -124,7 +134,7 @@ public class ThresholdDialog implements ImageListener {
 		imp_.killRoi();
 		int nFound = 0;
 		int nMissed = 0;
-		IJ.log(imp_.getTitle() + ": Processing");
+		IJ.log(imp_.getTitle() + ": Detecting particles ...");
 
 		ImageStack stack = imp_.getImageStack();
 		nodes_ = new SmNode[stack.getSize()][];

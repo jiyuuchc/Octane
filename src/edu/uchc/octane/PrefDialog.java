@@ -29,12 +29,6 @@ public class PrefDialog {
 	 */
 	static public void openDialog() {
 		GenericDialog dlg = new GenericDialog("Options");
-		dlg.addMessage("- Subpixel Fitting -");
-		String [] choices = {"None", "Polyfit Gaussian Weight","Gaussian Fit", "Zeor Background Gaussian"};
-		dlg.addChoice("Algrithm", choices, choices[Prefs.refiner_]);
-		dlg.addNumericField("Kernel Size", Prefs.kernelSize_, 0);
-		dlg.addNumericField("PSD sigma", Prefs.sigma_, 2);
-
 		dlg.addMessage("- Tracking -");
 		dlg.addNumericField("Max Displacement", Prefs.trackerMaxDsp_, 1);
 		dlg.addNumericField("Max Blinking", (double)Prefs.trackerMaxBlinking_, 0);
@@ -50,9 +44,6 @@ public class PrefDialog {
 		dlg.showDialog();
 		if (dlg.wasCanceled())
 			return;
-		Prefs.refiner_ = dlg.getNextChoiceIndex();
-		Prefs.kernelSize_ = (int) dlg.getNextNumber();
-		Prefs.sigma_ = dlg.getNextNumber();
 		Prefs.trackerMaxDsp_ = dlg.getNextNumber();
 		Prefs.trackerMaxBlinking_ = (int) dlg.getNextNumber();
 		Prefs.residueThreshold_ = dlg.getNextNumber();

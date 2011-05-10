@@ -46,6 +46,7 @@ public class Prefs {
 	final static String KERNELSIZE_KEY = "kernelSize";
 	final static String SIGMA_KEY = "sigma";
 	final static String IFS_SCALE_FACTOR = "IFSRatio";
+	final static String PEAK_TOLERANCE = "peakTolerance";
 	//static String lastWorkingDir;
 
 	static boolean initialized = false;
@@ -70,8 +71,10 @@ public class Prefs {
 	static int kernelSize_ = 2;
 	static double sigma_ = 0.94;
 	static int IFSScaleFactor_ = 3;
-	static double trackerLowerBound_ = 1.0;
+	static int peakTolerance_ = 2000;
 	
+	static double trackerLowerBound_ = 1.0;
+
 	static Preferences pref_;
 
 	/**
@@ -104,6 +107,7 @@ public class Prefs {
 		kernelSize_ = pref.getInt(KERNELSIZE_KEY, kernelSize_);
 		sigma_ = pref.getDouble(SIGMA_KEY, sigma_);
 		IFSScaleFactor_ = pref.getInt(IFS_SCALE_FACTOR, IFSScaleFactor_);
+		peakTolerance_ = pref.getInt(PEAK_TOLERANCE, peakTolerance_);
 		pref_ = pref;
 		initialized = true;
 	}
@@ -137,7 +141,8 @@ public class Prefs {
 		pref_.putInt(SLOPPYNESS_KEY, sloppyness_);
 		pref_.putInt(KERNELSIZE_KEY, kernelSize_);
 		pref_.putDouble(SIGMA_KEY, sigma_);
-		pref_.putInt(IFS_SCALE_FACTOR, IFSScaleFactor_);		
+		pref_.putInt(IFS_SCALE_FACTOR, IFSScaleFactor_);
+		pref_.putInt(PEAK_TOLERANCE, peakTolerance_);
 	}
 
 }
