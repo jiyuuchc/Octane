@@ -772,7 +772,7 @@ public class Browser implements ClipboardOwner{
 	public void deleteSelectedTrajectories() {
 		int [] selected = browserWindow_.getSelectedTrajectories();
 		for (int i = 0; i < selected.length; i ++) {
-			dataset_.getTrajectoryByIndex(i).deleted = true;
+			dataset_.getTrajectoryByIndex(selected[i]).deleted = true;
 		}
 	}
 
