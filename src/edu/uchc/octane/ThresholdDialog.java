@@ -81,7 +81,8 @@ public class ThresholdDialog implements ImageListener {
 		
 		dlg_.addDialogListener(new DialogListener() {
 			public boolean dialogItemChanged(GenericDialog gd, AWTEvent ev) {
-				double tol = gd.getNextNumber();
+				Scrollbar s = (Scrollbar) gd.getSliders().get(0);
+				double tol = (double) s.getValue();
 				if (tol != finder_.getTolerance()) {
 					finder_.setTolerance(tol);
 					updateMaximum();
