@@ -154,7 +154,7 @@ public class TrajsTable extends JTable {
 	}
 
 	/**
-	 * Reverse marks of all selected trjectories.
+	 * Reverse marks of all selected trajectories.
 	 */
 	public void reverseMarkOfSelected() {
 		boolean acted = false;

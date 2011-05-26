@@ -55,6 +55,9 @@ import javax.swing.JButton;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import bsh.EvalError;
+import bsh.Interpreter;
+
 import edu.uchc.octane.Browser.IFSType;
 
 /**
@@ -318,6 +321,26 @@ public class BrowserWindow extends JFrame {
 			}
 		});
 
+		processMenu.addSeparator();
+		
+		item = new JMenuItem("Execute script...");
+		processMenu.add(item);
+		item.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JFileChooser fc = new JFileChooser();
+				if (fc.showOpenDialog(browser_.getWindow()) == JFileChooser.APPROVE_OPTION) {
+					Interpreter bsh = new Interpreter();
+					try {
+						bsh.set("octaneData", browser_.getData());
+						bsh.source(fc.getSelectedFile().getPath());
+					} catch (Exception e1) {
+						IJ.log(e1.toString());
+					}
+					trajsTable_.tableDataChanged();
+				}
+			}
+		});
 		return menuBar;
 	}
 	

@@ -167,18 +167,17 @@ public class Browser implements ClipboardOwner{
 			boolean firstSel = true;
 			for (int i = 0; i < dataset_.getSize(); i++) {
 				Trajectory t = dataset_.getTrajectoryByIndex(i);
-				if (t.deleted) {
-					continue;
-				}
-				for (int j = 0; j< t.size(); j++) {
-					if (roi.contains( (int)t.get(j).x, (int)t.get(j).y)) {
-						if (firstSel) {
-							browserWindow_.selectTrajectoryByIndex(i);
-							firstSel = false;
-						} else {
-							browserWindow_.addTrajectoriesToSelection(i);
+				if (!t.deleted) {
+					for (int j = 0; j< t.size(); j++) {
+						if (roi.contains( (int)t.get(j).x, (int)t.get(j).y)) {
+							if (firstSel) {
+								browserWindow_.selectTrajectoryByIndex(i);
+								firstSel = false;
+							} else {
+								browserWindow_.addTrajectoriesToSelection(i);
+							}
+							break;
 						}
-						break;
 					}
 				}
 			}
