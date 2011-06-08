@@ -31,6 +31,7 @@ import javax.swing.RowFilter;
 public class TrajsTable extends JTable {
 
 	private static String[] ColumnNames_ = { "Frame", "Len", "Mobility", "Marked","Notes"};
+	private static boolean [] ColumnEditable_ = {false, false, false, true, true};
 	private static Class<?> [] ColumnClasses_ = {Integer.class, Integer.class, Double.class, Boolean.class, String.class};
 	
 	private TrajDataset data_ = null;
@@ -80,11 +81,7 @@ public class TrajsTable extends JTable {
 		
 		@Override
 		public boolean isCellEditable(int row, int col) {
-			if (col == 2 || col == 3) {
-				return true;
-			} else {
-				return false;
-			}
+			return ColumnEditable_[col];
 		}
 
 		@Override
