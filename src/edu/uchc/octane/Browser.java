@@ -40,6 +40,7 @@ import java.util.Iterator;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
+import ij.gui.GenericDialog;
 import ij.gui.HistogramWindow;
 import ij.gui.ImageCanvas;
 import ij.gui.Plot;
@@ -407,6 +408,12 @@ public class Browser implements ClipboardOwner{
 		if (roi!=null && !roi.isArea())
 			imp_.killRoi(); 
 		rect = imp_.getProcessor().getRoi();
+		
+		GenericDialog dlg = new GenericDialog("Construct PALM");
+		String[] items = { "Average", "Head", "Tail"};
+		dlg.addChoice("PALM Type", items, "Average");
+		dlg.showDialog();
+		int palmType = dlg.getNextChoiceIndex();
 
 		FloatProcessor ip = new FloatProcessor((int) (rect.width * Prefs.palmScaleFactor_), (int) (rect.height * Prefs.palmScaleFactor_));
 		double psdWidth = Prefs.palmPSDWidth_ * Prefs.palmScaleFactor_;
@@ -418,17 +425,27 @@ public class Browser implements ClipboardOwner{
 			double xx = traj.get(0).x;
 			double yy = traj.get(0).y;
 			boolean converge = true;
-			for (int j = 1; j < traj.size(); j++ ) {
-				if (Math.abs(xx / j - traj.get(j).x) > Prefs.palmThreshold_ || Math.abs(yy / j - traj.get(j).y) > Prefs.palmThreshold_ ) {
-					converge = false;
-					break;
+			switch (palmType) {
+			case 0:
+				for (int j = 1; j < traj.size(); j++ ) {
+					if (Math.abs(xx / j - traj.get(j).x) > Prefs.palmThreshold_ || Math.abs(yy / j - traj.get(j).y) > Prefs.palmThreshold_ ) {
+						converge = false;
+						break;
+					}
+					xx += traj.get(j).x;
+					yy += traj.get(j).y;
 				}
-				xx += traj.get(j).x;
-				yy += traj.get(j).y;
-			}
-			if (converge) {
 				xx /= traj.size();
 				yy /= traj.size();
+				break;
+			case 1:
+				break;
+			case 2:
+				xx = traj.get(traj.size()-1).x;
+				yy = traj.get(traj.size()-1).y;
+				break;
+			}
+			if (converge) {
 				double xs = (xx - rect.x)* Prefs.palmScaleFactor_;
 				double ys = (yy - rect.y)* Prefs.palmScaleFactor_;
 				gaussianImage(ip, xs, ys, psdWidth);
