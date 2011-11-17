@@ -53,6 +53,8 @@ import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
 import ij.process.ShortProcessor;
 
+import org.apache.commons.math.stat.descriptive.SummaryStatistics;
+
 /**
  * Controller of the the browser window.
  */
@@ -61,7 +63,6 @@ public class Browser implements ClipboardOwner{
 	ImagePlus imp_ = null;
 
 	TrajDataset dataset_ = null;
-	//TrajsTable trajsTable_;
 	//NodesTable nodesTable_;
 
 	protected String path_;
@@ -726,36 +727,36 @@ public class Browser implements ClipboardOwner{
 	 */
 	public void showMSD() {
 		int [] selected = browserWindow_.getSelectedTrajectoriesOrAll();
-		ArrayList<Double> dl = new ArrayList<Double>();
-		ArrayList<Integer> nl = new ArrayList<Integer>();
+		ArrayList<SummaryStatistics> stat = new ArrayList<SummaryStatistics>();
 		for (int i = 0; i < selected.length; i ++) {
 			Trajectory t = dataset_.getTrajectoryByIndex(selected[i]);
 			for (int j = 0; j < t.size()-1; j++) {
 				int frame = t.get(j).frame;
 				for (int k = j + 1; k < t.size(); k++) {
 					int deltaframe = t.get(k).frame - frame;
-					while (deltaframe > dl.size()) {
-						dl.add(0.0);
-						nl.add(0);
+					while (deltaframe > stat.size()) {
+						stat.add(new SummaryStatistics());
 					}
-					dl.set(deltaframe - 1, dl.get(deltaframe-1) + t.get(j).distance2(t.get(k))); 
-					nl.set(deltaframe - 1, nl.get(deltaframe-1) + 1);
+					stat.get(deltaframe - 1).addValue(t.get(j).distance2(t.get(k)));
 				}
 			}
 			IJ.showProgress(i, selected.length);
 		}
-		double [] x = new double [dl.size() + 1];
-		double [] y = new double [dl.size() + 1];
+		double [] x = new double [stat.size() + 1];
+		double [] y = new double [stat.size() + 1];
+		double [] e = new double [stat.size() + 1];
 		x[0] = 0;
 		y[0] = 0;
-		for (int i = 0; i < dl.size(); i++) {
-			x[i+1] = 1.0 + i;
-			y[i+1] = dl.get(i).doubleValue() / nl.get(i).intValue();
-		}
-		if (x.length > 0) {
+		if ( stat.size()>0 ) {
+			for (int i = 0 ; i < stat.size(); i++) {
+				x[i+1] = 1.0 + i;
+				y[i+1] = stat.get(i).getMean();
+				e[i+1] = stat.get(i).getStandardDeviation() / Math.sqrt(stat.get(i).getN());
+			}
 			Plot plotWin = new Plot("MSD Plot", "T/T-frame", "MSD (pixel^2)", x, y);
-			plotWin.show();
 			plotWin.addPoints(x, y, Plot.BOX);
+			plotWin.addErrorBars(e);
+			plotWin.show();
 		} 
 	}
 
