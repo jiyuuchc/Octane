@@ -21,6 +21,7 @@ import java.awt.Font;
 import java.util.Arrays;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import javax.swing.event.TableModelEvent;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableRowSorter;
 import javax.swing.RowFilter;
@@ -90,6 +91,7 @@ public class TrajsTable extends JTable {
 				data_.getTrajectoryByIndex(row).note = (String) value;
 			} else if (ColumnNames_[col] == "Marked") {
 				data_.getTrajectoryByIndex(row).marked = (Boolean) value;
+				this.fireTableCellUpdated(row, 3);
 			}
 		}
 
@@ -155,10 +157,8 @@ public class TrajsTable extends JTable {
 	 */
 	public void reverseMarkOfSelected() {
 		boolean acted = false;
-		int [] rows = getSelectedRows();
-		for (int i = 0; i < rows.length; i++) {
-			rows[i] = convertRowIndexToModel(rows[i]);
-		}
+		int [] rows = getSelectedTrajectories();
+
 		for (int i = 0; i < rows.length; i++) {		
 			Trajectory v = data_.getTrajectoryByIndex(rows[i]);
 			if (v.marked == false) {
@@ -180,7 +180,7 @@ public class TrajsTable extends JTable {
 	public void hideUnmarked() {
 		int cnt = 0;
 		for (int i=0; i < data_.getSize(); i++) {
-			isVisible_[cnt ++] = data_.getTrajectoryByIndex(i).marked; 
+			isVisible_[cnt ++] = data_.getTrajectoryByIndex(i).marked;
 		}
 		model_.fireTableDataChanged();
 	}
@@ -191,5 +191,41 @@ public class TrajsTable extends JTable {
 	public void showAll() {
 		Arrays.fill(isVisible_, true);
 		model_.fireTableDataChanged();
+	}
+
+	/**
+	 * Returns the index of currently selected trajectory.
+	 *
+	 * @return the index
+	 */
+	public int getSelectedTrajectoryIndex() {
+		int row = getSelectedRow();
+		if (row >= 0) {
+			return convertRowIndexToModel(row);
+		} else {
+			return -1;
+		}
+	}
+
+	/**
+	 * Returns the indices of all selected trajectories.
+	 *
+	 * @return array of indices
+	 */
+	public int[] getSelectedTrajectories() {
+		int [] selected = getSelectedRows();
+		for (int i = 0; i < selected.length; i++) {
+			selected[i] = convertRowIndexToModel(selected[i]);
+		}
+		return selected;				
+	}
+
+	/**
+	 * Test if a model-changed event involve changes in "marked"
+	 * 
+	 * @return true if "marked" column has changed
+	 */
+	public boolean isMarkedColumnChanged(TableModelEvent e) {
+		return ColumnNames_[e.getColumn()] == "Marked";  
 	}
 }

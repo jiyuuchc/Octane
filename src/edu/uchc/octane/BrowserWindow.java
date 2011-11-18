@@ -35,7 +35,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-
+ 
 import java.awt.GridBagConstraints;
 import java.io.IOException;
 
@@ -54,6 +54,8 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 
 import bsh.EvalError;
 import bsh.Interpreter;
@@ -200,6 +202,7 @@ public class BrowserWindow extends JFrame {
 			public void actionPerformed(ActionEvent e){
 				JCheckBoxMenuItem cb = (JCheckBoxMenuItem) e.getSource();
 				Prefs.showOverlay_ = cb.getState();
+				browser_.drawOverlay();
 			}
 		});
 
@@ -439,11 +442,17 @@ public class BrowserWindow extends JFrame {
 				browser_.stopAnimation();
 				if (e.getValueIsAdjusting())
 					return;
-				browser_.drawOverlay();
+				//browser_.drawOverlay();
 				browser_.getImp().killRoi();
 				if (nodesTable_ != null) {
 					populateNodesTable();
 				}
+			}
+		});
+		trajsTable_.getModel().addTableModelListener(new TableModelListener() {
+			@Override
+			public void tableChanged(TableModelEvent e) {
+				browser_.drawOverlay();
 			}
 		});
 		trajsPane.setViewportView(trajsTable_);
@@ -527,12 +536,7 @@ public class BrowserWindow extends JFrame {
 	 * @return the index
 	 */
 	public int getSelectedTrajectoryIndex() {
-		int row = trajsTable_.getSelectedRow();
-		if (row >= 0) {
-			return trajsTable_.convertRowIndexToModel(row);
-		} else {
-			return -1;
-		}
+		return trajsTable_.getSelectedTrajectoryIndex();
 	}
 	
 	/**
@@ -541,13 +545,9 @@ public class BrowserWindow extends JFrame {
 	 * @return array of indices
 	 */
 	public int[] getSelectedTrajectories() {
-		int [] selected = trajsTable_.getSelectedRows();
-		for (int i = 0; i < selected.length; i++) {
-			selected[i] = trajsTable_.convertRowIndexToModel(selected[i]);
-		}
-		return selected;				
+		return trajsTable_.getSelectedTrajectories();
 	}
-	
+
 	/**
 	 * Returns the indices of multiple selected trajectories or all trajectories.
 	 * If none or one trajectory is selected, the indices of all trajectories are returned.
@@ -588,7 +588,7 @@ public class BrowserWindow extends JFrame {
 		nodesTable_.setRowSelectionInterval(nodeIndex,nodeIndex);
 		nodesTable_.getSelectionModel().setValueIsAdjusting(true);
 	}
-	
+
 	/**
 	 * Adds a trajectories to the current selection in the trajectory table.
 	 *

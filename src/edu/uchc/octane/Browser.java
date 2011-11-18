@@ -252,17 +252,18 @@ public class Browser implements ClipboardOwner{
 			return;
 		}
 		GeneralPath path = new GeneralPath();
-		int [] selected = browserWindow_.getSelectedTrajectories();
-		for (int i = 0; i < selected.length; i++) {
-			Trajectory v = dataset_.getTrajectoryByIndex(selected[i]);
-			path.moveTo(v.get(0).x, v.get(0).y);
-			for (int j = 1; j < v.size(); j++) {
-				path.lineTo(v.get(j).x, v.get(j).y);
+		for (int i = 0; i < dataset_.getSize(); i ++) {
+			Trajectory v = dataset_.getTrajectoryByIndex(i);
+			if ( v.marked ) {
+				path.moveTo(v.get(0).x, v.get(0).y);
+				for (int j = 1; j < v.size(); j++) {
+					path.lineTo(v.get(j).x, v.get(j).y);
+				}
 			}
 		}
 		imp_.setOverlay(path, Color.yellow, new BasicStroke(1f));			
 	}
-	
+
 	protected void drawBox() {
 		SmNode node = browserWindow_.getCurrentNode();
 		int x,y;
