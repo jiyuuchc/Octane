@@ -592,4 +592,23 @@ public class TrajDataset{
 
 	} //doTracking
 
+	/**
+	 * Maximum frame number in all trajectories.
+	 *
+	 * @return the maximum frame number
+	 */
+	public int getMaximumFrameNumber() {
+		int maxFrameNum = -1;
+		for (int i = 0; i < trajectories_.size(); i++) {
+			Trajectory t = trajectories_.get(i);
+			if (!t.deleted) {
+				int f = t.get(t.size()-1).frame;
+				if (maxFrameNum < f) {
+					maxFrameNum = f;
+				}
+			}
+		}
+
+		return maxFrameNum;
+	}	
 }

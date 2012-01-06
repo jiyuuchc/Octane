@@ -70,6 +70,9 @@ public class Browser implements ClipboardOwner{
 	protected Animator animator_ = null;
 	
 	BrowserWindow browserWindow_ = null;
+
+	double [] drift_x_; 
+	double [] drift_y_;
 	
 	public enum IFSType {GaussianSpot, LineOverlay, SquareOverlay};
 
@@ -401,6 +404,39 @@ public class Browser implements ClipboardOwner{
 		
 	}
 	
+	boolean setFiducialPoints() {
+		int nFrames = dataset_.getMaximumFrameNumber();
+		drift_x_ = new double[nFrames];
+		drift_y_ = new double[nFrames];
+		int npoints[] = new int[nFrames];
+		for ( int i = 0; i < dataset_.getSize(); i++) {
+			Trajectory t =  dataset_.getTrajectoryByIndex(i);
+			if (t.marked && ! t.deleted) {
+				for (int j = 1; j < t.size(); j++) {
+					int frame = t.get(j).frame - 1;
+					drift_x_[frame] += t.get(j).x - t.get(0).x;
+					drift_y_[frame] += t.get(j).y - t.get(0).y;
+					npoints[frame]++;
+				}
+			}
+		}
+		int cnt = 0;
+		for (int j = 1; j < nFrames; j++) {
+			if (npoints[j] > 0) {
+				drift_x_[j] /= npoints[j];
+				drift_y_[j] /= npoints[j];
+				cnt++;
+			} else {
+				drift_x_[j] = drift_x_[j-1];
+				drift_y_[j] = drift_y_[j-1];
+			}
+		}
+		if (cnt == 0 )
+			return false;
+		else
+			return true;
+	}
+
 	/**
 	 * Construct PALM image.
 	 */
@@ -414,8 +450,17 @@ public class Browser implements ClipboardOwner{
 		GenericDialog dlg = new GenericDialog("Construct PALM");
 		String[] items = { "Average", "Head", "Tail"};
 		dlg.addChoice("PALM Type", items, "Average");
+		dlg.addCheckbox("Use marked trajectories as fiducial markers", true);
 		dlg.showDialog();
+		if (dlg.wasCanceled())
+			return;
+		
 		int palmType = dlg.getNextChoiceIndex();
+		boolean useFiducial = dlg.getNextBoolean();
+
+		if (useFiducial) {
+			useFiducial = setFiducialPoints();
+		}
 
 		FloatProcessor ip = new FloatProcessor((int) (rect.width * Prefs.palmScaleFactor_), (int) (rect.height * Prefs.palmScaleFactor_));
 		double psdWidth = Prefs.palmPSDWidth_ * Prefs.palmScaleFactor_;
@@ -424,18 +469,31 @@ public class Browser implements ClipboardOwner{
 		int [] selected = browserWindow_.getSelectedTrajectoriesOrAll();
 		for ( int i = 0; i < selected.length; i ++) {
 			Trajectory traj = dataset_.getTrajectoryByIndex(selected[i]);
+			if (useFiducial && traj.marked){
+				continue;
+			}
 			double xx = traj.get(0).x;
 			double yy = traj.get(0).y;
+			if (useFiducial) {
+				xx -= drift_x_[traj.get(0).frame - 1];
+				yy -= drift_y_[traj.get(0).frame - 1];
+			}
 			boolean converge = true;
 			switch (palmType) {
 			case 0:
 				for (int j = 1; j < traj.size(); j++ ) {
-					if (Math.abs(xx / j - traj.get(j).x) > Prefs.palmThreshold_ || Math.abs(yy / j - traj.get(j).y) > Prefs.palmThreshold_ ) {
+					double x = traj.get(j).x;
+					double y = traj.get(j).y;
+					if (useFiducial) {
+						x -= drift_x_[traj.get(j).frame - 1];
+						y -= drift_y_[traj.get(j).frame - 1];						
+					}
+					if (Math.abs(xx / j - x) > Prefs.palmThreshold_ || Math.abs(yy / j - y) > Prefs.palmThreshold_ ) {
 						converge = false;
 						break;
 					}
-					xx += traj.get(j).x;
-					yy += traj.get(j).y;
+					xx += x;
+					yy += y;
 				}
 				xx /= traj.size();
 				yy /= traj.size();
@@ -443,8 +501,13 @@ public class Browser implements ClipboardOwner{
 			case 1:
 				break;
 			case 2:
-				xx = traj.get(traj.size()-1).x;
-				yy = traj.get(traj.size()-1).y;
+				int f = traj.size()-1;
+				xx = traj.get(f).x;
+				yy = traj.get(f).y;
+				if (useFiducial) {
+					xx -= drift_x_[traj.get(f).frame - 1];
+					yy -= drift_y_[traj.get(f).frame - 1];
+				}				
 				break;
 			}
 			if (converge) {
