@@ -144,12 +144,12 @@ public class OctanePlugin implements PlugIn{
 				} else if (cmd.equals("import")) { 
 					JFileChooser fc = new JFileChooser();
 					if (fc.showOpenDialog(IJ.getApplet()) == JFileChooser.APPROVE_OPTION) {
-						TrajDataset dataset = TrajDataset.importDatasetFromPositionsText(fc.getSelectedFile());
+						TrajDataset dataset = TrajDataset.importDatasetFromText(fc.getSelectedFile());
 						openBrowser(dataset);
 					}
 				}
 			} catch (Exception e) {
-				IJ.showMessage("Can't load the file! " + e.getMessage()); 
+				IJ.showMessage("Can't load the file! Is it in the correct format? " + e.getMessage()); 
 			} 				
 		} else if (dict_.get(imp_) != null ) {
 			dict_.get(imp_).getWindow().setVisible(true);

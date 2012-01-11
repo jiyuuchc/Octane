@@ -236,13 +236,13 @@ public class TrajDataset{
 	}
 
 	/**
-	 * Import dataset from trajectories text file.
-	 *
+	 * Import dataset from trajectories text file. Will use the traceID if exist or 
+	 * rebuild trajectories if no traceID is found.
 	 * @param file the file
 	 * @return a new dataset
 	 * @throws IOException
 	 */
-	static public TrajDataset importDatasetFromTrajectoriesText(File file) throws IOException {
+	static public TrajDataset importDatasetFromText(File file) throws IOException {
 
 		TrajDataset dataset;
 
@@ -256,14 +256,19 @@ public class TrajDataset{
 		while (null != (line = br.readLine())) {
 			int c = line.lastIndexOf(',');
 			int cnt = Integer.parseInt(line.substring(c + 1).trim());
-			if (cur_cnt < cnt) {
+			if (cur_cnt == cnt - 1) {
 				oneTraj = new Trajectory();
 				dataset.trajectories_.add(oneTraj);
 				cur_cnt = cnt;
+			} 
+			if (cur_cnt == cnt) {
+				SmNode node = new SmNode(line.substring(0, c)); 
+				oneTraj.add(node);
+				//dataset.nodes_.add(node);
+			} else {
+				IJ.log("Can't find TraceID. All traces will be rebuilt");
+				return importDatasetFromPositionsText(file);
 			}
-			SmNode node = new SmNode(line.substring(0, c)); 
-			oneTraj.add(node);
-			//dataset.nodes_.add(node);
 		}
 
 		br.close();
@@ -272,6 +277,7 @@ public class TrajDataset{
 		return dataset;
 	}
 
+		
 	/**
 	 * Creates the dataset from array of node lists.
 	 *
