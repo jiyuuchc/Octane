@@ -19,7 +19,7 @@ public class TrackerTest {
 		imp = ij.IJ.openImage(path);
 
 		imp.show();
-
+             
 		ThresholdDialog dlg = new ThresholdDialog(imp);
 		if (dlg.openDialog() == true) {
 			TrajDataset d= TrajDataset.createDatasetFromNodes(dlg.getProcessedNodes());

@@ -18,6 +18,7 @@
 
 package edu.uchc.octane;
 
+import java.awt.Cursor;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
@@ -60,17 +61,13 @@ public class OctanePlugin implements PlugIn{
 	/**
 	 * Open browser.
 	 *
-	 * @param dataset a prior built dataset or null to load from disk
+	 * @param dataset a prior built dataset
 	 * @throws IOException 
 	 * @throws ClassNotFoundException 
 	 */
 	public void openBrowser(TrajDataset dataset) throws IOException, ClassNotFoundException {
 		Browser browser = new Browser(imp_);
-		if (dataset == null) {
-			browser.setup();
-		} else {
-			browser.setup(dataset);
-		}
+		browser.setup(dataset);
 		dict_.put(imp_, browser);
 		browser.getWindow().addWindowListener(new WindowAdapter() {
 			@Override
@@ -78,7 +75,6 @@ public class OctanePlugin implements PlugIn{
 				dict_.remove(imp_);
 			}
 		});
-
 	}
 
 	/**
@@ -101,12 +97,31 @@ public class OctanePlugin implements PlugIn{
 		}
 	}
 	
+	TrajDataset readDataset(File f) throws IOException, ClassNotFoundException {
+		TrajDataset dataset;
+		try {
+			IJ.getInstance().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+			IJ.showStatus("Loading data ...");
+			dataset = TrajDataset.loadDataset(f);
+		} finally {
+			IJ.showStatus("");
+			IJ.getInstance().setCursor(Cursor.getDefaultCursor());
+		}
+		return dataset;
+	}
+	
 	/* (non-Javadoc)
 	 * @see ij.plugin.PlugIn#run(java.lang.String)
 	 */
 	@Override
 	public void run(String cmd) {
+		if (!IJ.isJava16()) {
+			IJ.showMessage("Octane requires Java version 1.6 or higher. Please upgrade the JVM.");
+			return;
+		}
+		
 		String path;		
+		
 		if (cmd.equals("options")) {
 			PrefDialog.openDialog();
 			return;
@@ -124,35 +139,42 @@ public class OctanePlugin implements PlugIn{
 			return;
 		}
 
-		if (! dict_.containsKey(imp_)) { // do not open multiple window for the same image
-			try {
-				if (cmd.equals("browser")) {
-					dict_.put(imp_, null);
-					analyze();
-				} else if (cmd.equals("load")){
-					if (path != null && new File(path + File.separator + imp_.getTitle() + ".dataset").exists()) {
-						openBrowser(null);
-					} else {
-						IJ.showMessage("You don't seem to have a previously saved " +
-						"analysis at the default location. Please specify another path.");
-						JFileChooser fc = new JFileChooser();
-						if (fc.showOpenDialog(IJ.getApplet()) == JFileChooser.APPROVE_OPTION) {
-							TrajDataset dataset = TrajDataset.loadDataset(fc.getSelectedFile());
-							openBrowser(dataset);
-						}
-					}
-				} else if (cmd.equals("import")) { 
-					JFileChooser fc = new JFileChooser();
-					if (fc.showOpenDialog(IJ.getApplet()) == JFileChooser.APPROVE_OPTION) {
-						TrajDataset dataset = TrajDataset.importDatasetFromText(fc.getSelectedFile());
-						openBrowser(dataset);
+		if (dict_.containsKey(imp_)) { // window already open
+			dict_.get(imp_).getWindow().setVisible(true);
+			return;
+		}
+			
+		try {
+			if (cmd.equals("browser")) {
+				dict_.put(imp_, null);
+				analyze();
+				return;
+			} 
+			if (cmd.equals("load")){					
+				if (path != null) {
+					File file = new File(path + File.separator + imp_.getTitle() + ".dataset");
+					if (file.exists()) { 
+						openBrowser(readDataset(file));
+						return;
 					}
 				}
-			} catch (Exception e) {
-				IJ.showMessage("Can't load the file! Is it in the correct format? " + e.getMessage()); 
-			} 				
-		} else if (dict_.get(imp_) != null ) {
-			dict_.get(imp_).getWindow().setVisible(true);
-		}
+				IJ.showMessage("You don't seem to have a previously saved " +
+				"analysis at the default location. Please specify another path.");
+				JFileChooser fc = new JFileChooser();
+				if (fc.showOpenDialog(IJ.getApplet()) == JFileChooser.APPROVE_OPTION) {
+					openBrowser(readDataset(fc.getSelectedFile()));
+				}
+				return;
+			} 
+			if (cmd.equals("import")) { 
+				JFileChooser fc = new JFileChooser();
+				if (fc.showOpenDialog(IJ.getApplet()) == JFileChooser.APPROVE_OPTION) {
+					openBrowser(TrajDataset.importDatasetFromText(fc.getSelectedFile()));
+				}
+				return;
+			}				
+		} catch (Exception e) {
+			IJ.showMessage("Can't load the file! Is it in the correct format? " + e.getMessage()); 
+		} 				
 	}
 }

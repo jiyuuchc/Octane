@@ -626,6 +626,7 @@ public class BrowserWindow extends JFrame {
 	 */
 	@Override
 	public void dispose() {
+		this.setVisible(false);
 		browser_.saveDataset();
 		Prefs.savePrefs();
 		super.dispose();
