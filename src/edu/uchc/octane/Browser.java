@@ -73,6 +73,7 @@ public class Browser implements ClipboardOwner{
 
 	double [] drift_x_; 
 	double [] drift_y_;
+	boolean useFiducial_;
 	
 	public enum IFSType {GaussianSpot, LineOverlay, SquareOverlay};
 
@@ -437,6 +438,22 @@ public class Browser implements ClipboardOwner{
 			return true;
 	}
 
+	double getCorrectedX(Trajectory traj, int frameIndex) {
+		double x = traj.get(frameIndex).x;
+		if (useFiducial_) {
+			x -= drift_x_[traj.get(frameIndex).frame - 1];
+		}
+		return x;
+	}
+	
+	double getCorrectedY(Trajectory traj, int frameIndex) {
+		double y = traj.get(frameIndex).y;
+		if (useFiducial_) {
+			y -= drift_y_[traj.get(frameIndex).frame - 1];
+		}
+		return y;
+		
+	}
 	/**
 	 * Construct PALM image.
 	 */
@@ -446,9 +463,9 @@ public class Browser implements ClipboardOwner{
 		if (roi!=null && !roi.isArea())
 			imp_.killRoi(); 
 		rect = imp_.getProcessor().getRoi();
-		
+
 		GenericDialog dlg = new GenericDialog("Construct PALM");
-		String[] items = { "Average", "Head", "Tail"};
+		String[] items = { "Average", "Head", "Tail", "All Points"};
 		dlg.addChoice("PALM Type", items, "Average");
 		dlg.addCheckbox("Use marked trajectories as fiducial markers", true);
 		dlg.showDialog();
@@ -456,67 +473,78 @@ public class Browser implements ClipboardOwner{
 			return;
 		
 		int palmType = dlg.getNextChoiceIndex();
-		boolean useFiducial = dlg.getNextBoolean();
+		useFiducial_ = dlg.getNextBoolean();
 
-		if (useFiducial) {
-			useFiducial = setFiducialPoints();
+		if (useFiducial_) {
+			useFiducial_ = setFiducialPoints();
 		}
 
 		FloatProcessor ip = new FloatProcessor((int) (rect.width * Prefs.palmScaleFactor_), (int) (rect.height * Prefs.palmScaleFactor_));
 		double psdWidth = Prefs.palmPSDWidth_ * Prefs.palmScaleFactor_;
 		int nPlotted = 0;
 		int nSkipped = 0;
+		double xs,ys,xx,yy;
 		int [] selected = browserWindow_.getSelectedTrajectoriesOrAll();
 		for ( int i = 0; i < selected.length; i ++) {
 			Trajectory traj = dataset_.getTrajectoryByIndex(selected[i]);
-			if (useFiducial && traj.marked){
+			if (useFiducial_ && traj.marked){
 				continue;
 			}
-			double xx = traj.get(0).x;
-			double yy = traj.get(0).y;
-			if (useFiducial) {
-				xx -= drift_x_[traj.get(0).frame - 1];
-				yy -= drift_y_[traj.get(0).frame - 1];
-			}
-			boolean converge = true;
 			switch (palmType) {
-			case 0:
-				for (int j = 1; j < traj.size(); j++ ) {
-					double x = traj.get(j).x;
-					double y = traj.get(j).y;
-					if (useFiducial) {
-						x -= drift_x_[traj.get(j).frame - 1];
-						y -= drift_y_[traj.get(j).frame - 1];						
-					}
-					if (Math.abs(xx / j - x) > Prefs.palmThreshold_ || Math.abs(yy / j - y) > Prefs.palmThreshold_ ) {
-						converge = false;
-						break;
-					}
+			case 0: //average
+				boolean converge = true;
+				xx=0;
+				yy=0;
+				for (int j = 0; j < traj.size(); j++ ) {
+					double x = getCorrectedX(traj, j);
+					double y = getCorrectedY(traj, j);
 					xx += x;
 					yy += y;
+					if (j > 0) {
+						if (Math.abs(xx / j - x) > Prefs.palmThreshold_ || Math.abs(yy / j - y) > Prefs.palmThreshold_ ) {
+							converge = false;
+							break;
+						}
+					}					
 				}
-				xx /= traj.size();
-				yy /= traj.size();
+				if (converge) {
+					xx /= traj.size();
+					yy /= traj.size();
+					xs = (xx - rect.x)* Prefs.palmScaleFactor_;
+					ys = (yy - rect.y)* Prefs.palmScaleFactor_;
+					gaussianImage(ip, xs, ys, psdWidth);
+					nPlotted ++;
+				} else {
+					nSkipped ++;
+				}
 				break;
-			case 1:
-				break;
-			case 2:
-				int f = traj.size()-1;
-				xx = traj.get(f).x;
-				yy = traj.get(f).y;
-				if (useFiducial) {
-					xx -= drift_x_[traj.get(f).frame - 1];
-					yy -= drift_y_[traj.get(f).frame - 1];
-				}				
-				break;
-			}
-			if (converge) {
-				double xs = (xx - rect.x)* Prefs.palmScaleFactor_;
-				double ys = (yy - rect.y)* Prefs.palmScaleFactor_;
+			case 1:  // head
+				xx = getCorrectedX(traj, 0);
+				yy = getCorrectedY(traj, 0);
+				xs = (xx - rect.x)* Prefs.palmScaleFactor_;
+				ys = (yy - rect.y)* Prefs.palmScaleFactor_;
 				gaussianImage(ip, xs, ys, psdWidth);
 				nPlotted ++;
-			} else {
-				nSkipped ++;
+				break;
+			case 2:	// tail
+				int f = traj.size()-1;
+				xx = getCorrectedX(traj, f);
+				yy = getCorrectedY(traj, f);
+				xs = (xx - rect.x)* Prefs.palmScaleFactor_;
+				ys = (yy - rect.y)* Prefs.palmScaleFactor_;
+				gaussianImage(ip, xs, ys, psdWidth);
+				nPlotted ++;
+				break;
+			case 3: // all points
+				for (int j = 0; j < traj.size(); j++ ) {
+					xx = getCorrectedX(traj, j);
+					yy = getCorrectedY(traj, j);
+					xs = (xx - rect.x)* Prefs.palmScaleFactor_;
+					ys = (yy - rect.y)* Prefs.palmScaleFactor_;
+					gaussianImage(ip, xs, ys, psdWidth);
+					nPlotted ++;
+				}
+				break;
 			}
 		}
 		ImagePlus img = new ImagePlus("PALM", ip);
