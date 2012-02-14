@@ -218,6 +218,12 @@ public class TrajDataset{
 		int curFrame = 0;
 		ArrayList<SmNode> curFrameNodes = null;
 		while (null != (line = br.readLine())) {
+			if (line.startsWith("#") || line.startsWith("//")) {
+				continue;
+			}
+			if (line.trim().isEmpty()) {
+				continue;
+			}
 			SmNode node = new SmNode(line);
 			while (node.frame > curFrame) {
 				if (curFrameNodes != null) {
@@ -254,6 +260,12 @@ public class TrajDataset{
 		dataset = new TrajDataset();
 
 		while (null != (line = br.readLine())) {
+			if (line.startsWith("#") || line.startsWith("//")) {
+				continue;
+			}
+			if (line.trim().isEmpty()) {
+				continue;
+			}			
 			int c = line.lastIndexOf(',');
 			int cnt = Integer.parseInt(line.substring(c + 1).trim());
 			if (cur_cnt == cnt - 1) {
