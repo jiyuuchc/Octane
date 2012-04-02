@@ -174,7 +174,7 @@ public class OctanePlugin implements PlugIn{
 				return;
 			}				
 		} catch (Exception e) {
-			IJ.showMessage("Can't load the file! Is it in the correct format? " + e.getMessage()); 
+			IJ.showMessage("Can't load the file! Is it in the correct format? " + e.toString()); 
 		} 				
 	}
 }

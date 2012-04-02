@@ -20,6 +20,8 @@ package edu.uchc.octane;
 
 import java.awt.AWTEvent;
 import java.awt.Scrollbar;
+import java.awt.event.AdjustmentEvent;
+import java.awt.event.AdjustmentListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.Vector;
@@ -76,14 +78,25 @@ public class ThresholdDialog implements ImageListener {
 		dlg_.addSlider("Threshold", 0, 40000.0, finder_.getTolerance());
 
 		Vector<Scrollbar> sliders = (Vector<Scrollbar>)dlg_.getSliders();
-		Scrollbar slider = sliders.get(0);
+		final Scrollbar slider = sliders.get(0);
 		slider.setUnitIncrement(20); // default was 1 
 		
 		dlg_.addDialogListener(new DialogListener() {
+			@Override
 			public boolean dialogItemChanged(GenericDialog gd, AWTEvent ev) {
-				Scrollbar s = (Scrollbar) gd.getSliders().get(0);
-				double tol = (double) s.getValue();
-				if (tol != finder_.getTolerance()) {
+				if (gd.wasOKed() || finder_ == null || ev == null || gd == null) {
+					return true;
+				}
+				double tol = -1;
+				if (ev.getSource() == slider) {
+					tol = slider.getValue();
+				} else {
+					Prefs.refiner_ = dlg_.getNextChoiceIndex();
+					Prefs.kernelSize_ = (int) dlg_.getNextNumber();
+					Prefs.sigma_ = dlg_.getNextNumber();
+					tol = gd.getNextNumber();
+				}
+				if (tol >= 0 && tol != finder_.getTolerance()) {
 					finder_.setTolerance(tol);
 					updateMaximum();
 				}
@@ -115,9 +128,6 @@ public class ThresholdDialog implements ImageListener {
 		dlg_.showDialog();
 		ImagePlus.removeImageListener(this);
 		if (dlg_.wasOKed()) {
-			Prefs.refiner_ = dlg_.getNextChoiceIndex();
-			Prefs.kernelSize_ = (int) dlg_.getNextNumber();
-			Prefs.sigma_ = dlg_.getNextNumber();
 			Prefs.savePrefs();
 			return processStack();
 		} else {
