@@ -52,7 +52,7 @@ public class NullResolver implements SubPixelResolver {
 	}
 
 	@Override
-	public double getResidue() {
+	public double getConfidenceEstimator() {
 		return 0;
 	}
 

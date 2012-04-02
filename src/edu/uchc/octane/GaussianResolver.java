@@ -30,6 +30,7 @@ import org.apache.commons.math.optimization.GoalType;
 import org.apache.commons.math.optimization.RealPointValuePair;
 import org.apache.commons.math.optimization.direct.PowellOptimizer;
 
+import ij.IJ;
 import ij.process.ImageProcessor;
 
 /**
@@ -56,7 +57,7 @@ public class GaussianResolver implements SubPixelResolver, DifferentiableMultiva
 	ImageProcessor ip_;
 	
 	private double [] parameters_; 
-	private double residue_;
+	private double confidenceEstimator_;
 	private double bg_ = 1700.0;
 	private double [] gradients_;
 	//int k_;
@@ -169,8 +170,20 @@ public class GaussianResolver implements SubPixelResolver, DifferentiableMultiva
 			parameters_[3] = bg_;
 		}
 		RealPointValuePair vp = gno.optimize(this, GoalType.MINIMIZE, parameters_);
-		parameters_ = vp.getPoint(); 
-		residue_ = vp.getValue() / parameters_[2] / parameters_[2] ; // normalized to H^2
+		parameters_ = vp.getPoint();
+		
+		double m = 0;
+		double m2 = 0;
+		for (int xi = - Prefs.kernelSize_; xi <= Prefs.kernelSize_; xi++) {
+			for (int yi = - Prefs.kernelSize_; yi <= Prefs.kernelSize_; yi++) {
+				m += ip_.get(x0_+xi, y0_+yi);
+				m2 += (ip_.get(x0_+xi, y0_+yi))*(ip_.get(x0_+xi, y0_+yi));
+			}
+		}
+		int nPixels = (1 + 2 * Prefs.kernelSize_)*(1 + 2 * Prefs.kernelSize_);
+		m = m2 - m * m / nPixels; //variance of the grey values
+
+		confidenceEstimator_ = nPixels * Math.log(m/vp.getValue())  ; // a MLestimator. See Nature Methods 5,687 - 694 
 	}
 
 	/* (non-Javadoc)
@@ -201,8 +214,8 @@ public class GaussianResolver implements SubPixelResolver, DifferentiableMultiva
 	 * @see edu.uchc.octane.SubPixelRefiner#getResidue()
 	 */
 	@Override
-	public double getResidue() {
-		return residue_ ;
+	public double getConfidenceEstimator() {
+		return confidenceEstimator_ ;
 	}
 
 	/* (non-Javadoc)

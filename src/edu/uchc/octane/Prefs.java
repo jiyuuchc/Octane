@@ -66,7 +66,7 @@ public class Prefs {
 	static boolean refinePeak_ = true;
 	static int refiner_ = 1;
 	static int histogramBins_ = 20;
-	static double residueThreshold_ = 100;
+	static double confidenceThreshold_ = 100;
 	static int sloppyness_ = 1;
 	static int kernelSize_ = 2;
 	static double sigma_ = 0.94;
@@ -102,7 +102,7 @@ public class Prefs {
 		refinePeak_ = pref.getBoolean(REFINE_PEAK_KEY, refinePeak_);
 		refiner_ = pref.getInt(REFINER_KEY, refiner_);
 		histogramBins_ = pref.getInt(HISTOGRAMBINS_KEY, histogramBins_);
-		residueThreshold_ = pref.getDouble(RESIDUETHRESHOLD_KEY, residueThreshold_);
+		confidenceThreshold_ = pref.getDouble(RESIDUETHRESHOLD_KEY, confidenceThreshold_);
 		sloppyness_ = pref.getInt(SLOPPYNESS_KEY, sloppyness_);
 		kernelSize_ = pref.getInt(KERNELSIZE_KEY, kernelSize_);
 		sigma_ = pref.getDouble(SIGMA_KEY, sigma_);
@@ -137,7 +137,7 @@ public class Prefs {
 		pref_.putBoolean(REFINE_PEAK_KEY, refinePeak_);
 		pref_.putInt(REFINER_KEY, refiner_);
 		pref_.putInt(HISTOGRAMBINS_KEY, histogramBins_);
-		pref_.putDouble(RESIDUETHRESHOLD_KEY , residueThreshold_);
+		pref_.putDouble(RESIDUETHRESHOLD_KEY , confidenceThreshold_);
 		pref_.putInt(SLOPPYNESS_KEY, sloppyness_);
 		pref_.putInt(KERNELSIZE_KEY, kernelSize_);
 		pref_.putDouble(SIGMA_KEY, sigma_);

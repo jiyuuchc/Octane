@@ -167,7 +167,7 @@ public class NelderMeadResolver implements SubPixelResolver, MultivariateRealFun
 	 * @see edu.uchc.octane.SubPixelRefiner#getResidue()
 	 */
 	@Override
-	public double getResidue() {
+	public double getConfidenceEstimator() {
 		return residue_ ;
 	}
 
