@@ -315,6 +315,25 @@ public class BrowserWindow extends JFrame {
 			}
 		});
 
+		item = new JMenuItem("Directional Displacement Histogram");
+		processMenu.add(item);
+		item.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e){
+				int stepsize = 1;
+				double dir = 0;
+				GenericDialog gd = new GenericDialog("Step Size Input");
+				gd.addNumericField("Step Size: ", stepsize, 0);
+				gd.addNumericField("Direction (0-180 degree, 0 is up): ", dir, 0);
+				gd.showDialog();
+				if (gd.wasCanceled())
+					return;
+				stepsize = (int) gd.getNextNumber();
+				dir = (double) gd.getNextNumber();
+				browser_.showDirectionalDisplacementHistogram(stepsize, dir);
+			}
+		});
+
 		item = new JMenuItem("MSD Plot");
 		processMenu.add(item);
 		item.addActionListener(new ActionListener() {

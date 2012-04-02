@@ -813,6 +813,51 @@ public class Browser implements ClipboardOwner{
 		hw.setVisible(true);
 		imp.close();
 	}
+
+	/**
+	 * Show directional displacement histogram.
+	 * 
+	 * @param stepSize the stepsize for calculating the displacement
+	 * @param dir direction of the displacement in degrees. 0 is up
+	 */
+	public void showDirectionalDisplacementHistogram(int stepSize, double dir) {
+		double [] v = new double[2];
+		v[0] = Math.sin(dir * Math.PI / 180);
+		v[1] = - Math.cos(dir * Math.PI / 180);
+		int [] selected = browserWindow_.getSelectedTrajectoriesOrAll();
+		ArrayList<Double> dl = new ArrayList<Double>();
+		for (int i = 0; i < selected.length; i++) {
+			Trajectory t = dataset_.getTrajectoryByIndex(selected[i]);
+			for (int j = 0; j < t.size() - stepSize; j++) {
+				int k = j + 1;
+				int frame = t.get(j).frame;
+				while ( k < t.size()) {
+					if (t.get(k).frame - frame < stepSize) {
+						k++;
+					} else if (t.get(k).frame - frame == stepSize) {
+						dl.add((t.get(j).x - t.get(k).x)*v[0] + (t.get(j).y-t.get(k).y)*v[1]);
+						break;
+					} else {
+						break;
+					}
+				}
+			}
+			IJ.showProgress(i, selected.length);
+		}
+		double [] d = new double[dl.size()];
+		for (int i = 0; i < dl.size(); i ++) {
+			d[i] = dl.get(i).doubleValue();
+		}
+		if (d.length <= 1) {
+			IJ.showMessage("Not enough data point. Stepsize too large?");
+			return;
+		}
+		FloatProcessor ip = new FloatProcessor(1, d.length, d);
+		ImagePlus imp = new ImagePlus("", ip);
+		HistogramWindow hw = new HistogramWindow("Directional Displacement Histogram", imp, Prefs.histogramBins_);
+		hw.setVisible(true);
+		imp.close();
+	}
 	
 	/**
 	 * Show mean square displacement.
