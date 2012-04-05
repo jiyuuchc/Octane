@@ -468,7 +468,7 @@ public class TrajDataset{
 			nBonds = 0;
 
 			for (int j = 0; j < nodes_[curFrame_].length; j ++) {
-				if (nodes_[curFrame_][j].reserved < Prefs.residueThreshold_) {
+				if (nodes_[curFrame_][j].reserved > Prefs.confidenceThreshold_) {
 					double d = trackHead.distance2(nodes_[curFrame_][j]);
 					if (d <= threshold2_) { // don't miss the = sign
 						Bond b = new Bond();
@@ -540,8 +540,12 @@ public class TrajDataset{
 		for (int i = 0; i < nodes_[0].length; i ++ ) {
 			Trajectory t;
 			t = new Trajectory();
-			t.add(nodes_[0][i]);
-			activeTracks_.add(t);
+			if ( nodes_[0][i].reserved > Prefs.confidenceThreshold_) {
+				t.add(nodes_[0][i]);
+				activeTracks_.add(t);
+			} else {
+				wasted_.add(nodes_[0][i]);
+			}
 		}
 
 		curFrame_ = 1;
@@ -579,7 +583,7 @@ public class TrajDataset{
 			for (int i = 0; i < nodes_[curFrame_].length; i++) {
 				if (! isTrackedParticle_[i]) {
 					assert(backwardBonds_[i] != null);
-					if (nodes_[curFrame_][i].reserved < Prefs.residueThreshold_) {
+					if (nodes_[curFrame_][i].reserved > Prefs.confidenceThreshold_) {
 						Trajectory t;
 						t = new Trajectory();
 						t.add(nodes_[curFrame_][i]);

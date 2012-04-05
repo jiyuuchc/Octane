@@ -67,5 +67,5 @@ public interface SubPixelResolver {
 	 *
 	 * @return residue
 	 */
-	public double getResidue(); 
+	public double getConfidenceEstimator(); 
 }

@@ -49,7 +49,7 @@ public class PeakFinder {
 	private double[] xArray_;
 	private double[] yArray_;
 	private int[] peakSize_;
-	private double[] residue_;
+	private double[] confidence_;
 	private short nMaxima_;
 
 	/**
@@ -205,7 +205,7 @@ public class PeakFinder {
 		xArray_ = new double[pixels.length];
 		yArray_ = new double[pixels.length];
 		peakSize_ = new int[pixels.length];
-		residue_ = new double[pixels.length];
+		confidence_ = new double[pixels.length];
 		return analyzeMaxima(pixels);
 	} 
 
@@ -307,7 +307,7 @@ public class PeakFinder {
 		short nNewMaxima = 0;
 		refiner_.setImageData(ip_);
 
-		residue_ = new double[nMaxima_];
+		confidence_ = new double[nMaxima_];
 		if (nMaxima_ > 0 ) {
 			for (int i = 0; i < nMaxima_; i++) {
 				int rtmp;
@@ -315,7 +315,7 @@ public class PeakFinder {
 				if (rtmp >= 0) {
 					xArray_[nNewMaxima] = refiner_.getXOut();
 					yArray_[nNewMaxima] = refiner_.getYOut();
-					residue_[nNewMaxima] = refiner_.getResidue();
+					confidence_[nNewMaxima] = refiner_.getConfidenceEstimator();
 					peakSize_[nNewMaxima] = (int)Math.round(refiner_.getHeightOut());
 					nNewMaxima++;
 				}else {
@@ -359,7 +359,7 @@ public class PeakFinder {
 			for (int i = 0; i < nMaxima_; i++) {
 				double x = xArray_[i];
 				double y = yArray_[i];
-				writer.write(x + ", " + y +  ", " + frame + "," + peakSize_[i] + "," + residue_[i] + '\n');
+				writer.write(x + ", " + y +  ", " + frame + "," + peakSize_[i] + "," + confidence_[i] + '\n');
 			}
 		}
 	}
@@ -374,7 +374,7 @@ public class PeakFinder {
 		SmNode [] nodes;
 		nodes = new SmNode[nMaxima_];
 		for ( int i = 0; i < nMaxima_; i ++) {
-			nodes[i] = new SmNode(xArray_[i], yArray_[i], frame, peakSize_[i], residue_[i]);
+			nodes[i] = new SmNode(xArray_[i], yArray_[i], frame, peakSize_[i], confidence_[i]);
 		}
 		return nodes;
 	}

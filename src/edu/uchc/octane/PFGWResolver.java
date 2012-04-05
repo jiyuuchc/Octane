@@ -194,7 +194,7 @@ public class PFGWResolver implements SubPixelResolver {
 	  * @see edu.uchc.octane.SubPixelRefiner#getResidue()
 	  */
 	 @Override
-	 public double getResidue() {
+	 public double getConfidenceEstimator() {
 		 return residue_ /(2 * Prefs.kernelSize_ + 1) / (2 * Prefs.kernelSize_ + 1);
 	 }
 }

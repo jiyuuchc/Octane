@@ -32,7 +32,7 @@ public class PrefDialog {
 		dlg.addMessage("- Tracking -");
 		dlg.addNumericField("Max Displacement", Prefs.trackerMaxDsp_, 1);
 		dlg.addNumericField("Max Blinking", (double)Prefs.trackerMaxBlinking_, 0);
-		dlg.addNumericField("Residue Threshold", Prefs.residueThreshold_, 1);
+		dlg.addNumericField("Confidence Threshold", Prefs.confidenceThreshold_, 0);
 
 		dlg.addMessage("- Analysis -");
 		dlg.addNumericField("PALM Scale Factor", Prefs.palmScaleFactor_, 1);
@@ -46,7 +46,7 @@ public class PrefDialog {
 			return;
 		Prefs.trackerMaxDsp_ = dlg.getNextNumber();
 		Prefs.trackerMaxBlinking_ = (int) dlg.getNextNumber();
-		Prefs.residueThreshold_ = dlg.getNextNumber();
+		Prefs.confidenceThreshold_ = dlg.getNextNumber();
 		Prefs.palmScaleFactor_ = dlg.getNextNumber();
 		Prefs.IFSScaleFactor_ = (int)dlg.getNextNumber();
 		Prefs.palmPSDWidth_ = dlg.getNextNumber();
