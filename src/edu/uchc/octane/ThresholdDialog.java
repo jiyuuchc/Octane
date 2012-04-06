@@ -75,11 +75,14 @@ public class ThresholdDialog implements ImageListener {
 		dlg_.addNumericField("PSD sigma", Prefs.sigma_, 2);
 		
 		finder_.setTolerance(Prefs.peakTolerance_);
-		dlg_.addSlider("Threshold", 0, 40000.0, finder_.getTolerance());
+		dlg_.addSlider("Intensity Threshold", 0, 40000.0, finder_.getTolerance());
+
+		finder_.setLaplaceTolerance(0);
+		dlg_.addSlider("Laplace Threshold", 0, 100, finder_.getLaplaceTolerance()*10);
 
 		Vector<Scrollbar> sliders = (Vector<Scrollbar>)dlg_.getSliders();
-		final Scrollbar slider = sliders.get(0);
-		slider.setUnitIncrement(20); // default was 1 
+		//final Scrollbar slider = sliders.get(0);
+		sliders.get(0).setUnitIncrement(20); // default was 1 
 		
 		dlg_.addDialogListener(new DialogListener() {
 			@Override
@@ -88,16 +91,19 @@ public class ThresholdDialog implements ImageListener {
 					return true;
 				}
 				double tol = -1;
-				if (ev.getSource() == slider) {
-					tol = slider.getValue();
-				} else {
-					Prefs.refiner_ = dlg_.getNextChoiceIndex();
-					Prefs.kernelSize_ = (int) dlg_.getNextNumber();
-					Prefs.sigma_ = dlg_.getNextNumber();
-					tol = gd.getNextNumber();
-				}
+				double laplaceTol = -1;
+				Prefs.refiner_ = dlg_.getNextChoiceIndex();
+				Prefs.kernelSize_ = (int) dlg_.getNextNumber();
+				Prefs.sigma_ = dlg_.getNextNumber();
+				
+				tol = gd.getNextNumber();
+				laplaceTol = gd.getNextNumber() / 10.0;
 				if (tol >= 0 && tol != finder_.getTolerance()) {
 					finder_.setTolerance(tol);
+					updateMaximum();
+				}
+				if (laplaceTol >= 0 && laplaceTol != finder_.getLaplaceTolerance() ) {
+					finder_.setLaplaceTolerance(laplaceTol);
 					updateMaximum();
 				}
 				return true;	
@@ -138,7 +144,7 @@ public class ThresholdDialog implements ImageListener {
 	protected void updateMaximum() {
 		imp_.killRoi();
 		finder_.findMaxima();
-		imp_.setRoi(finder_.markMaxima());
+		imp_.setRoi(finder_.getMaximaAsROI());
 	}
 
 	protected boolean processStack() {
@@ -159,7 +165,7 @@ public class ThresholdDialog implements ImageListener {
 			nFound += finder_.findMaxima();
 			nMissed += finder_.refineMaxima();
 			//finder_.exportCurrentMaxima(writer, frame);
-			nodes_[frame - 1] = finder_.getCurrentNodes(frame);
+			nodes_[frame - 1] = finder_.getMaximaAsSMNodes(frame);
 		}
 
 		IJ.log(imp_.getTitle() + "- Tested:" + nFound + " Missed:" + nMissed);

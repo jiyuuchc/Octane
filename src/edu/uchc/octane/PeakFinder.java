@@ -32,9 +32,12 @@ import java.util.Vector;
  */
 public class PeakFinder {
 	private double tol_;
+	private double laplaceTol_; 
 	private int[] dirOffset_;
 	private int[] dirXoffset_;
 	private int[] dirYoffset_;
+	
+	//protected int bg_; 
 	
 	final static byte LISTED = (byte) 1;
 	final static byte OWNED = (byte) 2;
@@ -48,7 +51,7 @@ public class PeakFinder {
 	private SubPixelResolver refiner_;
 	private double[] xArray_;
 	private double[] yArray_;
-	private int[] peakSize_;
+	private double[] peakSize_;
 	private double[] confidence_;
 	private short nMaxima_;
 
@@ -107,6 +110,8 @@ public class PeakFinder {
 		ip_ = ip.duplicate();
 		if (bSmooth)
 			ip_.smooth();
+		
+		//bg_ = ip_.getAutoThreshold();
 		width_ = ip_.getWidth();
 		height_ = ip_.getHeight();
 		makeDirectionOffsets();
@@ -122,12 +127,30 @@ public class PeakFinder {
 	}
 
 	/**
+	 * Gets the laplacian tolerance.
+	 *
+	 * @return the laplacian tolerance
+	 */
+	public double getLaplaceTolerance() {
+		return laplaceTol_;
+	}
+	
+	/**
 	 * Sets the peak detection tolerance.
 	 *
 	 * @param tol the new tolerance
 	 */
 	public void setTolerance(double tol) {
 		tol_ = tol;
+	}
+
+	/**
+	 * Sets the laplacian tolerance.
+	 *
+	 * @param tol the new tolerance
+	 */
+	public void setLaplaceTolerance(double tol) {
+		laplaceTol_ = tol;
 	}
 
 	/**
@@ -146,6 +169,33 @@ public class PeakFinder {
 		dirYoffset_ = new int[] { -1, -1, 0, 1, 1, 1, 0, -1 };
 	}
 
+	// this is the average laplacian around x,y by averaging 9 pixels.
+	int laplacian(int x, int y) {
+		int l = 0;
+		int [] kernel = {
+				0,-1,-1,-1,0,
+				-1,2,1,2,-1,
+				-1,1,0,1,-1,
+				-1,2,1,2,-1,
+				0,-1,-1,-1,0				
+		};
+		
+		int idx = 0;
+		for (int xi = -2; xi <= 2; xi++) {
+			int x0 = x + xi;
+			if (x0 < 0 ) {x0 = 0;}
+			if (x0 >= width_) { x0 = width_ -1 ;}
+			for (int yi = -2; yi <=2; yi++) {
+				int y0 = y + yi;
+				if (y0 < 0) { y0 = 0;}
+				if (y0 >= height_) { y0 = height_ -1;}
+				l += kernel[idx++] * ip_.get(x0,y0); 
+			}
+		}
+		
+		return l;
+	}
+	
 	/**
 	 * Detect all peaks.
 	 *
@@ -204,7 +254,7 @@ public class PeakFinder {
 		nMaxima_ = 0;
 		xArray_ = new double[pixels.length];
 		yArray_ = new double[pixels.length];
-		peakSize_ = new int[pixels.length];
+		peakSize_ = new double[pixels.length];
 		confidence_ = new double[pixels.length];
 		return analyzeMaxima(pixels);
 	} 
@@ -269,10 +319,15 @@ public class PeakFinder {
 
 			if (isMax && v < maxThreshold_ && v > minThreshold_) {
 				if (roi_ == null || roi_.contains(pixels[i].x, pixels[i].y)) {
-					xArray_[nMaxima_] = pixels[i].x;
-					yArray_[nMaxima_] = pixels[i].y;
-					peakSize_[nMaxima_] = listLen;
-					nMaxima_++;
+					int x = pixels[i].x;
+					int y = pixels[i].y;
+					if (laplacian(x,y)/ip_.getf(x,y) > laplaceTol_) {
+						xArray_[nMaxima_] = x;
+						yArray_[nMaxima_] = y;
+						//peakSize_[nMaxima_] = listLen;
+						//peakSize_[nMaxima_] = (double) (laplacian(x,y)/(ip_.getf(x,y)));					
+						nMaxima_++;
+					}
 				}
 			}
 		}
@@ -316,7 +371,7 @@ public class PeakFinder {
 					xArray_[nNewMaxima] = refiner_.getXOut();
 					yArray_[nNewMaxima] = refiner_.getYOut();
 					confidence_[nNewMaxima] = refiner_.getConfidenceEstimator();
-					peakSize_[nNewMaxima] = (int)Math.round(refiner_.getHeightOut());
+					peakSize_[nNewMaxima] = refiner_.getHeightOut();
 					nNewMaxima++;
 				}else {
 					nMissed++;
@@ -329,11 +384,11 @@ public class PeakFinder {
 	}
 
 	/**
-	 * Mark all peaks in the ImageJ window.
+	 * return all peaks as an ROI in ImageJ window.
 	 *
 	 * @return the PointRoi
 	 */
-	public Roi markMaxima() {
+	public Roi getMaximaAsROI() {
 		if (nMaxima_ > 0) {
 			int[] xpoints = new int[nMaxima_];
 			int[] ypoints = new int[nMaxima_];
@@ -354,7 +409,7 @@ public class PeakFinder {
 	 * @param frame the frame number
 	 * @throws IOException 
 	 */
-	public void exportCurrentMaxima(Writer writer, int frame) throws IOException {
+	public void exportMaxima(Writer writer, int frame) throws IOException {
 		if (nMaxima_ > 0) {
 			for (int i = 0; i < nMaxima_; i++) {
 				double x = xArray_[i];
@@ -370,11 +425,11 @@ public class PeakFinder {
 	 * @param frame the frame number
 	 * @return the array of nodes
 	 */
-	public SmNode[] getCurrentNodes(int frame) {
+	public SmNode[] getMaximaAsSMNodes(int frame) {
 		SmNode [] nodes;
 		nodes = new SmNode[nMaxima_];
 		for ( int i = 0; i < nMaxima_; i ++) {
-			nodes[i] = new SmNode(xArray_[i], yArray_[i], frame, peakSize_[i], confidence_[i]);
+			nodes[i] = new SmNode(xArray_[i], yArray_[i], frame, 0, confidence_[i]);
 		}
 		return nodes;
 	}
