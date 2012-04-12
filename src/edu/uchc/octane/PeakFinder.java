@@ -368,10 +368,10 @@ public class PeakFinder {
 				int rtmp;
 				rtmp = refiner_.refine(.5 + xArray_[i], .5 + yArray_[i]);
 				if (rtmp >= 0) {
-					xArray_[nNewMaxima] = refiner_.getXOut();
-					yArray_[nNewMaxima] = refiner_.getYOut();
+					xArray_[nNewMaxima] = refiner_.getX();
+					yArray_[nNewMaxima] = refiner_.getY();
 					confidence_[nNewMaxima] = refiner_.getConfidenceEstimator();
-					peakSize_[nNewMaxima] = refiner_.getHeightOut();
+					peakSize_[nNewMaxima] = refiner_.getHeight();
 					nNewMaxima++;
 				}else {
 					nMissed++;

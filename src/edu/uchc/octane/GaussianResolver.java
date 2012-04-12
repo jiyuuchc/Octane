@@ -190,7 +190,7 @@ public class GaussianResolver implements SubPixelResolver, DifferentiableMultiva
 	 * @see edu.uchc.octane.SubPixelRefiner#getXOut()
 	 */
 	@Override
-	public double getXOut() {
+	public double getX() {
 		return (x0_ + .5 - parameters_[0]) ;
 	}
 
@@ -198,7 +198,7 @@ public class GaussianResolver implements SubPixelResolver, DifferentiableMultiva
 	 * @see edu.uchc.octane.SubPixelRefiner#getYOut()
 	 */
 	@Override
-	public double getYOut() {
+	public double getY() {
 		return (y0_ + .5 - parameters_[1]);
 	}
 
@@ -206,12 +206,12 @@ public class GaussianResolver implements SubPixelResolver, DifferentiableMultiva
 	 * @see edu.uchc.octane.SubPixelRefiner#getHeightOut()
 	 */
 	@Override
-	public double getHeightOut() {
+	public double getHeight() {
 		return parameters_[2];
 	}
 
 	/* (non-Javadoc)
-	 * @see edu.uchc.octane.SubPixelRefiner#getResidue()
+	 * @see edu.uchc.octane.SubPixelRefiner#getConfidenceEstimator()
 	 */
 	@Override
 	public double getConfidenceEstimator() {

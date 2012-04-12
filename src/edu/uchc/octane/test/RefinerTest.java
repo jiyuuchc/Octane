@@ -52,7 +52,7 @@ public class RefinerTest {
 						refiner.setImageData(noisyGaussianImage(x,y));
 						int ret = refiner.refine(size +.5 , size +.5);
 						if (ret >=0 ) {
-							System.out.printf("%+.3f,%+.3f\t", refiner.getXOut(), refiner.getYOut());
+							System.out.printf("%+.3f,%+.3f\t", refiner.getX(), refiner.getY());
 						} else {
 							System.out.printf("xxxxxx %6d\t", ret);
 						}
@@ -76,7 +76,7 @@ public class RefinerTest {
 					for (double x = -1; x <= 1; x+= 0.5 ) {
 						int ret = refiner.refine(x + size +.5 , y + size +.5);
 						if (ret >=0 ) {
-							System.out.printf("%+.3f,%+.3f\t", refiner.getXOut(), refiner.getYOut());
+							System.out.printf("%+.3f,%+.3f\t", refiner.getX(), refiner.getY());
 						} else {
 							System.out.printf("xxxxxx %6d\t", ret);
 						}
@@ -109,7 +109,7 @@ public class RefinerTest {
 
 				int ret = refiner.refine(.5 + xi , .5 + yi);
 				if (ret >=0 ) {
-					System.out.printf("%+.3f,%+.3f | ", refiner.getXOut(), refiner.getYOut());
+					System.out.printf("%+.3f,%+.3f | ", refiner.getX(), refiner.getY());
 				} else {
 					System.out.printf("xxxxxx %6d | ", ret);
 				}
@@ -117,7 +117,7 @@ public class RefinerTest {
 				if (xi != size || yi != size) {
 					ret = refiner.refine(.5 + size , .5 + size);
 					if (ret >=0 ) {
-						System.out.printf("%+.3f,%+.3f\t", refiner.getXOut(), refiner.getYOut());
+						System.out.printf("%+.3f,%+.3f\t", refiner.getX(), refiner.getY());
 					} else {
 						System.out.printf("xxxxxx %6d\t", ret);
 					}

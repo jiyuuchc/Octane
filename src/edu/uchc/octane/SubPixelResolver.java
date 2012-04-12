@@ -46,21 +46,21 @@ public interface SubPixelResolver {
 	 *
 	 * @return x
 	 */
-	public double getXOut();
+	public double getX();
 	
 	/**
 	 * Subpixel y .
 	 *
 	 * @return y
 	 */
-	public double getYOut();
+	public double getY();
 	
 	/**
 	 * Height of the peak.
 	 *
 	 * @return height 
 	 */
-	public double getHeightOut();
+	public double getHeight();
 	
 	/**
 	 * The residue.

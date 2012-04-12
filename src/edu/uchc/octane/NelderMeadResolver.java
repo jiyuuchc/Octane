@@ -136,14 +136,26 @@ public class NelderMeadResolver implements SubPixelResolver, MultivariateRealFun
 
 		RealPointValuePair vp = nm.optimize(this, GoalType.MINIMIZE, parameters_);
 		parameters_ = vp.getPoint();
-		residue_ = vp.getValue() / parameters_[2] / parameters_[2]; // normalized to H^2
+		//residue_ = vp.getValue(); // normalized to H^2
+		
+		double m = 0;
+		double m2 = 0;
+		for (int xi = - Prefs.kernelSize_; xi <= Prefs.kernelSize_; xi++) {
+			for (int yi = - Prefs.kernelSize_; yi <= Prefs.kernelSize_; yi++) {
+				m += ip_.get(x0_+xi, y0_+yi);
+				m2 += (ip_.get(x0_+xi, y0_+yi))*(ip_.get(x0_+xi, y0_+yi));
+			}
+		}
+		int nPixels = (1 + 2 * Prefs.kernelSize_)*(1 + 2 * Prefs.kernelSize_);
+		m = m2 - m * m / nPixels; //variance of the grey values
+		residue_ = nPixels * Math.log(m/vp.getValue());
 	}
 
 	/* (non-Javadoc)
 	 * @see edu.uchc.octane.SubPixelRefiner#getXOut()
 	 */
 	@Override
-	public double getXOut() {
+	public double getX() {
 		return (x0_ + .5 - parameters_[0]);
 	}
 
@@ -151,7 +163,7 @@ public class NelderMeadResolver implements SubPixelResolver, MultivariateRealFun
 	 * @see edu.uchc.octane.SubPixelRefiner#getYOut()
 	 */
 	@Override
-	public double getYOut() {
+	public double getY() {
 		return (y0_ + .5 - parameters_[1]);
 	}
 
@@ -159,7 +171,7 @@ public class NelderMeadResolver implements SubPixelResolver, MultivariateRealFun
 	 * @see edu.uchc.octane.SubPixelRefiner#getHeightOut()
 	 */
 	@Override
-	public double getHeightOut() {
+	public double getHeight() {
 		return parameters_[2];
 	}
 
@@ -168,6 +180,7 @@ public class NelderMeadResolver implements SubPixelResolver, MultivariateRealFun
 	 */
 	@Override
 	public double getConfidenceEstimator() {
+		
 		return residue_ ;
 	}
 

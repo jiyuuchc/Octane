@@ -24,6 +24,7 @@ import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.math.linear.ArrayRealVector;
 import org.apache.commons.math.linear.QRDecompositionImpl;
 import org.apache.commons.math.linear.RealVector;
+import org.apache.commons.math.stat.descriptive.moment.Variance;
 
 
 /**
@@ -48,6 +49,8 @@ public class PFGWResolver implements SubPixelResolver {
 	private ArrayRealVector yps = new ArrayRealVector(numPixels);
 	private Array2DRowRealMatrix V = new Array2DRowRealMatrix(numPixels, (poly_order + 1) * (poly_order + 2) / 2);
 	private ArrayRealVector z = new ArrayRealVector(numPixels);
+
+	private double pixels[] = new double[numPixels];
 
 	/* (non-Javadoc)
 	 * @see edu.uchc.octane.SubPixelRefiner#setImageData(ij.process.ImageProcessor)
@@ -91,6 +94,8 @@ public class PFGWResolver implements SubPixelResolver {
 				 yps.setEntry(i, yd);
 				 V.setEntry(i, 0, w);
 				 z.setEntry(i, frame_.getf(x0_ + xi, y0_ + yi) * w);
+				 
+				 pixels[i]= frame_.getf(x0_+xi, y0_ + yi);
 				 i++;
 			 }
 		 }
@@ -170,7 +175,7 @@ public class PFGWResolver implements SubPixelResolver {
 	  * @see edu.uchc.octane.SubPixelRefiner#getXOut()
 	  */
 	 @Override
-	 public double getXOut() {
+	 public double getX() {
 		 return x_out;
 	 }
 
@@ -178,7 +183,7 @@ public class PFGWResolver implements SubPixelResolver {
 	  * @see edu.uchc.octane.SubPixelRefiner#getYOut()
 	  */
 	 @Override
-	 public double getYOut() {
+	 public double getY() {
 		 return y_out;
 	 }
 
@@ -186,7 +191,7 @@ public class PFGWResolver implements SubPixelResolver {
 	  * @see edu.uchc.octane.SubPixelRefiner#getHeightOut()
 	  */
 	 @Override
-	 public double getHeightOut() {
+	 public double getHeight() {
 		 return h_out;
 	 }
 
@@ -195,6 +200,9 @@ public class PFGWResolver implements SubPixelResolver {
 	  */
 	 @Override
 	 public double getConfidenceEstimator() {
-		 return residue_ /(2 * Prefs.kernelSize_ + 1) / (2 * Prefs.kernelSize_ + 1);
+		 double m;
+		 m = new Variance(false).evaluate(pixels);
+		 return numPixels * Math.log(m/residue_);
 	 }
 }
+

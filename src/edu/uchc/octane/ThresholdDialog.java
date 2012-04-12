@@ -39,9 +39,9 @@ import ij.process.ImageProcessor;
  * The dialog to set peak detection threshold.
  */
 public class ThresholdDialog implements ImageListener {
-	
+
 	ImagePlus imp_;
-	
+
 	protected PeakFinder finder_;
 	
 	protected NonBlockingGenericDialog dlg_;

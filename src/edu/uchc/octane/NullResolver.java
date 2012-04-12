@@ -37,17 +37,17 @@ public class NullResolver implements SubPixelResolver {
 	}
 
 	@Override
-	public double getXOut() {
+	public double getX() {
 		return x_;
 	}
 
 	@Override
-	public double getYOut() {
+	public double getY() {
 		return y_;
 	}
 
 	@Override
-	public double getHeightOut() {
+	public double getHeight() {
 		return ip_.getPixelValue((int)x_, (int)y_);
 	}
 
