@@ -36,7 +36,7 @@ public class PrefDialog {
 
 		dlg.addMessage("- Analysis -");
 		dlg.addNumericField("PALM Scale Factor", Prefs.palmScaleFactor_, 1);
-		dlg.addNumericField("IFS Scale Factor", Prefs.palmScaleFactor_, 0);
+		dlg.addNumericField("IFS Scale Factor", Prefs.IFSScaleFactor_, 0);
 		dlg.addNumericField("PALM PSD sigma", Prefs.palmPSDWidth_, 3);
 		dlg.addNumericField("PALM Threshold", Prefs.palmThreshold_, 1);		
 		dlg.addNumericField("Histogram Bins", Prefs.histogramBins_, 0);

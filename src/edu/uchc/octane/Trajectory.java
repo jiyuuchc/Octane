@@ -28,6 +28,7 @@ public class Trajectory extends Vector<SmNode> {
 	private static final long serialVersionUID = 8187158272341013922L;
 
 	private double stepSize2_ = -1;
+	private double maxDisplacement_ = -1;
 
 	/** Whether it is marked. */
 	public boolean marked = false;
@@ -37,6 +38,9 @@ public class Trajectory extends Vector<SmNode> {
 
 	/** A text note. */
 	public String note = null;
+
+	private int timeDelay_ = 4;
+
 
 	/**
 	 * Gets the length of the trajectory.
@@ -53,20 +57,48 @@ public class Trajectory extends Vector<SmNode> {
 	 * @return Average stepsize^2
 	 */
 	public double getAvgSquareStepSize() {
-		if (size() < 2)
-			return 0;
+		if (size() < timeDelay_ )
+			return -1;
 		if (stepSize2_ >= 0)
 			return stepSize2_;
 		stepSize2_ = 0;
 		int cnt = 0;
-		for (int i = 0; i < size()-1; i++) {
-			if (get(i+1).frame - get(i).frame == 1) {
-				stepSize2_ += get(i+1).distance2(get(i));
+		for (int i = 0; i < size()-timeDelay_; i++) {
+			int j = i + timeDelay_;
+			while (get(j).frame - get(i).frame > timeDelay_) {
+				j--;
+			}
+			if (get(j).frame - get(i).frame == timeDelay_) {
+				stepSize2_ += get(j).distance2(get(i));
 				cnt ++;
 			}
 		}
 		if (cnt > 0) 
 			stepSize2_ /= cnt;
 		return stepSize2_;
+	}
+
+	/**
+	 * Gets largest displacement in the trajectory
+	 * 
+	 * @return Max displacement
+	 */
+	public double getMaxDisplament() {
+		if (size() < 2)
+			return 0;
+		if (maxDisplacement_ >= 0)
+			return maxDisplacement_;
+
+		for (int i = 0; i < size()-1; i++) {
+			for ( int j = 0; j < size(); j++) {
+				double d = get(j).distance2(get(i));
+				if (d > maxDisplacement_) {
+					maxDisplacement_ = d;
+				}
+			}
+		}
+		if (maxDisplacement_ > 0) 
+			maxDisplacement_ = Math.sqrt(maxDisplacement_);
+		return maxDisplacement_;
 	}
 }

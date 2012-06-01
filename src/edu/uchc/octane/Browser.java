@@ -29,7 +29,9 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseAdapter;
+import java.awt.geom.Arc2D;
 import java.awt.geom.GeneralPath;
+import java.awt.geom.Rectangle2D;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -259,10 +261,12 @@ public class Browser implements ClipboardOwner{
 		for (int i = 0; i < dataset_.getSize(); i ++) {
 			Trajectory v = dataset_.getTrajectoryByIndex(i);
 			if ( v.marked ) {
+				path.append(new Arc2D.Double(v.get(0).x-0.15,v.get(0).y,0.3,0.3,0,360,Arc2D.OPEN), false);
 				path.moveTo(v.get(0).x, v.get(0).y);
 				for (int j = 1; j < v.size(); j++) {
 					path.lineTo(v.get(j).x, v.get(j).y);
 				}
+				path.append(new Rectangle2D.Double(v.get(v.size()-1).x-0.15,v.get(v.size()-1).y-0.15,0.3,0.3), false);
 			}
 		}
 		imp_.setOverlay(path, Color.yellow, new BasicStroke(1f));			
@@ -772,7 +776,7 @@ public class Browser implements ClipboardOwner{
 		hw.setVisible(true);
 		imp.close();		
 	}
-	
+
 	/**
 	 * Show displacement histogram.
 	 * 

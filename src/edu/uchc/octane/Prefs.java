@@ -70,7 +70,7 @@ public class Prefs {
 	static int sloppyness_ = 1;
 	static int kernelSize_ = 2;
 	static double sigma_ = 0.94;
-	static int IFSScaleFactor_ = 3;
+	static int IFSScaleFactor_ = 1;
 	static int peakTolerance_ = 2000;
 	
 	static double trackerLowerBound_ = 1.0;
