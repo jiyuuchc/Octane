@@ -867,7 +867,7 @@ public class Browser implements ClipboardOwner{
 	/**
 	 * Show mean square displacement.
 	 */
-	public void showMSD() {
+	public void showMSD(int maxSteps) {
 		int [] selected = browserWindow_.getSelectedTrajectoriesOrAll();
 		ArrayList<SummaryStatistics> stat = new ArrayList<SummaryStatistics>();
 		for (int i = 0; i < selected.length; i ++) {
@@ -876,10 +876,12 @@ public class Browser implements ClipboardOwner{
 				int frame = t.get(j).frame;
 				for (int k = j + 1; k < t.size(); k++) {
 					int deltaframe = t.get(k).frame - frame;
-					while (deltaframe > stat.size()) {
-						stat.add(new SummaryStatistics());
+					if (deltaframe <= maxSteps) {
+						while (deltaframe > stat.size()) {
+							stat.add(new SummaryStatistics());
+						}
+						stat.get(deltaframe - 1).addValue(t.get(j).distance2(t.get(k)));
 					}
-					stat.get(deltaframe - 1).addValue(t.get(j).distance2(t.get(k)));
 				}
 			}
 			IJ.showProgress(i, selected.length);

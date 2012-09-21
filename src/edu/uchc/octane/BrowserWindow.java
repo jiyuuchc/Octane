@@ -346,7 +346,13 @@ public class BrowserWindow extends JFrame {
 		item.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e){
-				browser_.showMSD();
+				GenericDialog gd = new GenericDialog("MSD parameters");
+				gd.addNumericField("Maximum time steps", 20, 0);
+				gd.showDialog();
+				if (gd.wasCanceled())
+					return;
+				int maxSteps = (int) gd.getNextNumber();
+				browser_.showMSD(maxSteps);
 			}
 		});
 
