@@ -307,10 +307,17 @@ public class BrowserWindow extends JFrame {
 				int stepsize = 1;
 				GenericDialog gd = new GenericDialog("Step Size Input");
 				gd.addNumericField("Step Size: ", stepsize, 0);
+				gd.addNumericField("Number of bins:", Prefs.histogramBins_, 0);
+				gd.addNumericField("Minimal value:", Prefs.dspHistogramMin_, 0);
+				gd.addNumericField("Maximal value:", Prefs.dspHistogramMax_, 0);
 				gd.showDialog();
 				if (gd.wasCanceled())
 					return;
 				stepsize = (int) gd.getNextNumber();
+				Prefs.histogramBins_ = (int) gd.getNextNumber();
+				Prefs.dspHistogramMin_ = gd.getNextNumber();
+				Prefs.dspHistogramMax_ = gd.getNextNumber();
+				
 				browser_.showDisplacementHistogram(stepsize);
 			}
 		});

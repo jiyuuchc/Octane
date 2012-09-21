@@ -72,7 +72,8 @@ public class Prefs {
 	static double sigma_ = 0.94;
 	static int IFSScaleFactor_ = 1;
 	static int peakTolerance_ = 2000;
-	
+	static double dspHistogramMin_ = 0;
+	static double dspHistogramMax_ = 10;
 	static double trackerLowerBound_ = 1.0;
 
 	static Preferences pref_;

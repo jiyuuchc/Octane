@@ -813,7 +813,8 @@ public class Browser implements ClipboardOwner{
 		}
 		FloatProcessor ip = new FloatProcessor(1, d.length, d);
 		ImagePlus imp = new ImagePlus("", ip);
-		HistogramWindow hw = new HistogramWindow("Displacement Histogram", imp, Prefs.histogramBins_);
+		HistogramWindow hw = new HistogramWindow("Displacement Histogram", imp, Prefs.histogramBins_, 
+				Prefs.dspHistogramMin_, Prefs.dspHistogramMax_);
 		hw.setVisible(true);
 		imp.close();
 	}
