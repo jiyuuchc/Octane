@@ -39,7 +39,7 @@ public class Animator extends MouseAdapter {
 	private boolean loop_;
 	private Timer animateTimer_;
 	private ImagePlus imp_;
-	private int increment_ = 1; 
+	private int increment_ = 1;
 	private Overlay overlay_;
 
 	/**

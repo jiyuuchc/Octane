@@ -213,9 +213,9 @@ public class TrajDataset{
 	static public TrajDataset importDatasetFromPositionsText(File file) throws IOException {
 		BufferedReader br;
 		String line;
-		ArrayList<SmNode[]> nodes = new ArrayList<SmNode[]>(); 
+		ArrayList<ArrayList<SmNode>> nodes = new ArrayList<ArrayList<SmNode>>(); 
 		br = new BufferedReader(new FileReader(file));
-		int curFrame = 0;
+		int maxFrame = 0;
 		ArrayList<SmNode> curFrameNodes = null;
 		while (null != (line = br.readLine())) {
 			if (line.startsWith("#") || line.startsWith("//")) {
@@ -225,20 +225,19 @@ public class TrajDataset{
 				continue;
 			}
 			SmNode node = new SmNode(line);
-			while (node.frame > curFrame) {
-				if (curFrameNodes != null) {
-					nodes.add(curFrameNodes.toArray(new SmNode[curFrameNodes.size()]));
-				}
-				curFrameNodes = new ArrayList<SmNode>();
-				curFrame ++;
+			while (node.frame > nodes.size()) {
+				nodes.add(new ArrayList<SmNode>());
 			}
-			curFrameNodes.add(node);
+			nodes.get(node.frame-1).add(node);
 		}
-		nodes.add(curFrameNodes.toArray(new SmNode[curFrameNodes.size()]));
 		br.close();
 
 		SmNode[][] n = new SmNode[nodes.size()][];
-		return createDatasetFromNodes(nodes.toArray(n));
+		for (int i = 0; i < nodes.size(); i++) {
+			n[i] = new SmNode[nodes.get(i).size()];
+			nodes.get(i).toArray(n[i]);
+		}
+		return createDatasetFromNodes(n);
 	}
 
 	/**

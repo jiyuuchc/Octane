@@ -66,7 +66,7 @@ public class Prefs {
 	static boolean refinePeak_ = true;
 	static int refiner_ = 1;
 	static int histogramBins_ = 20;
-	static double confidenceThreshold_ = 100;
+	static double confidenceThreshold_ = 0;
 	static int sloppyness_ = 1;
 	static int kernelSize_ = 2;
 	static double sigma_ = 0.94;
