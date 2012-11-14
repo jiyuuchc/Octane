@@ -20,7 +20,7 @@ package edu.uchc.octane;
 
 import ij.process.ImageProcessor;
 
-public class NullResolver implements SubPixelResolver {
+public class NullSPL implements SubPixelLocalization {
 
 	double x_, y_;
 	ImageProcessor ip_;

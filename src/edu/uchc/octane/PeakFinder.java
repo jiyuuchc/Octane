@@ -48,7 +48,7 @@ public class PeakFinder {
 	private int height_;
 	private double minThreshold_, maxThreshold_;
 	private Roi roi_;
-	private SubPixelResolver refiner_;
+	private SubPixelLocalization refiner_;
 	private double[] xArray_;
 	private double[] yArray_;
 	private double[] peakSize_;
@@ -158,7 +158,7 @@ public class PeakFinder {
 	 *
 	 * @param refiner the new refiner
 	 */
-	public void setRefiner(SubPixelResolver refiner) {
+	public void setRefiner(SubPixelLocalization refiner) {
 		refiner_ = refiner;
 	}
 
@@ -344,16 +344,16 @@ public class PeakFinder {
 		if (refiner_ == null ) {
 			switch (Prefs.refiner_) {
 			case 0:
-				refiner_ = new NullResolver();
+				refiner_ = new NullSPL();
 				break;
 			case 1: 
-				refiner_ = new PFGWResolver();
+				refiner_ = new PFGWSPL();
 				break;
 			case 2:
-				refiner_ = new GaussianResolver();
+				refiner_ = new GaussianSPL();
 				break;
 			case 3:
-				refiner_ = new NelderMeadResolver(true);
+				refiner_ = new NelderMeadSPL(true);
 				break;
 			}
 		}

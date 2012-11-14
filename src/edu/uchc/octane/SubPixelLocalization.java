@@ -23,7 +23,7 @@ import ij.process.ImageProcessor;
 /**
  * The subpixel fitter interface.
  */
-public interface SubPixelResolver {
+public interface SubPixelLocalization {
 
 	/**
 	 * Sets the image data.

@@ -36,7 +36,7 @@ import ij.process.ImageProcessor;
 /**
  * Subpixel refiner by Gaussian fit.
  */
-public class GaussianResolver implements SubPixelResolver, DifferentiableMultivariateRealFunction {
+public class GaussianSPL implements SubPixelLocalization, DifferentiableMultivariateRealFunction {
 	
 	private static final double defaultH_ = 200.0;
 	double sigma2_ = 1.73;
@@ -67,7 +67,7 @@ public class GaussianResolver implements SubPixelResolver, DifferentiableMultiva
 	/**
 	 * Default constructor assuming nonzero background.
 	 */
-	public GaussianResolver() {
+	public GaussianSPL() {
 		this(false);
 	}
 	
@@ -76,7 +76,7 @@ public class GaussianResolver implements SubPixelResolver, DifferentiableMultiva
 	 *
 	 * @param b whether the data is zero-background
 	 */
-	public GaussianResolver(boolean b) {
+	public GaussianSPL(boolean b) {
 		zeroBg_ = b;
 		if (!b) {
 			parameters_ = new double[4];

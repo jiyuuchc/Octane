@@ -30,7 +30,7 @@ import ij.process.ImageProcessor;
 /**
  * A refiner using NelderMead fitting algrithm.
  */
-public class NelderMeadResolver implements SubPixelResolver, MultivariateRealFunction {
+public class NelderMeadSPL implements SubPixelLocalization, MultivariateRealFunction {
 		
 	//private static final double defaultH_ = 200.0;
 	private double sigma2_ = 1.73;
@@ -49,7 +49,7 @@ public class NelderMeadResolver implements SubPixelResolver, MultivariateRealFun
 	/**
 	 * Default constructor.
 	 */
-	public NelderMeadResolver() {
+	public NelderMeadSPL() {
 		this(false);
 	}
 	
@@ -58,7 +58,7 @@ public class NelderMeadResolver implements SubPixelResolver, MultivariateRealFun
 	 *
 	 * @param b Is zero-background
 	 */
-	public NelderMeadResolver(boolean b) {
+	public NelderMeadSPL(boolean b) {
 		zeroBg_ = b;
 		if (b) 
 			parameters_ = new double[3];

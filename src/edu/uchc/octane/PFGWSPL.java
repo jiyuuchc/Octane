@@ -30,7 +30,7 @@ import org.apache.commons.math.stat.descriptive.moment.Variance;
 /**
  * Subpixel fitting the peak using polynomial functions with Guassian weighting function.
  */
-public class PFGWResolver implements SubPixelResolver {
+public class PFGWSPL implements SubPixelLocalization {
 
 	ImageProcessor frame_;
 
