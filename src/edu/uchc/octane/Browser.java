@@ -57,6 +57,7 @@ import ij.process.ShortProcessor;
 
 import org.apache.commons.math.stat.descriptive.SummaryStatistics;
 
+
 /**
  * Controller of the the browser window.
  */
@@ -409,55 +410,6 @@ public class Browser implements ClipboardOwner{
 		
 	}
 	
-	boolean setFiducialPoints() {
-		int nFrames = dataset_.getMaximumFrameNumber();
-		drift_x_ = new double[nFrames];
-		drift_y_ = new double[nFrames];
-		int npoints[] = new int[nFrames];
-		for ( int i = 0; i < dataset_.getSize(); i++) {
-			Trajectory t =  dataset_.getTrajectoryByIndex(i);
-			if (t.marked && ! t.deleted) {
-				for (int j = 1; j < t.size(); j++) {
-					int frame = t.get(j).frame - 1;
-					drift_x_[frame] += t.get(j).x - t.get(0).x;
-					drift_y_[frame] += t.get(j).y - t.get(0).y;
-					npoints[frame]++;
-				}
-			}
-		}
-		int cnt = 0;
-		for (int j = 1; j < nFrames; j++) {
-			if (npoints[j] > 0) {
-				drift_x_[j] /= npoints[j];
-				drift_y_[j] /= npoints[j];
-				cnt++;
-			} else {
-				drift_x_[j] = drift_x_[j-1];
-				drift_y_[j] = drift_y_[j-1];
-			}
-		}
-		if (cnt == 0 )
-			return false;
-		else
-			return true;
-	}
-
-	double getCorrectedX(Trajectory traj, int frameIndex) {
-		double x = traj.get(frameIndex).x;
-		if (useFiducial_) {
-			x -= drift_x_[traj.get(frameIndex).frame - 1];
-		}
-		return x;
-	}
-	
-	double getCorrectedY(Trajectory traj, int frameIndex) {
-		double y = traj.get(frameIndex).y;
-		if (useFiducial_) {
-			y -= drift_y_[traj.get(frameIndex).frame - 1];
-		}
-		return y;
-		
-	}
 	/**
 	 * Construct PALM image.
 	 */
@@ -475,85 +427,32 @@ public class Browser implements ClipboardOwner{
 		dlg.showDialog();
 		if (dlg.wasCanceled())
 			return;
+
+		Palm palm = new Palm(dataset_);
 		
 		int palmType = dlg.getNextChoiceIndex();
-		useFiducial_ = dlg.getNextBoolean();
-
-		if (useFiducial_) {
-			useFiducial_ = setFiducialPoints();
-		}
-
-		FloatProcessor ip = new FloatProcessor((int) (rect.width * Prefs.palmScaleFactor_), (int) (rect.height * Prefs.palmScaleFactor_));
-		double psdWidth = Prefs.palmPSDWidth_ * Prefs.palmScaleFactor_;
-		int nPlotted = 0;
-		int nSkipped = 0;
-		double xs,ys,xx,yy;
+		//useFiducial_ = dlg.getNextBoolean();
+		palm.SetUseFiducial(dlg.getNextBoolean());
+		FloatProcessor ip = null;
+		
 		int [] selected = browserWindow_.getSelectedTrajectoriesOrAll();
-		for ( int i = 0; i < selected.length; i ++) {
-			Trajectory traj = dataset_.getTrajectoryByIndex(selected[i]);
-			if (useFiducial_ && traj.marked){
-				continue;
-			}
-			switch (palmType) {
-			case 0: //average
-				boolean converge = true;
-				xx=0;
-				yy=0;
-				for (int j = 0; j < traj.size(); j++ ) {
-					double x = getCorrectedX(traj, j);
-					double y = getCorrectedY(traj, j);
-					xx += x;
-					yy += y;
-					if (j > 0) {
-						if (Math.abs(xx / j - x) > Prefs.palmThreshold_ || Math.abs(yy / j - y) > Prefs.palmThreshold_ ) {
-							converge = false;
-							break;
-						}
-					}					
-				}
-				if (converge) {
-					xx /= traj.size();
-					yy /= traj.size();
-					xs = (xx - rect.x)* Prefs.palmScaleFactor_;
-					ys = (yy - rect.y)* Prefs.palmScaleFactor_;
-					gaussianImage(ip, xs, ys, psdWidth);
-					nPlotted ++;
-				} else {
-					nSkipped ++;
-				}
-				break;
-			case 1:  // head
-				xx = getCorrectedX(traj, 0);
-				yy = getCorrectedY(traj, 0);
-				xs = (xx - rect.x)* Prefs.palmScaleFactor_;
-				ys = (yy - rect.y)* Prefs.palmScaleFactor_;
-				gaussianImage(ip, xs, ys, psdWidth);
-				nPlotted ++;
-				break;
-			case 2:	// tail
-				int f = traj.size()-1;
-				xx = getCorrectedX(traj, f);
-				yy = getCorrectedY(traj, f);
-				xs = (xx - rect.x)* Prefs.palmScaleFactor_;
-				ys = (yy - rect.y)* Prefs.palmScaleFactor_;
-				gaussianImage(ip, xs, ys, psdWidth);
-				nPlotted ++;
-				break;
-			case 3: // all points
-				for (int j = 0; j < traj.size(); j++ ) {
-					xx = getCorrectedX(traj, j);
-					yy = getCorrectedY(traj, j);
-					xs = (xx - rect.x)* Prefs.palmScaleFactor_;
-					ys = (yy - rect.y)* Prefs.palmScaleFactor_;
-					gaussianImage(ip, xs, ys, psdWidth);
-					nPlotted ++;
-				}
-				break;
-			}
+		switch (palmType) {
+		case 0: // average
+			ip = palm.constructPalm(Palm.PalmType.AVERAGE, rect, selected);
+			break;
+		case 1: //head
+			ip = palm.constructPalm(Palm.PalmType.HEAD, rect, selected);
+			break;
+		case 2: //head
+			ip = palm.constructPalm(Palm.PalmType.TAIL, rect, selected);
+			break;
+		case 3: //all points
+			ip = palm.constructPalm(Palm.PalmType.ALLPOINTS, rect, selected);
+			break;
 		}
 		ImagePlus img = new ImagePlus("PALM", ip);
 		img.show();
-		IJ.log(String.format("Plotted %d molecules, skipped %d molecules.", nPlotted, nSkipped));
+		IJ.log(String.format("Plotted %d molecules, skipped %d molecules.", palm.getnPlotted(), palm.getnSkipped()));
 	}
 
 	/**
