@@ -33,6 +33,9 @@ public class SmNode implements Serializable {
 	/** y position */
 	public double y;
 	
+	/* z position */
+	public double z;
+
 	/** The frame number */
 	public int frame;
 	
@@ -50,7 +53,7 @@ public class SmNode implements Serializable {
 	 * @param f the frame number
 	 */
 	public SmNode(double x, double y, int f) {
-		this(x, y, f, 0, 0.0);
+		this(x, y, 0, f, 0, 0.0);
 	}
 
 	/**
@@ -58,12 +61,27 @@ public class SmNode implements Serializable {
 	 *
 	 * @param x the x
 	 * @param y the y
+	 * @param z the z
 	 * @param f the frame number
+	 */
+	public SmNode(double x, double y, double z, int f) {
+		this(x, y, z, f, 0, 0.0);
+	}
+
+	/**
+	 * Instantiates a new node.
+	 *
+	 * @param x the x
+	 * @param y the y
+	 * @param z the z
+	 * @param f the frame number
+	 * @param f the intensity
 	 * @param q the residue
 	 */
-	public SmNode(double x, double y, int f, int h,  double q) {
+	public SmNode(double x, double y, double z, int f, int h,  double q) {
 		this.x = x;
 		this.y = y;
+		this.z = z;
 		frame = f;
 		height = h;
 		reserved = q;
@@ -91,7 +109,7 @@ public class SmNode implements Serializable {
 	 * Convert to comma separated text data.
 	 */
 	public String toString() {
-		return (x + ", " + y + ", " + frame + ", " + height + "," + reserved);
+		return (x + ", " + y + ", " + z + ", " + frame + ", " + height + "," + reserved);
 	}
 	
 	/**
@@ -101,7 +119,7 @@ public class SmNode implements Serializable {
 	 * @return distance^2
 	 */
 	public double distance2(SmNode n) {
-		return (x - n.x)*(x - n.x) + (y - n.y)*(y - n.y);
+		return (x - n.x)*(x - n.x) + (y - n.y)*(y - n.y) + (z - n.z)*( z - n.z);
 	}
 	
 	/**

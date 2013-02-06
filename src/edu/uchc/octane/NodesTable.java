@@ -28,8 +28,8 @@ import javax.swing.table.DefaultTableCellRenderer;
  */
 public class NodesTable extends JTable{
 
-	private static String[] ColumnNames_ = { "F", "X", "Y","I","Q"};
-	private static Class<?> [] ColumnClasses_ = {Integer.class, Double.class, Double.class, Integer.class, Double.class};
+	private static String[] ColumnNames_ = { "F", "X", "Y", "Z", "I","Q"};
+	private static Class<?> [] ColumnClasses_ = {Integer.class, Double.class, Double.class, Double.class, Integer.class, Double.class};
 	
 	private Trajectory traj_ = null;
 	private Model model_;
@@ -118,8 +118,10 @@ public class NodesTable extends JTable{
 			case 2:
 				return node.y;
 			case 3:
-				return node.height;
+				return node.z;
 			case 4:
+				return node.height;
+			case 5:
 				return node.reserved;
 			}
 			return null;

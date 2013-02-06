@@ -101,4 +101,14 @@ public class Trajectory extends Vector<SmNode> {
 			maxDisplacement_ = Math.sqrt(maxDisplacement_);
 		return maxDisplacement_;
 	}
+	
+	/**
+	 * Notify data change
+	 * 
+	 * @return None
+	 * 
+	 */
+	public void dataChanged() {
+		maxDisplacement_ = -1;
+	}
 }
