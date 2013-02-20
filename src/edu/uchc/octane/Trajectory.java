@@ -111,4 +111,5 @@ public class Trajectory extends Vector<SmNode> {
 	public void dataChanged() {
 		maxDisplacement_ = -1;
 	}
+	
 }

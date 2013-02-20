@@ -433,7 +433,7 @@ public class Browser implements ClipboardOwner{
 		int palmType = dlg.getNextChoiceIndex();
 		//useFiducial_ = dlg.getNextBoolean();
 		if (dlg.getNextBoolean()) {
-			palm.setFiducialPoints();
+			//palm.setFiducialPoints();
 		}
 		FloatProcessor ip = null;
 		

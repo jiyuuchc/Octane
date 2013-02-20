@@ -17,6 +17,7 @@
 
 package edu.uchc.octane;
 
+import ij.IJ;
 import ij.process.FloatProcessor;
 import java.awt.Rectangle;
 
@@ -30,11 +31,8 @@ public class Palm {
 	public enum PalmType {AVERAGE, HEAD, TAIL, ALLPOINTS};
 	public enum IFSType {SPOT, LINE, SQUARE};
 	
-	boolean useFiducial_;
+	boolean correctDrift_;
 	TrajDataset dataset_;
-
-	double [] drift_x_; 
-	double [] drift_y_;
 
 	FloatProcessor ip_;
 	Rectangle rect_;
@@ -47,71 +45,21 @@ public class Palm {
 		dataset_ = dataset;
 	}
 
-	public void SetUseFiducial(boolean b) {
-		useFiducial_ = b;
+	public void setCorrectDrift(boolean b) {
+		correctDrift_ = b;
 	}
 	
-	public boolean getUsefiducial() {
-		return useFiducial_;
+	public boolean getCorrectDrift() {
+		return correctDrift_;
 	}
 
-	public int getnPlotted() {
+	public int getNPlotted() {
 		return nPlotted_;
 	}
 
-	public int getnSkipped() {
+	public int getNSkipped() {
 		return nSkipped_;
 	}
-
-	boolean setFiducialPoints() {
-		int nFrames = dataset_.getMaximumFrameNumber();
-		drift_x_ = new double[nFrames];
-		drift_y_ = new double[nFrames];
-		int npoints[] = new int[nFrames];
-		for ( int i = 0; i < dataset_.getSize(); i++) {
-			Trajectory t =  dataset_.getTrajectoryByIndex(i);
-			if (t.marked && ! t.deleted) {
-				for (int j = 1; j < t.size(); j++) {
-					int frame = t.get(j).frame - 1;
-					drift_x_[frame] += t.get(j).x - t.get(0).x;
-					drift_y_[frame] += t.get(j).y - t.get(0).y;
-					npoints[frame]++;
-				}
-			}
-		}
-		int cnt = 0;
-		for (int j = 1; j < nFrames; j++) {
-			if (npoints[j] > 0) {
-				drift_x_[j] /= npoints[j];
-				drift_y_[j] /= npoints[j];
-				cnt++;
-			} else {
-				drift_x_[j] = drift_x_[j-1];
-				drift_y_[j] = drift_y_[j-1];
-			}
-		}
-		if (cnt == 0 )
-			return false;
-		else
-			return true;
-	}
-
-	double getCorrectedX(Trajectory traj, int frameIndex) {
-		double x = traj.get(frameIndex).x;
-		if (useFiducial_) {
-			x -= drift_x_[traj.get(frameIndex).frame - 1];
-		}
-		return x;
-	}
-	
-	double getCorrectedY(Trajectory traj, int frameIndex) {
-		double y = traj.get(frameIndex).y;
-		if (useFiducial_) {
-			y -= drift_y_[traj.get(frameIndex).frame - 1];
-		}
-		return y;	
-	}
-
 
 	void gaussianImage(double xs, double ys, double w) {
 		for (int x = Math.max(0, (int)(xs - 3*w)); x < Math.min(ip_.getWidth(), (int)(xs + 3*w)); x ++) {
@@ -123,10 +71,6 @@ public class Palm {
 	}
 
 	public FloatProcessor constructPalm(PalmType palmType, Rectangle rect, int [] selected) {
-		if (useFiducial_) {
-			useFiducial_ = setFiducialPoints();
-		}
-		
 		nPlotted_ = 0;
 		nSkipped_ = 0;
 
@@ -150,31 +94,34 @@ public class Palm {
 	}
 
 	void constructPalmTypeHeadOrTail(Rectangle rect, int [] selected, boolean isHead) {
-		double xx, yy, xs, ys;
+		double xs, ys;
 
 		double psdWidth = Prefs.palmPSDWidth_ * Prefs.palmScaleFactor_;
 		
 		for ( int i = 0; i < selected.length; i ++) {
 			Trajectory traj = dataset_.getTrajectoryByIndex(selected[i]);
-			if (useFiducial_ && traj.marked){
+			if (correctDrift_ && traj.marked){
 				continue;
 			}
-			if (isHead) {
-				xx = getCorrectedX(traj, 0);
-				yy = getCorrectedY(traj, 0);
-				xs = (xx - rect.x)* Prefs.palmScaleFactor_;
-				ys = (yy - rect.y)* Prefs.palmScaleFactor_;
+			try {
+				SmNode node;
+				if (isHead) {
+					node = traj.get(0);
+				} else {
+					node = traj.get(traj.size()-1);
+				}
+				if (correctDrift_) {
+					node = dataset_.correctDrift(node);
+				}
+				xs = (node.x - rect.x)* Prefs.palmScaleFactor_;
+				ys = (node.y - rect.y)* Prefs.palmScaleFactor_;
 				gaussianImage(xs, ys, psdWidth);
 				nPlotted_ ++;
-			} else {
-				int f = traj.size()-1;
-				xx = getCorrectedX(traj, f);
-				yy = getCorrectedY(traj, f);
-				xs = (xx - rect.x)* Prefs.palmScaleFactor_;
-				ys = (yy - rect.y)* Prefs.palmScaleFactor_;
-				gaussianImage(xs, ys, psdWidth);
-				nPlotted_ ++;
+			} catch (OctaneException e) {
+				IJ.showMessage("Error drift compensation.");
+				return;
 			}
+
 		}
 	}	
 	
@@ -183,60 +130,80 @@ public class Palm {
 
 		double psdWidth = Prefs.palmPSDWidth_ * Prefs.palmScaleFactor_;
 		
-		for ( int i = 0; i < selected.length; i ++) {
-			Trajectory traj = dataset_.getTrajectoryByIndex(selected[i]);
-			if (useFiducial_ && traj.marked){
-				continue;
-			}
-			
-			xx= getCorrectedX(traj, 0);
-			yy= getCorrectedY(traj, 0);
-			xx2 = xx*xx;
-			yy2 = yy*yy;
+		try {
+			for ( int i = 0; i < selected.length; i ++) {
+				Trajectory traj = dataset_.getTrajectoryByIndex(selected[i]);
+				if (correctDrift_ && traj.marked){
+					continue;
+				}
+				SmNode node;
+				node = traj.get(0);
+				if (correctDrift_) {
+					node = dataset_.correctDrift(node);
+				}
+				xx= node.x;
+				yy= node.y;
+				xx2 = xx*xx;
+				yy2 = yy*yy;
 
-			for (int j = 1; j < traj.size(); j++ ) {
-				double x = getCorrectedX(traj, j);
-				double y = getCorrectedY(traj, j);
-				xx += x;
-				yy += y;
-				xx2 += x * x;
-				yy2 += y * y;
+				for (int j = 1; j < traj.size(); j++ ) {
+					node = traj.get(j);
+					if (correctDrift_) {
+						node = dataset_.correctDrift(node);
+					}
+					xx += node.x;
+					yy += node.y;
+					xx2 += node.x * node.x;
+					yy2 += node.y * node.y;
+				}
+
+				xx /= traj.size();
+				yy /= traj.size();
+				xx2 /= traj.size();
+				yy2 /= traj.size();
+
+				if (xx2 - xx * xx < Prefs.palmThreshold_ && yy2 - yy * yy < Prefs.palmThreshold_) {
+					xs = (xx - rect.x)* Prefs.palmScaleFactor_;
+					ys = (yy - rect.y)* Prefs.palmScaleFactor_;
+					gaussianImage(xs, ys, psdWidth);
+					nPlotted_ ++;
+				} else {
+					nSkipped_ ++;
+				}
 			}
-			
-			xx /= traj.size();
-			yy /= traj.size();
-			xx2 /= traj.size();
-			yy2 /= traj.size();
-			
-			if (xx2 - xx * xx < Prefs.palmThreshold_ && yy2 - yy * yy < Prefs.palmThreshold_) {
-				xs = (xx - rect.x)* Prefs.palmScaleFactor_;
-				ys = (yy - rect.y)* Prefs.palmScaleFactor_;
-				gaussianImage(xs, ys, psdWidth);
-				nPlotted_ ++;
-			} else {
-				nSkipped_ ++;
-			}
+		} catch (OctaneException e) {
+			IJ.showMessage("Error drift compensation.");
+			return;
 		}
 	}
 	
 	void constructPalmTypeAllPoints(Rectangle rect, int [] selected) {
-		double xx, yy, xs, ys;
+		double xs, ys;
 
 		double psdWidth = Prefs.palmPSDWidth_ * Prefs.palmScaleFactor_;
-		
-		for ( int i = 0; i < selected.length; i ++) {
-			Trajectory traj = dataset_.getTrajectoryByIndex(selected[i]);
-			if (useFiducial_ && traj.marked){
-				continue;
+
+		try {
+			for ( int i = 0; i < selected.length; i ++) {
+				Trajectory traj = dataset_.getTrajectoryByIndex(selected[i]);
+				if (correctDrift_ && traj.marked){
+					continue;
+				}
+				for (int j = 0; j < traj.size(); j++ ) {
+					SmNode node;
+					node = traj.get(j);
+					if (correctDrift_) {
+						node = dataset_.correctDrift(node);
+					}
+					xs = (node.x - rect.x)* Prefs.palmScaleFactor_;
+					ys = (node.y - rect.y)* Prefs.palmScaleFactor_;
+					gaussianImage(xs, ys, psdWidth);
+					nPlotted_ ++;
+				}
 			}
-			for (int j = 0; j < traj.size(); j++ ) {
-				xx = getCorrectedX(traj, j);
-				yy = getCorrectedY(traj, j);
-				xs = (xx - rect.x)* Prefs.palmScaleFactor_;
-				ys = (yy - rect.y)* Prefs.palmScaleFactor_;
-				gaussianImage(xs, ys, psdWidth);
-				nPlotted_ ++;
-			}
+		} catch (OctaneException e) {
+			IJ.showMessage("Error drift compensation.");
+			return;
 		}
+
 	}
 }

@@ -32,6 +32,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.InputMismatchException;
+import java.util.Scanner;
 import java.util.Vector;
 
 /**
@@ -44,7 +46,8 @@ public class TrajDataset{
 	protected SmNode [][] nodes_; //nodes_[frame][offset]
 
 	TrackingModule tm_;
-	
+	DriftCorrectionModule dcm_;
+
 	class Bond implements Comparable<Bond> {
 		int bondTo;
 		double bondLength;
@@ -60,6 +63,7 @@ public class TrajDataset{
 	public TrajDataset() {
 		trajectories_ = new Vector<Trajectory>();
 		tm_ = new TrackingModule(this);
+		dcm_ = new DriftCorrectionModule(this);
 	}
 
 	/**
@@ -307,5 +311,55 @@ public class TrajDataset{
 		}
 
 		return maxFrameNum;
-	}	
+	}
+	
+	/**
+	 * Import dataset from peak position text file.
+	 *
+	 * @param file the file
+	 * @throws IOException
+	 * @throws OctaneException 
+	 */
+	public void importDriftData(File file) throws IOException, OctaneException {
+		BufferedReader br;
+		String line; 
+		br = new BufferedReader(new FileReader(file));
+		int nFrames = getMaximumFrameNumber();
+		double [] drift_x = new double[nFrames];
+		double [] drift_y = new double[nFrames];
+		double [] drift_z = new double[nFrames];
+		int cnt = 0;
+		while (null != (line = br.readLine())) {
+			if (line.startsWith("#") || line.startsWith("//")) {
+				continue;
+			}
+			if (line.trim().isEmpty()) {
+				continue;
+			}
+			Scanner s = new Scanner(line).useDelimiter("\\s*,\\s*");
+			drift_x[cnt] = s.nextDouble();
+			drift_y[cnt] = s.nextDouble();
+			if (s.hasNextDouble()) {
+				drift_z[cnt] = s.nextDouble();
+			}
+			cnt ++;
+			if (cnt == nFrames) {
+				break;
+			}
+		}
+		br.close();
+		if (cnt != nFrames) {
+			throw new IOException("Error import drift data: wrong format");
+		}
+		dcm_.setDriftData(drift_x, drift_y, drift_z);
+	}
+
+	public void estimateDrift() {
+		//FIXME
+	}
+
+	public SmNode correctDrift(SmNode node) throws OctaneException {
+		return dcm_.correctDrift(node);
+	}
 }
+

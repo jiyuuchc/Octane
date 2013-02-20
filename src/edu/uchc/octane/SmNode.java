@@ -23,7 +23,7 @@ import java.io.Serializable;
 /**
  * A node contains information of a detected peak.
  */
-public class SmNode implements Serializable {
+public class SmNode implements Serializable, Cloneable {
 	
 	private static final long serialVersionUID = -8876493729593706510L;
 
@@ -105,6 +105,15 @@ public class SmNode implements Serializable {
 		}
 	}
 
+	public SmNode clone() {
+		try {
+			return (SmNode) super.clone();
+		} catch (CloneNotSupportedException e) {
+			System.out.println("Cloning not allowed.");
+			return null;
+		}
+	}
+	
 	/** 
 	 * Convert to comma separated text data.
 	 */
