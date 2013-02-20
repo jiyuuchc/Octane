@@ -432,7 +432,9 @@ public class Browser implements ClipboardOwner{
 		
 		int palmType = dlg.getNextChoiceIndex();
 		//useFiducial_ = dlg.getNextBoolean();
-		palm.SetUseFiducial(dlg.getNextBoolean());
+		if (dlg.getNextBoolean()) {
+			palm.setFiducialPoints();
+		}
 		FloatProcessor ip = null;
 		
 		int [] selected = browserWindow_.getSelectedTrajectoriesOrAll();
@@ -452,7 +454,7 @@ public class Browser implements ClipboardOwner{
 		}
 		ImagePlus img = new ImagePlus("PALM", ip);
 		img.show();
-		IJ.log(String.format("Plotted %d molecules, skipped %d molecules.", palm.getnPlotted(), palm.getnSkipped()));
+		IJ.log(String.format("Plotted %d molecules, skipped %d molecules.", palm.getNPlotted(), palm.getNSkipped()));
 	}
 
 	/**
