@@ -423,7 +423,7 @@ public class Browser implements ClipboardOwner{
 		GenericDialog dlg = new GenericDialog("Construct PALM");
 		String[] items = { "Average", "Head", "Tail", "All Points"};
 		dlg.addChoice("PALM Type", items, "Average");
-		dlg.addCheckbox("Use marked trajectories as fiducial markers", true);
+		dlg.addCheckbox("Use marked trajectories as fiducial markers", false);
 		dlg.showDialog();
 		if (dlg.wasCanceled())
 			return;
