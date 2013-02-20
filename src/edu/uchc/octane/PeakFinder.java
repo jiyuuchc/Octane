@@ -17,7 +17,6 @@
 //
 package edu.uchc.octane;
 
-import ij.IJ;
 import ij.gui.PointRoi;
 import ij.gui.Roi;
 import ij.process.ImageProcessor;
@@ -25,7 +24,6 @@ import java.awt.Rectangle;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Arrays;
-import java.util.Vector;
 
 /**
  * PeakFinder class detect and subpixel fit signal from a image.
