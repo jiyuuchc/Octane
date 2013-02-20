@@ -57,46 +57,46 @@ public class DriftCorrectionModule {
 		hasDriftCorrectionData_ = true;
 	}
 
-	public void setFiducialPoints(int [] selection) {
-		int nFrames = dataset_.getMaximumFrameNumber();
-		drift_x_ = new double[nFrames];
-		drift_y_ = new double[nFrames];
-		drift_z_ = new double[nFrames];
-		int npoints[] = new int[nFrames];
+//	public void setFiducialPoints(int [] selection) {
+//		int nFrames = dataset_.getMaximumFrameNumber();
+//		drift_x_ = new double[nFrames];
+//		drift_y_ = new double[nFrames];
+//		drift_z_ = new double[nFrames];
+//		int npoints[] = new int[nFrames];
+//
+//		for ( int i = 0; i < selection.length; i++) {
+//			Trajectory t =  dataset_.getTrajectoryByIndex(selection[i]);
+//			for (int j = 1; j < t.size(); j++) {
+//				int frame = t.get(j).frame - 1;
+//				drift_x_[frame] += t.get(j).x - t.get(0).x;
+//				drift_y_[frame] += t.get(j).y - t.get(0).y;
+//				drift_z_[frame] += t.get(j).z - t.get(0).z;
+//				npoints[frame]++;
+//			}
+//		}
+//		int cnt = 0;
+//		for (int j = 1; j < nFrames; j++) {
+//			if (npoints[j] > 0) {
+//				drift_x_[j] /= npoints[j];
+//				drift_y_[j] /= npoints[j];
+//				drift_z_[j] /= npoints[j];
+//				cnt++;
+//			} else {
+//				drift_x_[j] = drift_x_[j-1];
+//				drift_y_[j] = drift_y_[j-1];
+//				drift_z_[j] = drift_z_[j-1];
+//			}
+//		}
+//
+//		if (cnt == 0 )
+//			hasDriftCorrectionData_ = false;
+//		else
+//			hasDriftCorrectionData_ = true;
+//
+//		return;		
+//	}
 
-		for ( int i = 0; i < selection.length; i++) {
-			Trajectory t =  dataset_.getTrajectoryByIndex(selection[i]);
-			for (int j = 1; j < t.size(); j++) {
-				int frame = t.get(j).frame - 1;
-				drift_x_[frame] += t.get(j).x - t.get(0).x;
-				drift_y_[frame] += t.get(j).y - t.get(0).y;
-				drift_z_[frame] += t.get(j).z - t.get(0).z;
-				npoints[frame]++;
-			}
-		}
-		int cnt = 0;
-		for (int j = 1; j < nFrames; j++) {
-			if (npoints[j] > 0) {
-				drift_x_[j] /= npoints[j];
-				drift_y_[j] /= npoints[j];
-				drift_z_[j] /= npoints[j];
-				cnt++;
-			} else {
-				drift_x_[j] = drift_x_[j-1];
-				drift_y_[j] = drift_y_[j-1];
-				drift_z_[j] = drift_z_[j-1];
-			}
-		}
-
-		if (cnt == 0 )
-			hasDriftCorrectionData_ = false;
-		else
-			hasDriftCorrectionData_ = true;
-
-		return;		
-	}
-
-	public void setFiducialPoints() {
+	public void calculateDrift() {
 		int [] marked = new int[dataset_.getSize()];
 		int cnt = 0;
 		for ( int i = 0; i < dataset_.getSize(); i++) {
@@ -109,37 +109,48 @@ public class DriftCorrectionModule {
 		for (int i = 0; i < cnt; i++) {
 			marked_n[i] = marked[i];
 		}
-		setFiducialPoints(marked_n);
+		calculateDrift(marked_n);
 
 		return;
 	}
 
-	public void calcDriftByGlobalDisplacement(int [] selection) {
+	public void calculateDrift(int [] selection) {
 		int nFrames = dataset_.getMaximumFrameNumber();
 		drift_x_ = new double[nFrames];
 		drift_y_ = new double[nFrames];
 		drift_z_ = new double[nFrames];
-
+		int npoints[] = new int[nFrames];
 		for ( int i = 0; i < selection.length; i++) {
 			Trajectory t =  dataset_.getTrajectoryByIndex(selection[i]);
-			for (int j = 1; j < t.size() - 1; j++) {
+			for (int j = 0; j < t.size() - 1; j++) {
 				int frame = t.get(j + 1).frame;
 				if (t.get(j).frame == frame - 1) {
-					drift_x_[frame] += t.get(j).x - t.get(j+1).x;
-					drift_y_[frame] += t.get(j).y - t.get(j+1).y;
-					drift_z_[frame] += t.get(j).z - t.get(j+1).z;
+					drift_x_[frame-1] += -t.get(j).x + t.get(j+1).x;
+					drift_y_[frame-1] += -t.get(j).y + t.get(j+1).y;
+					drift_z_[frame-1] += -t.get(j).z + t.get(j+1).z;
+					npoints[frame-1]++;
 				}
 			}
 		}
-
-		//cumulate
-		for (int i = 1; i < nFrames; i++ ) {
-			drift_x_[i] += drift_x_[i-1];
-			drift_y_[i] += drift_y_[i-1];
-			drift_z_[i] += drift_z_[i-1];
+		int cnt = 0;
+		for (int j = 1; j < nFrames; j++) {
+			if ( npoints[j] > 0) {
+				drift_x_[j] /= npoints[j];
+				drift_y_[j] /= npoints[j];
+				drift_z_[j] /= npoints[j];
+				cnt++;
+			}
+			//cumulate
+			drift_x_[j] += drift_x_[j-1];
+			drift_y_[j] += drift_y_[j-1];
+			drift_z_[j] += drift_z_[j-1];			
 		}
 
-		hasDriftCorrectionData_ = true;
+		if (cnt > 0.95*nFrames) { 
+			hasDriftCorrectionData_ = true;
+		} else {
+			hasDriftCorrectionData_ = false;
+		}
 		return;
 	}
 

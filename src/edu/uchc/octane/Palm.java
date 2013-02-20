@@ -64,7 +64,7 @@ public class Palm {
 	void gaussianImage(double xs, double ys, double w) {
 		for (int x = Math.max(0, (int)(xs - 3*w)); x < Math.min(ip_.getWidth(), (int)(xs + 3*w)); x ++) {
 			for (int y = Math.max(0, (int)(ys - 3*w)); y < Math.min(ip_.getHeight(), (int)(ys + 3*w)); y++) {
-				double v = Math.exp( -((x-xs) * (x-xs) + (y-ys)*(y-ys))/(2.0*w*w) );
+				double v = 100 * Math.exp( -((x-xs) * (x-xs) + (y-ys)*(y-ys))/(2.0*w*w) );
 				ip_.setf(x, y, (float)v + ip_.getf(x,y));
 			}
 		}
@@ -100,9 +100,9 @@ public class Palm {
 		
 		for ( int i = 0; i < selected.length; i ++) {
 			Trajectory traj = dataset_.getTrajectoryByIndex(selected[i]);
-			if (correctDrift_ && traj.marked){
-				continue;
-			}
+//			if (correctDrift_ && traj.marked){
+//				continue;
+//			}
 			try {
 				SmNode node;
 				if (isHead) {
@@ -133,9 +133,9 @@ public class Palm {
 		try {
 			for ( int i = 0; i < selected.length; i ++) {
 				Trajectory traj = dataset_.getTrajectoryByIndex(selected[i]);
-				if (correctDrift_ && traj.marked){
-					continue;
-				}
+//				if (correctDrift_ && traj.marked){
+//					continue;
+//				}
 				SmNode node;
 				node = traj.get(0);
 				if (correctDrift_) {
@@ -176,7 +176,7 @@ public class Palm {
 			return;
 		}
 	}
-	
+
 	void constructPalmTypeAllPoints(Rectangle rect, int [] selected) {
 		double xs, ys;
 
@@ -185,9 +185,9 @@ public class Palm {
 		try {
 			for ( int i = 0; i < selected.length; i ++) {
 				Trajectory traj = dataset_.getTrajectoryByIndex(selected[i]);
-				if (correctDrift_ && traj.marked){
-					continue;
-				}
+//				if (correctDrift_ && traj.marked){
+//					continue;
+//				}
 				for (int j = 0; j < traj.size(); j++ ) {
 					SmNode node;
 					node = traj.get(j);

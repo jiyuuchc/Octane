@@ -354,12 +354,25 @@ public class TrajDataset{
 		dcm_.setDriftData(drift_x, drift_y, drift_z);
 	}
 
-	public void estimateDrift() {
-		//FIXME
+	public void estimateDrift(int [] selection) {
+		dcm_.calculateDrift(selection);
+	}
+
+	public double [] getDriftX() {
+		return dcm_.getDriftX();
+	}
+	
+	public double [] getDriftY() {
+		return dcm_.getDriftY();
+	}
+
+	public double [] getDriftZ() {
+		return dcm_.getDriftZ();
 	}
 
 	public SmNode correctDrift(SmNode node) throws OctaneException {
 		return dcm_.correctDrift(node);
 	}
+	
 }
 

@@ -243,6 +243,15 @@ public class BrowserWindow extends JFrame {
 			}
 		});
 
+		item = new JMenuItem("Compute Drift");
+		processMenu.add(item);
+		item.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e){
+				browser_.computeDrift();
+			}
+		});
+		
 		item = new JMenuItem("PALM");
 		processMenu.add(item);
 		item.addActionListener(new ActionListener() {

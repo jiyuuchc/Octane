@@ -247,7 +247,7 @@ public class Browser implements ClipboardOwner{
 	private void gaussianImage(ImageProcessor ip, double xs, double ys, double w) {
 		for (int x = Math.max(0, (int)(xs - 3*w)); x < Math.min(ip.getWidth(), (int)(xs + 3*w)); x ++) {
 			for (int y = Math.max(0, (int)(ys - 3*w)); y < Math.min(ip.getHeight(), (int)(ys + 3*w)); y++) {
-				double v = Math.exp( -((x-xs) * (x-xs) + (y-ys)*(y-ys))/(2.0*w*w) );
+				double v = 100 * Math.exp( -((x-xs) * (x-xs) + (y-ys)*(y-ys))/(2.0*w*w) );
 				ip.setf(x, y, (float)v + ip.getf(x,y));
 			}
 		}
@@ -419,11 +419,16 @@ public class Browser implements ClipboardOwner{
 		if (roi!=null && !roi.isArea())
 			imp_.killRoi(); 
 		rect = imp_.getProcessor().getRoi();
-
+		Palm.PalmType [] typeList = {
+				Palm.PalmType.AVERAGE,
+				Palm.PalmType.HEAD,
+				Palm.PalmType.TAIL,
+				Palm.PalmType.ALLPOINTS
+		};
 		GenericDialog dlg = new GenericDialog("Construct PALM");
 		String[] items = { "Average", "Head", "Tail", "All Points"};
 		dlg.addChoice("PALM Type", items, "Average");
-		dlg.addCheckbox("Use marked trajectories as fiducial markers", false);
+		dlg.addCheckbox("Use drift correction", false);
 		dlg.showDialog();
 		if (dlg.wasCanceled())
 			return;
@@ -431,27 +436,12 @@ public class Browser implements ClipboardOwner{
 		Palm palm = new Palm(dataset_);
 		
 		int palmType = dlg.getNextChoiceIndex();
-		//useFiducial_ = dlg.getNextBoolean();
-		if (dlg.getNextBoolean()) {
-			//palm.setFiducialPoints();
-		}
+		palm.setCorrectDrift(dlg.getNextBoolean());
+		
 		FloatProcessor ip = null;
 		
 		int [] selected = browserWindow_.getSelectedTrajectoriesOrAll();
-		switch (palmType) {
-		case 0: // average
-			ip = palm.constructPalm(Palm.PalmType.AVERAGE, rect, selected);
-			break;
-		case 1: //head
-			ip = palm.constructPalm(Palm.PalmType.HEAD, rect, selected);
-			break;
-		case 2: //head
-			ip = palm.constructPalm(Palm.PalmType.TAIL, rect, selected);
-			break;
-		case 3: //all points
-			ip = palm.constructPalm(Palm.PalmType.ALLPOINTS, rect, selected);
-			break;
-		}
+		ip = palm.constructPalm(typeList[palmType], rect, selected);
 		ImagePlus img = new ImagePlus("PALM", ip);
 		img.show();
 		IJ.log(String.format("Plotted %d molecules, skipped %d molecules.", palm.getNPlotted(), palm.getNSkipped()));
@@ -942,5 +932,25 @@ public class Browser implements ClipboardOwner{
 	 */
 	public void plotTransients() {
 		
+	}
+
+	public void computeDrift() {
+		int [] selected = browserWindow_.getSelectedTrajectoriesOrAll();
+		dataset_.estimateDrift(selected);
+		double [] dx = dataset_.getDriftX();
+		double [] dy = dataset_.getDriftY();
+		double [] dz = dataset_.getDriftZ();
+		double [] f = new double [dx.length];
+		for (int i = 0; i < f.length; i++) {
+			f[i] = i;
+		}
+		Plot plotWinX = new Plot("X-Drift", "T/T-frame", "Drift (pixel)", f, dx);
+		//plotWin.addPoints(x, y, Plot.BOX);
+		//plotWin.addErrorBars(e);
+		plotWinX.show();
+		Plot plotWinY = new Plot("Y-Drift", "T/T-frame", "Drift (pixel)", f, dy);
+		plotWinY.show();
+		Plot plotWinZ = new Plot("Z-Drift", "T/T-frame", "Drift (pixel)", f, dz);
+		plotWinZ.show();		
 	}
 }
