@@ -21,10 +21,8 @@ import ij.IJ;
 import ij.process.FloatProcessor;
 import java.awt.Rectangle;
 
-
 /**
- * @author Ji-Yu
- *
+ *  PALM plotting module
  */
 public class Palm {
 

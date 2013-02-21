@@ -37,6 +37,9 @@ import java.awt.event.MouseEvent;
 
 import bsh.Interpreter;
 
+/**
+ * The main octane window
+ */
 public class OctaneWindow extends JFrame {
 
 	private OctaneWindowControl ctlr_ = null;

@@ -20,7 +20,7 @@ package edu.uchc.octane;
 import java.util.prefs.Preferences;
 
 /**
- * The Prefences.
+ * The Preferences.
  */
 public class Prefs {
 
