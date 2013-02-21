@@ -43,7 +43,7 @@ public class OctanePlugin implements PlugIn{
 
 	ImagePlus imp_;
 
-	protected static HashMap<ImagePlus, Browser> dict_ = new HashMap<ImagePlus,Browser>();
+	protected static HashMap<ImagePlus, OctaneWindowControl> dict_ = new HashMap<ImagePlus,OctaneWindowControl>();
 	
 	
 	/**
@@ -66,7 +66,7 @@ public class OctanePlugin implements PlugIn{
 	 * @throws ClassNotFoundException 
 	 */
 	public void openBrowser(TrajDataset dataset) throws IOException, ClassNotFoundException {
-		Browser browser = new Browser(imp_);
+		OctaneWindowControl browser = new OctaneWindowControl(imp_);
 		browser.setup(dataset);
 		dict_.put(imp_, browser);
 		browser.getWindow().addWindowListener(new WindowAdapter() {
@@ -83,7 +83,7 @@ public class OctanePlugin implements PlugIn{
 	public void analyze() {
 		ThresholdDialog dlg = new ThresholdDialog(imp_);
 		if (dlg.openDialog() == true) {
-			Browser browser = new Browser(imp_);
+			OctaneWindowControl browser = new OctaneWindowControl(imp_);
 			browser.setup(dlg.getProcessedNodes());
 			dict_.put(imp_, browser);
 			browser.getWindow().addWindowListener(new WindowAdapter() {

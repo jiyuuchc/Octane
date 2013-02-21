@@ -1,4 +1,4 @@
-//FILE:          Browser.java
+//FILE:          OctaneWindowControl.java
 //PROJECT:       Octane
 //-----------------------------------------------------------------------------
 //
@@ -29,6 +29,8 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseAdapter;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.geom.Arc2D;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.Rectangle2D;
@@ -59,24 +61,19 @@ import org.apache.commons.math.stat.descriptive.SummaryStatistics;
 
 
 /**
- * Controller of the the browser window.
+ * Controller of the the octane window.
  */
-public class Browser implements ClipboardOwner{
+public class OctaneWindowControl implements ClipboardOwner{
 
 	ImagePlus imp_ = null;
-
 	TrajDataset dataset_ = null;
-	//NodesTable nodesTable_;
-
 	protected String path_;
-	
-	protected Animator animator_ = null;
-	
-	BrowserWindow browserWindow_ = null;
+	protected Animator animator_ = null;	
+	OctaneWindow frame_ = null;
 
-	double [] drift_x_; 
-	double [] drift_y_;
-	boolean useFiducial_;
+	//double [] drift_x_; 
+	//double [] drift_y_;
+	//boolean useFiducial_;
 	
 	public enum IFSType {GaussianSpot, LineOverlay, SquareOverlay};
 
@@ -85,9 +82,43 @@ public class Browser implements ClipboardOwner{
 	 *
 	 * @param imp the image
 	 */
-	public Browser(ImagePlus imp) {
-		super();		
-		setupPath(imp);
+	public OctaneWindowControl(ImagePlus imp) {
+		super();
+		
+		path_ = null;
+		imp_ = imp;
+		FileInfo fi = imp.getOriginalFileInfo();
+		if (fi != null) {
+			path_ = fi.directory; 
+		} 
+		
+		imp.getWindow().addWindowListener(new WindowAdapter() {
+			boolean isVisible;
+			@Override
+			public void windowIconified(WindowEvent e) {
+				isVisible = frame_.isVisible();
+				frame_.setVisible(false);
+			}
+			
+			@Override
+			public void windowDeiconified(WindowEvent e) {
+				frame_.setVisible(isVisible);
+			}
+			
+			@Override
+			public void windowClosed(WindowEvent e) {
+				frame_.dispose();
+			}
+		});
+		
+		imp.getCanvas().addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if (e.getClickCount() == 2 ) {
+					findMolecule();
+				}
+			}
+		});
 	}
 	
 	/**
@@ -122,26 +153,9 @@ public class Browser implements ClipboardOwner{
 	}
 
 	protected void createWindow() {
-		browserWindow_ = new BrowserWindow(this);
-		browserWindow_.setVisible(true);
-	}
-
-	private void setupPath(ImagePlus imp) {
-		path_ = null;
-		imp_ = imp;
-		FileInfo fi = imp.getOriginalFileInfo();
-		if (fi != null) {
-			path_ = fi.directory; 
-		} 
-		
-		imp.getCanvas().addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				if (e.getClickCount() == 2 ) {
-					findMolecule();
-				}
-			}			
-		});
+		frame_ = new OctaneWindow();
+		frame_.setController(this);
+		frame_.setVisible(true);
 	}
 
 	/**
@@ -149,8 +163,8 @@ public class Browser implements ClipboardOwner{
 	 *
 	 * @return the window
 	 */
-	public BrowserWindow getWindow() {
-		return browserWindow_;
+	public OctaneWindow getWindow() {
+		return frame_;
 	}
 
 	/**
@@ -180,10 +194,10 @@ public class Browser implements ClipboardOwner{
 					for (int j = 0; j< t.size(); j++) {
 						if (roi.contains( (int)t.get(j).x, (int)t.get(j).y)) {
 							if (firstSel) {
-								browserWindow_.selectTrajectoryByIndex(i);
+								frame_.selectTrajectoryByIndex(i);
 								firstSel = false;
 							} else {
-								browserWindow_.addTrajectoriesToSelection(i);
+								frame_.addTrajectoriesToSelection(i);
 							}
 							break;
 						}
@@ -195,7 +209,7 @@ public class Browser implements ClipboardOwner{
 	
 	protected void copySelectedTrajectories() {
 		StringBuilder buf = new StringBuilder();
-		int [] selected = browserWindow_.getSelectedTrajectories();
+		int [] selected = frame_.getTrajsTable().getSelectedTrajectories();
 		Trajectory traj;
 		for (int i = 0; i < selected.length; i++) {
 			traj = dataset_.getTrajectoryByIndex(selected[i]);
@@ -232,7 +246,7 @@ public class Browser implements ClipboardOwner{
 			index ++;
 		}
 		if (found) {
-			browserWindow_.selectTrajectoryAndNodeByIndex(index - 1 , fi);
+			frame_.selectTrajectoryAndNodeByIndex(index - 1 , fi);
 		}		
 	}
 	
@@ -274,7 +288,7 @@ public class Browser implements ClipboardOwner{
 	}
 
 	protected void drawBox() {
-		SmNode node = browserWindow_.getCurrentNode();
+		SmNode node = frame_.getNodesTable().getCurrentNode();
 		int x,y;
 		if (node != null && imp_ != null) {
 			imp_.setSlice(node.frame);
@@ -300,7 +314,7 @@ public class Browser implements ClipboardOwner{
 		}
 	}
 
-	void drawIFSGaussianSpots(Trajectory traj, ImagePlus imp) {
+	protected void drawIFSGaussianSpots(Trajectory traj, ImagePlus imp) {
 		ImageStack stack = imp.getStack();
 		Rectangle rect = imp_.getProcessor().getRoi();
 
@@ -312,7 +326,7 @@ public class Browser implements ClipboardOwner{
 		}
 	}
 		
-	void drawIFSLineOverlay(Trajectory traj, ImagePlus imp) {
+	protected void drawIFSLineOverlay(Trajectory traj, ImagePlus imp) {
 		if (traj == null || traj.size() < 2) 
 			return;
 		ImageStack stack = imp.getStack();
@@ -341,7 +355,7 @@ public class Browser implements ClipboardOwner{
 		}
 	}
 
-	void drawIFSSquareOverlay(Trajectory traj, ImagePlus imp) {
+	protected void drawIFSSquareOverlay(Trajectory traj, ImagePlus imp) {
 		if (traj == null || traj.size() < 2) 
 			return;
 		int frame = traj.get(0).frame;
@@ -367,7 +381,7 @@ public class Browser implements ClipboardOwner{
 	/**
 	 * Construct ifs stack.
 	 */
-	public void constructIFS(IFSType type) {
+	protected void constructIFS(IFSType type) {
 		Rectangle rect;
 		Roi roi = imp_.getRoi();
 		if (roi!=null && !roi.isArea())
@@ -390,7 +404,7 @@ public class Browser implements ClipboardOwner{
 		ImagePlus img = imp_.createImagePlus();
 		img.setStack("IFS", is);
 
-		int [] selected = browserWindow_.getSelectedTrajectoriesOrAll();
+		int [] selected = frame_.getTrajsTable().getSelectedTrajectoriesOrAll();
 		for ( int i = 0; i < selected.length; i ++) {
 			Trajectory traj = dataset_.getTrajectoryByIndex(selected[i]);
 			switch (type) {
@@ -413,7 +427,7 @@ public class Browser implements ClipboardOwner{
 	/**
 	 * Construct PALM image.
 	 */
-	public void constructPalm() {
+	protected void constructPalm() {
 		Rectangle rect;
 		Roi roi = imp_.getRoi();
 		if (roi!=null && !roi.isArea())
@@ -440,7 +454,7 @@ public class Browser implements ClipboardOwner{
 		
 		FloatProcessor ip = null;
 		
-		int [] selected = browserWindow_.getSelectedTrajectoriesOrAll();
+		int [] selected = frame_.getTrajsTable().getSelectedTrajectoriesOrAll();
 		ip = palm.constructPalm(typeList[palmType], rect, selected);
 		ImagePlus img = new ImagePlus("PALM", ip);
 		img.show();
@@ -474,7 +488,7 @@ public class Browser implements ClipboardOwner{
 		
 		float [][] m = new float[w][h];
 		float [][] n = new float[w][h];
-		int [] selected = browserWindow_.getSelectedTrajectoriesOrAll();
+		int [] selected = frame_.getTrajsTable().getSelectedTrajectoriesOrAll();
 		int i,j;
 		for (i =0; i < selected.length; i++) {
 			Trajectory t = dataset_.getTrajectoryByIndex(selected[i]);
@@ -523,7 +537,7 @@ public class Browser implements ClipboardOwner{
 		float [][] dxs = new float[rect.width][rect.height];
 		float [][] dys = new float[rect.width][rect.height];
 		float [][] n = new float[rect.width][rect.height];
-		int [] selected = browserWindow_.getSelectedTrajectoriesOrAll();
+		int [] selected = frame_.getTrajsTable().getSelectedTrajectoriesOrAll();
 		int i,j;
 		for (i =0; i < selected.length; i++) {
 			Trajectory t = dataset_.getTrajectoryByIndex(selected[i]);
@@ -601,10 +615,10 @@ public class Browser implements ClipboardOwner{
 	 * @param b select marked if true, unmarked if false
 	 */
 	public void selectMarked(boolean b) {
-		browserWindow_.selectTrajectoryByIndex(-1); //clear selection
+		frame_.selectTrajectoryByIndex(-1); //clear selection
 		for (int i = 0; i < dataset_.getSize(); i++) {
 			if (dataset_.getTrajectoryByIndex(i).marked == b) {
-				browserWindow_.addTrajectoriesToSelection(i);
+				frame_.addTrajectoriesToSelection(i);
 			}
 		}
 	}
@@ -614,14 +628,14 @@ public class Browser implements ClipboardOwner{
 	 */
 	public void rebuildTrajectories(){
 		dataset_.reTrack();
-		browserWindow_.updateNewData();
+		frame_.getTrajsTable().setData(dataset_);
 	}
 
 	/**
 	 * Show trajectory length histogram.
 	 */
 	public void showLengthHistogram() {
-		int [] selected = browserWindow_.getSelectedTrajectoriesOrAll();
+		int [] selected = frame_.getTrajsTable().getSelectedTrajectoriesOrAll();
 		short [] d = new short[selected.length];
 		
 		int min = 10000;
@@ -647,7 +661,7 @@ public class Browser implements ClipboardOwner{
 	 * Show fitting residue histogram.
 	 */
 	public void showResidueHistogram() {
-		int [] selected = browserWindow_.getSelectedTrajectoriesOrAll();
+		int [] selected = frame_.getTrajsTable().getSelectedTrajectoriesOrAll();
 		//ArrayList<Double> d = new ArrayList<Double>();
 		int numOfNodes = 0;
 		for ( int i= 0; i < selected.length; i++) {
@@ -674,7 +688,7 @@ public class Browser implements ClipboardOwner{
 	 * @param stepSize the stepsize for calculating the displacement
 	 */
 	public void showDisplacementHistogram(int stepSize) {
-		int [] selected = browserWindow_.getSelectedTrajectoriesOrAll();
+		int [] selected = frame_.getTrajsTable().getSelectedTrajectoriesOrAll();
 		ArrayList<Double> dl = new ArrayList<Double>();
 		for (int i = 0; i < selected.length; i++) {
 			Trajectory t = dataset_.getTrajectoryByIndex(selected[i]);
@@ -692,7 +706,7 @@ public class Browser implements ClipboardOwner{
 					}
 				}
 			}
-			IJ.showProgress(i, selected.length);
+			//IJ.showProgress(i, selected.length);
 		}
 		double [] d = new double[dl.size()];
 		for (int i = 0; i < dl.size(); i ++) {
@@ -720,7 +734,7 @@ public class Browser implements ClipboardOwner{
 		double [] v = new double[2];
 		v[0] = Math.sin(dir * Math.PI / 180);
 		v[1] = - Math.cos(dir * Math.PI / 180);
-		int [] selected = browserWindow_.getSelectedTrajectoriesOrAll();
+		int [] selected = frame_.getTrajsTable().getSelectedTrajectoriesOrAll();
 		ArrayList<Double> dl = new ArrayList<Double>();
 		for (int i = 0; i < selected.length; i++) {
 			Trajectory t = dataset_.getTrajectoryByIndex(selected[i]);
@@ -759,7 +773,7 @@ public class Browser implements ClipboardOwner{
 	 * Show mean square displacement.
 	 */
 	public void showMSD(int maxSteps) {
-		int [] selected = browserWindow_.getSelectedTrajectoriesOrAll();
+		int [] selected = frame_.getTrajsTable().getSelectedTrajectoriesOrAll();
 		ArrayList<SummaryStatistics> stat = new ArrayList<SummaryStatistics>();
 		for (int i = 0; i < selected.length; i ++) {
 			Trajectory t = dataset_.getTrajectoryByIndex(selected[i]);
@@ -804,7 +818,7 @@ public class Browser implements ClipboardOwner{
 			animator_.setLoop(true);
 		}
 		
-		int index= browserWindow_.getSelectedTrajectoryIndex();
+		int index= frame_.getTrajsTable().getSelectedTrajectoryIndex();
 		if (index >=0) {
 			animator_.animate(dataset_.getTrajectoryByIndex(index));
 		}
@@ -825,7 +839,7 @@ public class Browser implements ClipboardOwner{
 	 * Delete all selected trajectories from trajectory table.
 	 */
 	public void deleteSelectedTrajectories() {
-		int [] selected = browserWindow_.getSelectedTrajectories();
+		int [] selected = frame_.getTrajsTable().getSelectedTrajectories();
 		for (int i = 0; i < selected.length; i ++) {
 			dataset_.getTrajectoryByIndex(selected[i]).deleted = true;
 		}
@@ -913,7 +927,7 @@ public class Browser implements ClipboardOwner{
 	 */
 	public void exportTrajectories(File file) throws IOException {
 		BufferedWriter bw = new BufferedWriter(new FileWriter(file));
-		int [] selected = browserWindow_.getSelectedTrajectories();
+		int [] selected = frame_.getTrajsTable().getSelectedTrajectories();
 		Trajectory traj;
 		for (int i = 0; i < selected.length; i++) {
 			traj = dataset_.getTrajectoryByIndex(selected[i]);
@@ -935,7 +949,7 @@ public class Browser implements ClipboardOwner{
 	}
 
 	public void computeDrift() {
-		int [] selected = browserWindow_.getSelectedTrajectoriesOrAll();
+		int [] selected = frame_.getTrajsTable().getSelectedTrajectories();
 		dataset_.estimateDrift(selected);
 		double [] dx = dataset_.getDriftX();
 		double [] dy = dataset_.getDriftY();

@@ -36,7 +36,6 @@ public class TrajsTable extends JTable {
 	private static Class<?> [] ColumnClasses_ = {Integer.class, Integer.class, Double.class, Boolean.class, String.class};
 	
 	private TrajDataset data_ = null;
-//	private Vector<Trajectory> data_ = null;
 	private boolean [] isVisible_;
 	private Model model_;
 
@@ -49,11 +48,18 @@ public class TrajsTable extends JTable {
 
 		@Override
 		public int getRowCount() {
-			return data_.getSize();
+			if (data_ != null ) {
+				return data_.getSize();
+			} else {
+				return 0;
+			}
 		}
 
 		@Override
 		public Object getValueAt(int rowIndex, int colIndex) {
+			if (data_ == null) {
+				return null;
+			}
 			Trajectory traj = data_.getTrajectoryByIndex(rowIndex);
 			switch (colIndex) {
 			case 0:
@@ -105,7 +111,9 @@ public class TrajsTable extends JTable {
 	public TrajsTable(TrajDataset data) {
 		super();
 
-		setData(data);
+		if (data != null) {
+			setData(data);
+		}
 		
 		model_ = new Model();
 		setModel(model_);
@@ -218,6 +226,24 @@ public class TrajsTable extends JTable {
 			selected[i] = convertRowIndexToModel(selected[i]);
 		}
 		return selected;				
+	}
+
+	/**
+	 * Returns the indices of multiple selected trajectories or all trajectories.
+	 * If none or one trajectory is selected, the indices of all trajectories are returned.
+	 *
+	 * @return the indices
+	 */
+	public int[] getSelectedTrajectoriesOrAll() {
+		if (getSelectedRowCount() <= 1) {
+			int [] selected = new int[getRowCount()];
+			for (int i = 0; i < selected.length; i++) {
+				selected[i] = i;
+			}
+			return selected;
+		} else {
+			return getSelectedTrajectories();
+		}		
 	}
 
 	/**

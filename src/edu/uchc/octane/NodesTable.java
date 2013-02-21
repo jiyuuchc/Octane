@@ -76,6 +76,21 @@ public class NodesTable extends JTable{
 		return traj_;
 	}
 
+	/**
+	 * Returns the current selected molecule node (position) in node table.
+	 *
+	 * @return the current node
+	 */
+	public SmNode getCurrentNode() {
+		int row = getSelectedRow();
+		if (row >=0 && getData() != null) {
+			int index = convertRowIndexToModel(row);
+			return getData().get(index);
+		} else {
+			return null;
+		}				
+	}
+	
 	protected class CellRenderer extends DefaultTableCellRenderer {
 
 		protected void setValue(Object obj) {

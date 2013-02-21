@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.IOException;
 
 import ij.ImagePlus;
-import edu.uchc.octane.Browser;
+import edu.uchc.octane.OctaneWindowControl;
 import edu.uchc.octane.ThresholdDialog;
 
 public class BrowserTest {
@@ -14,12 +14,12 @@ public class BrowserTest {
 		//TrajDataset data = new TrajDataset(p);
 		File file = new File(args[0]+".dataset");
 		if (file.exists()) {
-			Browser b = new Browser(imp);
+			OctaneWindowControl b = new OctaneWindowControl(imp);
 			b.setup();
 		} else {
 			ThresholdDialog finderDlg = new ThresholdDialog(imp);
 			if (finderDlg.openDialog() == true) {
-				Browser b= new Browser(imp);
+				OctaneWindowControl b = new OctaneWindowControl(imp);
 				b.setup(finderDlg.getProcessedNodes());
 			} else {
 				imp.close();
@@ -27,4 +27,3 @@ public class BrowserTest {
 		}
 	}
 }
-  
