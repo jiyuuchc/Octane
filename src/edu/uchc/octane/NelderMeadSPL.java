@@ -37,9 +37,9 @@ public class NelderMeadSPL implements SubPixelLocalization, MultivariateRealFunc
 
 	//int blocks_;
 	private int x0_,y0_;
-	
+
 	ImageProcessor ip_;
-	
+
 	private double [] parameters_; 
 	private double residue_;
 	private double bg_ ;
@@ -129,7 +129,7 @@ public class NelderMeadSPL implements SubPixelLocalization, MultivariateRealFunc
 		
 		return 0;
 	}
-	
+
 	void fit() throws ConvergenceException, FunctionEvaluationException, IllegalArgumentException {
 		NelderMead nm = new NelderMead();
 		parameters_[2] = ip_.get(x0_, y0_) - bg_;
@@ -180,7 +180,6 @@ public class NelderMeadSPL implements SubPixelLocalization, MultivariateRealFunc
 	 */
 	@Override
 	public double getConfidenceEstimator() {
-		
 		return residue_ ;
 	}
 

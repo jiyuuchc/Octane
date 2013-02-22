@@ -128,7 +128,8 @@ public class TrajDataset{
 		for (int i = 0; i < nodes_.length; i ++ ) {
 			for (int j = 0; j < nodes_[i].length; j++) {
 				SmNode s = nodes_[i][j];
-				bw.write(String.format("%f, %f, %d, %f\n", s.x, s.y, s.frame, s.reserved));
+				bw.write(s.toString());
+				bw.write('\n');
 			}
 		}
 		bw.close();
@@ -142,13 +143,11 @@ public class TrajDataset{
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	public void writeTrajectoriesToText(Writer w)throws IOException {
-		//
 		for (int i = 0; i < trajectories_.size(); i ++ ) {
 			for (int j = 0; j < trajectories_.get(i).size(); j++) {
 				SmNode s = trajectories_.get(i).get(j);
 				w.append(s.toString());
-				w.append(", " + i + "\n");
-//				w.write(String.format("%f, %f, %d, %f, %d\n", s.x, s.y, s.frame, s.reserved, i));				
+				w.append(", " + i + "\n");				
 			}
 		}
 		w.close(); 		

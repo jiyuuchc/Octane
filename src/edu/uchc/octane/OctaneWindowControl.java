@@ -672,7 +672,7 @@ public class OctaneWindowControl implements ClipboardOwner{
 		for ( int i= 0; i < selected.length; i++) {
 			Iterator<SmNode> itr = dataset_.getTrajectoryByIndex(selected[i]).iterator();
 			while (itr.hasNext()) {
-				d[cnt++] = itr.next().reserved;
+				d[cnt++] = itr.next().residue;
 			}
 		}
 		FloatProcessor ip = new FloatProcessor(1, d.length, d);

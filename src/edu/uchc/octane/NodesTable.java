@@ -137,7 +137,7 @@ public class NodesTable extends JTable{
 			case 4:
 				return node.height;
 			case 5:
-				return node.reserved;
+				return node.residue;
 			}
 			return null;
 		}

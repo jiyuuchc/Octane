@@ -34,7 +34,6 @@ import ij.WindowManager;
 import ij.io.FileInfo;
 import ij.plugin.PlugIn;
 
-
 /**
  * The PlugIn adaptor.
  *
@@ -65,11 +64,11 @@ public class OctanePlugin implements PlugIn{
 	 * @throws IOException 
 	 * @throws ClassNotFoundException 
 	 */
-	public void openBrowser(TrajDataset dataset) throws IOException, ClassNotFoundException {
-		OctaneWindowControl browser = new OctaneWindowControl(imp_);
-		browser.setup(dataset);
-		dict_.put(imp_, browser);
-		browser.getWindow().addWindowListener(new WindowAdapter() {
+	public void openWindow(TrajDataset dataset) throws IOException, ClassNotFoundException {
+		OctaneWindowControl ctlr = new OctaneWindowControl(imp_);
+		ctlr.setup(dataset);
+		dict_.put(imp_, ctlr);
+		ctlr.getWindow().addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosed(WindowEvent e) {
 				dict_.remove(imp_);
@@ -83,10 +82,10 @@ public class OctanePlugin implements PlugIn{
 	public void analyze() {
 		ThresholdDialog dlg = new ThresholdDialog(imp_);
 		if (dlg.openDialog() == true) {
-			OctaneWindowControl browser = new OctaneWindowControl(imp_);
-			browser.setup(dlg.getProcessedNodes());
-			dict_.put(imp_, browser);
-			browser.getWindow().addWindowListener(new WindowAdapter() {
+			OctaneWindowControl ctlr = new OctaneWindowControl(imp_);
+			ctlr.setup(dlg.getProcessedNodes());
+			dict_.put(imp_, ctlr);
+			ctlr.getWindow().addWindowListener(new WindowAdapter() {
 				@Override
 				public void windowClosed(WindowEvent e) {
 					dict_.remove(imp_);
@@ -154,7 +153,7 @@ public class OctanePlugin implements PlugIn{
 				if (path != null) {
 					File file = new File(path + File.separator + imp_.getTitle() + ".dataset");
 					if (file.exists()) { 
-						openBrowser(readDataset(file));
+						openWindow(readDataset(file));
 						return;
 					}
 				}
@@ -162,14 +161,14 @@ public class OctanePlugin implements PlugIn{
 				"analysis at the default location. Please specify another path.");
 				JFileChooser fc = new JFileChooser();
 				if (fc.showOpenDialog(IJ.getApplet()) == JFileChooser.APPROVE_OPTION) {
-					openBrowser(readDataset(fc.getSelectedFile()));
+					openWindow(readDataset(fc.getSelectedFile()));
 				}
 				return;
 			} 
 			if (cmd.equals("import")) { 
 				JFileChooser fc = new JFileChooser();
 				if (fc.showOpenDialog(IJ.getApplet()) == JFileChooser.APPROVE_OPTION) {
-					openBrowser(TrajDataset.importDatasetFromText(fc.getSelectedFile()));
+					openWindow(TrajDataset.importDatasetFromText(fc.getSelectedFile()));
 				}
 				return;
 			}				

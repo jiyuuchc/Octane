@@ -24,7 +24,6 @@ import java.io.Serializable;
  * A node contains information of a detected peak.
  */
 public class SmNode implements Serializable, Cloneable {
-	
 	private static final long serialVersionUID = -8876493729593706510L;
 
 	/** x position */
@@ -43,7 +42,7 @@ public class SmNode implements Serializable, Cloneable {
 	public int height;
 	
 	/** residue of fitting. */
-	public double reserved;
+	public double residue;
 
 	/**
 	 * Instantiates a new node.
@@ -84,7 +83,7 @@ public class SmNode implements Serializable, Cloneable {
 		this.z = z;
 		frame = f;
 		height = h;
-		reserved = q;
+		residue = q;
 	}
 
 	/**
@@ -94,14 +93,12 @@ public class SmNode implements Serializable, Cloneable {
 	 */
 	public SmNode(String line) {
 		String[] items = line.split(",");
-		x = Double.parseDouble(items[0]);
-		y = Double.parseDouble(items[1]);
-		frame = Integer.parseInt(items[2].trim());
+		frame = Integer.parseInt(items[0].trim());
+		x = Double.parseDouble(items[1]);
+		y = Double.parseDouble(items[2]);
+
 		if (items.length > 3) {
-			height = Integer.parseInt(items[3].trim());
-		}
-		if (items.length > 4) {
-			reserved = Double.parseDouble(items[4]);
+			z = Double.parseDouble(items[3]);
 		}
 	}
 
@@ -118,9 +115,9 @@ public class SmNode implements Serializable, Cloneable {
 	 * Convert to comma separated text data.
 	 */
 	public String toString() {
-		return (x + ", " + y + ", " + z + ", " + frame + ", " + height + "," + reserved);
+		return (frame + ", " + x + ", " + y + ", " + z);
 	}
-	
+
 	/**
 	 * Calculate square distance between two nodes
 	 *

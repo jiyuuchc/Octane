@@ -219,7 +219,7 @@ public class TrackingModule {
 			nBonds = 0;
 
 			for (int j = 0; j < nodes_[curFrame_].length; j ++) {
-				if (nodes_[curFrame_][j].reserved > Prefs.confidenceThreshold_) {
+				if (nodes_[curFrame_][j].residue > Prefs.confidenceThreshold_) {
 					double d = trackHead.distance2(nodes_[curFrame_][j]);
 					if (d <= threshold2_) { // don't miss the = sign
 						Bond b = new Bond();
@@ -297,7 +297,7 @@ public class TrackingModule {
 		for (int i = 0; i < nodes_[0].length; i ++ ) {
 			Trajectory t;
 			t = new Trajectory();
-			if ( nodes_[0][i].reserved > Prefs.confidenceThreshold_) {
+			if ( nodes_[0][i].residue > Prefs.confidenceThreshold_) {
 				t.add(nodes_[0][i]);
 				activeTracks_.add(t);
 			} else {
@@ -340,7 +340,7 @@ public class TrackingModule {
 			for (int i = 0; i < nodes_[curFrame_].length; i++) {
 				if (! isTrackedParticle_[i]) {
 					assert(backwardBonds_[i] != null);
-					if (nodes_[curFrame_][i].reserved > Prefs.confidenceThreshold_) {
+					if (nodes_[curFrame_][i].residue > Prefs.confidenceThreshold_) {
 						Trajectory t;
 						t = new Trajectory();
 						t.add(nodes_[curFrame_][i]);
