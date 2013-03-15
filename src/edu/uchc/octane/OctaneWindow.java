@@ -279,21 +279,21 @@ public class OctaneWindow extends JFrame {
 		});
 		mnImage.add(mntmPalm);
 		
-		JMenuItem mntmIfs = new JMenuItem("IFS");
-		mntmIfs.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e){
-				ctlr_.constructIFS(OctaneWindowControl.IFSType.GaussianSpot);
-			}
-		});
-		mnImage.add(mntmIfs);
+//		JMenuItem mntmIfs = new JMenuItem("IFS");
+//		mntmIfs.addActionListener(new ActionListener() {
+//			public void actionPerformed(ActionEvent e){
+//				ctlr_.constructIFS();
+//			}
+//		});
+//		mnImage.add(mntmIfs);
 		
-		JMenuItem mntmFlowMap = new JMenuItem("Flow Map");
-		mntmFlowMap.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e){
-				ctlr_.constructFlowMap();
-			}
-		});
-		mnImage.add(mntmFlowMap);
+//		JMenuItem mntmFlowMap = new JMenuItem("Flow Map");
+//		mntmFlowMap.addActionListener(new ActionListener() {
+//			public void actionPerformed(ActionEvent e){
+//				ctlr_.constructFlowMap();
+//			}
+//		});
+//		mnImage.add(mntmFlowMap);
 		
 		JMenuItem mntmMobilityMap = new JMenuItem("Mobility Map");
 		mntmMobilityMap.addActionListener(new ActionListener() {
@@ -454,6 +454,13 @@ public class OctaneWindow extends JFrame {
 		rightPanel.add(nodesTableScrollPane, gbc_nodesTableScrollPane);
 		
 		nodesTable_ = new NodesTable((Trajectory) null);
+		nodesTable_.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+			@Override
+			public void valueChanged(ListSelectionEvent e) {
+				if (!e.getValueIsAdjusting())
+					ctlr_.drawBox();
+			}
+		} );
 		nodesTableScrollPane.setViewportView(nodesTable_);
 	}
 	
@@ -482,7 +489,7 @@ public class OctaneWindow extends JFrame {
 		if (ctlr_ != null ) {
 			ctlr_.saveDataset();
 		}
-		// Prefs.savePrefs();
+		Prefs.savePrefs();
 		super.dispose();
 	}
 	

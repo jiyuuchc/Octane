@@ -18,23 +18,29 @@
 package edu.uchc.octane;
 
 import ij.IJ;
+import ij.ImagePlus;
+import ij.ImageStack;
+import ij.gui.Roi;
 import ij.process.FloatProcessor;
+import ij.process.ImageProcessor;
+
 import java.awt.Rectangle;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.concurrent.ExecutionException;
+
+import javax.swing.SwingWorker;
 
 /**
  *  PALM plotting module
  */
 public class Palm {
 
-	public enum PalmType {AVERAGE, HEAD, TAIL, ALLPOINTS};
-	public enum IFSType {SPOT, LINE, SQUARE};
+	public enum PalmType {AVERAGE, HEAD, TAIL, ALLPOINTS, STACK};
+	// public enum IFSType {SPOT, LINE, SQUARE};
 	
 	boolean correctDrift_;
 	TrajDataset dataset_;
-
-	FloatProcessor ip_;
-	Rectangle rect_;
-	int [] selected_;
 
 	int nPlotted_;
 	int nSkipped_;
@@ -43,6 +49,19 @@ public class Palm {
 		dataset_ = dataset;
 	}
 
+	Rectangle getCurrentROI(ImagePlus imp) {
+		Rectangle rect;
+		Roi roi = imp.getRoi();
+		if (roi!=null && roi.isArea()) {
+			rect = roi.getBounds();
+		} else {
+			imp.killRoi();
+			rect = imp.getProcessor().getRoi();
+			imp.setRoi(roi);
+		}
+		return rect;
+	}
+	
 	public void setCorrectDrift(boolean b) {
 		correctDrift_ = b;
 	}
@@ -59,43 +78,99 @@ public class Palm {
 		return nSkipped_;
 	}
 
-	void gaussianImage(double xs, double ys, double w) {
-		for (int x = Math.max(0, (int)(xs - 3*w)); x < Math.min(ip_.getWidth(), (int)(xs + 3*w)); x ++) {
-			for (int y = Math.max(0, (int)(ys - 3*w)); y < Math.min(ip_.getHeight(), (int)(ys + 3*w)); y++) {
+	void gaussianImage(ImageProcessor ip, double xs, double ys, double w) {
+		for (int x = Math.max(0, (int)(xs - 3*w)); x < Math.min(ip.getWidth(), (int)(xs + 3*w)); x ++) {
+			for (int y = Math.max(0, (int)(ys - 3*w)); y < Math.min(ip.getHeight(), (int)(ys + 3*w)); y++) {
 				double v = 100 * Math.exp( -((x-xs) * (x-xs) + (y-ys)*(y-ys))/(2.0*w*w) );
-				ip_.setf(x, y, (float)v + ip_.getf(x,y));
+				ip.setf(x, y, (float)v + ip.getf(x,y));
 			}
 		}
 	}
 
-	public FloatProcessor constructPalm(PalmType palmType, Rectangle rect, int [] selected) {
+	public void constructPalm(PalmType palmType, final ImagePlus imp, final int [] selected) {
 		nPlotted_ = 0;
 		nSkipped_ = 0;
 
-		ip_ = new FloatProcessor((int) (rect.width * Prefs.palmScaleFactor_), (int) (rect.height * Prefs.palmScaleFactor_));
-	
-		switch (palmType) {
-		case HEAD:
-			constructPalmTypeHeadOrTail(rect, selected, true);
-			break;
-		case TAIL:
-			constructPalmTypeHeadOrTail(rect, selected, false);
-			break;
-		case AVERAGE:
-			constructPalmTypeAverage(rect, selected);
-			break;
-		case ALLPOINTS:
-			constructPalmTypeAllPoints(rect, selected);
-			break;
+		final Rectangle rect = getCurrentROI(imp);
+
+		if (palmType == PalmType.STACK) {
+			SwingWorker task = new SwingWorker<ImageStack, Void>() {
+				public ImageStack doInBackground() {
+					ImageStack is =  new ImageStack((int)(rect.width * Prefs.palmScaleFactor_), (int)(rect.height * Prefs.palmScaleFactor_));
+					for (int i = 0; i < imp.getStack().getSize(); i++) {
+						ImageProcessor ip = new FloatProcessor((int)(rect.width * Prefs.palmScaleFactor_), (int)(rect.height * Prefs.palmScaleFactor_));
+						is.addSlice(""+i, ip);
+					}
+					for ( int i = 0; i < selected.length; i ++) {
+						Trajectory traj = dataset_.getTrajectoryByIndex(selected[i]);
+						constructPALMStack(traj, rect, is);
+						firePropertyChange("Progress", i, i + 1);
+					}
+					return is;
+				}
+
+				public void done() {
+					ImagePlus img = imp.createImagePlus();
+					try {
+						img.setStack("PALMStack-" + imp.getTitle(), get());
+					} 
+					catch (InterruptedException ignore) {}
+					catch (ExecutionException e) {
+						IJ.showMessage("Error constructing PALM stack ");
+						Throwable cause = e.getCause();
+						if (cause != null) {
+							System.err.println(cause.getLocalizedMessage());
+						} else {
+							System.err.println(e.getLocalizedMessage());
+						}
+							
+					}
+					img.show();
+				}				
+			};
+			task.addPropertyChangeListener(new PropertyChangeListener() {
+				public void propertyChange(PropertyChangeEvent evt) {
+					if (evt.getPropertyName() == "Progress") {
+						IJ.showProgress((Integer) evt.getNewValue(), imp.getStack().getSize());
+					}
+				}
+			});
+			task.execute();
+
+		} else {
+			
+			FloatProcessor ip = null; 
+
+			switch (palmType) {
+			case HEAD:
+				ip = constructPalmTypeHeadOrTail(rect, selected, true);
+				break;
+			case TAIL:
+				ip = constructPalmTypeHeadOrTail(rect, selected, false);
+				break;
+			case AVERAGE:
+				ip = constructPalmTypeAverage(rect, selected);
+				break;
+			case ALLPOINTS:
+				ip = constructPalmTypeAllPoints(rect, selected);
+				break;
+			}
+
+			if (ip != null ) {
+				ImagePlus img = new ImagePlus("PALM-" + imp.getTitle(), ip);
+				img.show();
+			}
+
+			IJ.log(String.format("Plotted %d molecules, skipped %d molecules.", getNPlotted(), getNSkipped()));
 		}
-		return ip_;
 	}
 
-	void constructPalmTypeHeadOrTail(Rectangle rect, int [] selected, boolean isHead) {
+	FloatProcessor constructPalmTypeHeadOrTail(Rectangle rect, int [] selected, boolean isHead) {
 		double xs, ys;
-
 		double psdWidth = Prefs.palmPSDWidth_ * Prefs.palmScaleFactor_;
-		
+
+		FloatProcessor ip = new FloatProcessor((int) (rect.width * Prefs.palmScaleFactor_), (int) (rect.height * Prefs.palmScaleFactor_));	
+
 		for ( int i = 0; i < selected.length; i ++) {
 			Trajectory traj = dataset_.getTrajectoryByIndex(selected[i]);
 //			if (correctDrift_ && traj.marked){
@@ -113,21 +188,25 @@ public class Palm {
 				}
 				xs = (node.x - rect.x)* Prefs.palmScaleFactor_;
 				ys = (node.y - rect.y)* Prefs.palmScaleFactor_;
-				gaussianImage(xs, ys, psdWidth);
+				gaussianImage(ip, xs, ys, psdWidth);
 				nPlotted_ ++;
 			} catch (OctaneException e) {
 				IJ.showMessage("Error drift compensation.");
-				return;
+				return null;
 			}
 
 		}
+		
+		return ip;
 	}	
 	
-	void constructPalmTypeAverage(Rectangle rect, int [] selected) {
+	FloatProcessor constructPalmTypeAverage(Rectangle rect, int [] selected) {
 		double xx, yy, xx2, yy2, xs, ys;
 
 		double psdWidth = Prefs.palmPSDWidth_ * Prefs.palmScaleFactor_;
 		
+		FloatProcessor ip = new FloatProcessor((int) (rect.width * Prefs.palmScaleFactor_), (int) (rect.height * Prefs.palmScaleFactor_));		
+
 		try {
 			for ( int i = 0; i < selected.length; i ++) {
 				Trajectory traj = dataset_.getTrajectoryByIndex(selected[i]);
@@ -163,7 +242,7 @@ public class Palm {
 				if (xx2 - xx * xx < Prefs.palmThreshold_ && yy2 - yy * yy < Prefs.palmThreshold_) {
 					xs = (xx - rect.x)* Prefs.palmScaleFactor_;
 					ys = (yy - rect.y)* Prefs.palmScaleFactor_;
-					gaussianImage(xs, ys, psdWidth);
+					gaussianImage(ip, xs, ys, psdWidth);
 					nPlotted_ ++;
 				} else {
 					nSkipped_ ++;
@@ -171,14 +250,18 @@ public class Palm {
 			}
 		} catch (OctaneException e) {
 			IJ.showMessage("Error drift compensation.");
-			return;
+			return null;
 		}
+		
+		return ip;
 	}
 
-	void constructPalmTypeAllPoints(Rectangle rect, int [] selected) {
+	FloatProcessor constructPalmTypeAllPoints(Rectangle rect, int [] selected) {
 		double xs, ys;
 
 		double psdWidth = Prefs.palmPSDWidth_ * Prefs.palmScaleFactor_;
+
+		FloatProcessor ip = new FloatProcessor((int) (rect.width * Prefs.palmScaleFactor_), (int) (rect.height * Prefs.palmScaleFactor_));
 
 		try {
 			for ( int i = 0; i < selected.length; i ++) {
@@ -194,14 +277,87 @@ public class Palm {
 					}
 					xs = (node.x - rect.x)* Prefs.palmScaleFactor_;
 					ys = (node.y - rect.y)* Prefs.palmScaleFactor_;
-					gaussianImage(xs, ys, psdWidth);
+					gaussianImage(ip, xs, ys, psdWidth);
 					nPlotted_ ++;
 				}
 			}
 		} catch (OctaneException e) {
 			IJ.showMessage("Error drift compensation.");
+			return null;
+		}
+		
+		return ip;
+	}
+	
+	void constructPALMStack(Trajectory traj, Rectangle rect, ImageStack stack) {
+		if (traj == null ) {
 			return;
 		}
-
+		for (int i = 0; i < traj.size(); i++ ) {
+			SmNode node = traj.get(i);
+			if (correctDrift_) {
+				try {
+					node = dataset_.correctDrift(node);
+				} catch (OctaneException e) {
+					IJ.showMessage("Error drift compensation.");
+					node = traj.get(i);
+					correctDrift_ = false;
+				}
+			}
+			ImageProcessor ip = stack.getProcessor(traj.get(i).frame);
+			double xs = (traj.get(i).x - rect.x) * Prefs.palmScaleFactor_;
+			double ys = (traj.get(i).y - rect.y) * Prefs.palmScaleFactor_;
+			gaussianImage(ip, xs, ys, Prefs.palmPSDWidth_ * Prefs.palmScaleFactor_);
+		}
 	}
+	
+//	void drawIFSLineOverlay(Trajectory traj, Rectangle rect, ImageStack stack) {
+//		if (traj == null || traj.size() < 2) 
+//			return;
+//
+//		int [] xs = new int[traj.size()];
+//		int [] ys = new int[traj.size()];
+//		for (int i = 0; i < traj.size(); i ++) {
+//			xs[i] = (int)((traj.get(i).x - rect.x) * Prefs.IFSScaleFactor_);
+//			ys[i] = (int)((traj.get(i).y - rect.y) * Prefs.IFSScaleFactor_);			
+//		}
+//		
+//		PolygonRoi roi = null;
+//		int frame = traj.get(0).frame;
+//		ImageProcessor ip;
+//		for (int i = 0; i < traj.size(); i++) {
+//			while (frame < traj.get(i).frame) {
+//				ip = stack.getProcessor(frame ++);
+//				ip.setColor(Toolbar.getForegroundColor());
+//				roi.drawPixels(ip);
+//			}
+//			roi = new PolygonRoi(xs, ys, i + 1, Roi.POLYLINE);
+//			ip = stack.getProcessor(frame ++);
+//			ip.setColor(Toolbar.getForegroundColor());
+//			roi.drawPixels(ip);
+//		}
+//	}
+//
+//	void drawIFSSquareOverlay(Trajectory traj, Rectangle rect, ImageStack stack) {
+//		if (traj == null || traj.size() < 2) 
+//			return;
+//	
+//		int frame = traj.get(0).frame;
+//		Roi roi = null;
+//		ImageProcessor ip;
+//
+//		for ( int i = 0; i < traj.size(); i ++ ) {
+//			if (frame < traj.get(i).frame) {
+//				ip = stack.getProcessor(frame ++);
+//				ip.setColor(Toolbar.getForegroundColor());
+//				roi.drawPixels(ip);
+//			}
+//			int nx = (int)((traj.get(i).x - rect.x - 4) * Prefs.IFSScaleFactor_);
+//			int ny = (int)((traj.get(i).y - rect.y - 4) * Prefs.IFSScaleFactor_);
+//			roi = new Roi(nx,ny, 9 * Prefs.IFSScaleFactor_, 9 * Prefs.IFSScaleFactor_);
+//			ip = stack.getProcessor(frame ++);
+//			ip.setColor(Toolbar.getForegroundColor());
+//			roi.drawPixels(ip);
+//		}
+//	}	
 }

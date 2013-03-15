@@ -34,24 +34,11 @@ public class PrefDialog {
 		dlg.addNumericField("Max Blinking", (double)Prefs.trackerMaxBlinking_, 0);
 		dlg.addNumericField("Confidence Threshold", Prefs.confidenceThreshold_, 0);
 
-		dlg.addMessage("- Analysis -");
-		dlg.addNumericField("PALM Scale Factor", Prefs.palmScaleFactor_, 1);
-		dlg.addNumericField("IFS Scale Factor", Prefs.IFSScaleFactor_, 0);
-		dlg.addNumericField("PALM PSD sigma", Prefs.palmPSDWidth_, 3);
-		dlg.addNumericField("PALM Threshold", Prefs.palmThreshold_, 1);		
-		dlg.addNumericField("Histogram Bins", Prefs.histogramBins_, 0);
-
 		dlg.showDialog();
 		if (dlg.wasCanceled())
 			return;
 		Prefs.trackerMaxDsp_ = dlg.getNextNumber();
 		Prefs.trackerMaxBlinking_ = (int) dlg.getNextNumber();
 		Prefs.confidenceThreshold_ = dlg.getNextNumber();
-		Prefs.palmScaleFactor_ = dlg.getNextNumber();
-		Prefs.IFSScaleFactor_ = (int)dlg.getNextNumber();
-		Prefs.palmPSDWidth_ = dlg.getNextNumber();
-		Prefs.palmThreshold_ = dlg.getNextNumber();
-		Prefs.histogramBins_ = (int) dlg.getNextNumber();
-		Prefs.savePrefs();
 	}
 }

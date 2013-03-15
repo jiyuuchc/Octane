@@ -43,18 +43,14 @@ import java.util.Iterator;
 
 import ij.IJ;
 import ij.ImagePlus;
-import ij.ImageStack;
 import ij.gui.GenericDialog;
 import ij.gui.HistogramWindow;
 import ij.gui.ImageCanvas;
 import ij.gui.Plot;
 import ij.gui.PointRoi;
-import ij.gui.PolygonRoi;
 import ij.gui.Roi;
-import ij.gui.Toolbar;
 import ij.io.FileInfo;
 import ij.process.FloatProcessor;
-import ij.process.ImageProcessor;
 import ij.process.ShortProcessor;
 
 import org.apache.commons.math.stat.descriptive.SummaryStatistics;
@@ -258,15 +254,6 @@ public class OctaneWindowControl implements ClipboardOwner{
 		findMolecule(p.x, p.y, frame);
 	}
 
-	private void gaussianImage(ImageProcessor ip, double xs, double ys, double w) {
-		for (int x = Math.max(0, (int)(xs - 3*w)); x < Math.min(ip.getWidth(), (int)(xs + 3*w)); x ++) {
-			for (int y = Math.max(0, (int)(ys - 3*w)); y < Math.min(ip.getHeight(), (int)(ys + 3*w)); y++) {
-				double v = 100 * Math.exp( -((x-xs) * (x-xs) + (y-ys)*(y-ys))/(2.0*w*w) );
-				ip.setf(x, y, (float)v + ip.getf(x,y));
-			}
-		}
-	}
-
 	protected void drawOverlay() {
 		if (!Prefs.showOverlay_) {
 			imp_.setOverlay(null);
@@ -314,135 +301,50 @@ public class OctaneWindowControl implements ClipboardOwner{
 		}
 	}
 
-	protected void drawIFSGaussianSpots(Trajectory traj, ImagePlus imp) {
-		ImageStack stack = imp.getStack();
-		Rectangle rect = imp_.getProcessor().getRoi();
+//	/**
+//	 * Construct ifs stack.
+//	 */
+//	protected void constructIFS() {
+//		Palm.IFSType [] typeList = {
+//				Palm.IFSType.SPOT,
+//				Palm.IFSType.LINE,
+//				Palm.IFSType.SQUARE,
+//		};
+//
+//		GenericDialog dlg = new GenericDialog("Construct IFS");
+//		String[] items = { "Spot", "Line", "Square"};
+//		dlg.addChoice("IFS Type", items, "Spot");
+//		dlg.addNumericField("Scale Factor", Prefs.IFSScaleFactor_, 0);
+//		dlg.addNumericField("PSF width", Prefs.palmPSDWidth_, 3);
+//
+//		dlg.showDialog();
+//		if (dlg.wasCanceled())
+//			return;
+//		
+//		Palm palm = new Palm(dataset_);
+//	
+//		int [] selected = frame_.getTrajsTable().getSelectedTrajectoriesOrAll();
+//		
+//		palm.constructIFS(Palm.IFSType.SPOT, imp_, selected);
+//	}
 
-		for (int i = 0; i < traj.size(); i++ ) {
-			ImageProcessor ip = stack.getProcessor(traj.get(i).frame);
-			double xs = (traj.get(i).x - rect.x) * Prefs.IFSScaleFactor_;
-			double ys = (traj.get(i).y - rect.y) * Prefs.IFSScaleFactor_;
-			gaussianImage(ip, xs, ys, Prefs.palmPSDWidth_ * Prefs.IFSScaleFactor_);
-		}
-	}
-		
-	protected void drawIFSLineOverlay(Trajectory traj, ImagePlus imp) {
-		if (traj == null || traj.size() < 2) 
-			return;
-		ImageStack stack = imp.getStack();
-		Rectangle rect = imp_.getProcessor().getRoi();
-
-		int [] xs = new int[traj.size()];
-		int [] ys = new int[traj.size()];
-		for (int i = 0; i < traj.size(); i ++) {
-			xs[i] = (int)((traj.get(i).x - rect.x) * Prefs.IFSScaleFactor_);
-			ys[i] = (int)((traj.get(i).y - rect.y) * Prefs.IFSScaleFactor_);			
-		}
-		
-		PolygonRoi roi = null;
-		int frame = traj.get(0).frame;
-		ImageProcessor ip;
-		for (int i = 0; i < traj.size(); i++) {
-			while (frame < traj.get(i).frame) {
-				ip = stack.getProcessor(frame ++);
-				ip.setColor(Toolbar.getForegroundColor());
-				roi.drawPixels(ip);
-			}
-			roi = new PolygonRoi(xs, ys, i + 1, Roi.POLYLINE);
-			ip = stack.getProcessor(frame ++);
-			ip.setColor(Toolbar.getForegroundColor());
-			roi.drawPixels(ip);
-		}
-	}
-
-	protected void drawIFSSquareOverlay(Trajectory traj, ImagePlus imp) {
-		if (traj == null || traj.size() < 2) 
-			return;
-		int frame = traj.get(0).frame;
-		Rectangle rect = imp_.getProcessor().getRoi();
-		Roi roi = null;
-		ImageProcessor ip;
-		ImageStack stack = imp.getStack();
-		for ( int i = 0; i < traj.size(); i ++ ) {
-			if (frame < traj.get(i).frame) {
-				ip = stack.getProcessor(frame ++);
-				ip.setColor(Toolbar.getForegroundColor());
-				roi.drawPixels(ip);
-			}
-			int nx = (int)((traj.get(i).x - rect.x - 4) * Prefs.IFSScaleFactor_);
-			int ny = (int)((traj.get(i).y - rect.y - 4) * Prefs.IFSScaleFactor_);
-			roi = new Roi(nx,ny, 9 * Prefs.IFSScaleFactor_, 9 * Prefs.IFSScaleFactor_);
-			ip = stack.getProcessor(frame ++);
-			ip.setColor(Toolbar.getForegroundColor());
-			roi.drawPixels(ip);
-		}
-	}
-
-	/**
-	 * Construct ifs stack.
-	 */
-	protected void constructIFS(IFSType type) {
-		Rectangle rect;
-		Roi roi = imp_.getRoi();
-		if (roi!=null && !roi.isArea())
-			imp_.killRoi(); 
-		rect = imp_.getProcessor().getRoi();
-
-		ImageStack is =  new ImageStack(rect.width * Prefs.IFSScaleFactor_, rect.height * Prefs.IFSScaleFactor_);
-		ImageProcessor ip;
-		for (int i = 0; i < imp_.getNSlices(); i++) {
-			if (type != IFSType.GaussianSpot) {
-				ip = imp_.getImageStack().getProcessor(i+1);
-				ip.setRoi(rect);
-				ip = ip.crop().convertToRGB();
-				is.addSlice(""+i, ip.resize(rect.width * Prefs.IFSScaleFactor_) );
-			} else {
-				ip = new FloatProcessor(rect.width * Prefs.IFSScaleFactor_, rect.height * Prefs.IFSScaleFactor_);
-				is.addSlice(""+i, ip);
-			}
-		}
-		ImagePlus img = imp_.createImagePlus();
-		img.setStack("IFS", is);
-
-		int [] selected = frame_.getTrajsTable().getSelectedTrajectoriesOrAll();
-		for ( int i = 0; i < selected.length; i ++) {
-			Trajectory traj = dataset_.getTrajectoryByIndex(selected[i]);
-			switch (type) {
-			case GaussianSpot:
-				drawIFSGaussianSpots(traj, img);
-				break;
-			case LineOverlay:
-				drawIFSLineOverlay(traj, img);
-				break;
-			case SquareOverlay:
-				drawIFSSquareOverlay(traj, img);
-				break;
-			}
-			IJ.showProgress(i, selected.length);
-		}
-		img.show();
-		
-	}
-	
 	/**
 	 * Construct PALM image.
 	 */
 	protected void constructPalm() {
-		Rectangle rect;
-		Roi roi = imp_.getRoi();
-		if (roi!=null && !roi.isArea())
-			imp_.killRoi(); 
-		rect = imp_.getProcessor().getRoi();
 		Palm.PalmType [] typeList = {
 				Palm.PalmType.AVERAGE,
 				Palm.PalmType.HEAD,
 				Palm.PalmType.TAIL,
-				Palm.PalmType.ALLPOINTS
+				Palm.PalmType.ALLPOINTS,
+				Palm.PalmType.STACK
 		};
 		GenericDialog dlg = new GenericDialog("Construct PALM");
-		String[] items = { "Average", "Head", "Tail", "All Points"};
+		String[] items = { "Average", "Head", "Tail", "All Points", "Stack"};
 		dlg.addChoice("PALM Type", items, "Average");
-		dlg.addCheckbox("Use drift correction", false);
+		dlg.addNumericField("Scale Factor", Prefs.palmScaleFactor_, 0);
+		dlg.addNumericField("PSF width", Prefs.palmPSDWidth_, 3);
+
 		dlg.showDialog();
 		if (dlg.wasCanceled())
 			return;
@@ -450,156 +352,23 @@ public class OctaneWindowControl implements ClipboardOwner{
 		Palm palm = new Palm(dataset_);
 		
 		int palmType = dlg.getNextChoiceIndex();
-		palm.setCorrectDrift(dlg.getNextBoolean());
-		
-		FloatProcessor ip = null;
+		Prefs.palmScaleFactor_ = dlg.getNextNumber();
+		Prefs.palmPSDWidth_ = dlg.getNextNumber();
+
+		// palm.setCorrectDrift(dlg.getNextBoolean());
 		
 		int [] selected = frame_.getTrajsTable().getSelectedTrajectoriesOrAll();
-		ip = palm.constructPalm(typeList[palmType], rect, selected);
-		ImagePlus img = new ImagePlus("PALM", ip);
-		img.show();
-		IJ.log(String.format("Plotted %d molecules, skipped %d molecules.", palm.getNPlotted(), palm.getNSkipped()));
+		palm.constructPalm(typeList[palmType], imp_, selected);
 	}
 
 	/**
 	 * Construct mobility map.
 	 */
 	public void constructMobilityMap() {
-		Rectangle rect;
-		Roi roi = imp_.getRoi();
-		if (roi!=null && !roi.isArea())
-			imp_.killRoi(); 
-		rect = imp_.getProcessor().getRoi();
- 
-		int w = (int)(rect.width*Prefs.palmScaleFactor_);
-		int h = (int)(rect.height*Prefs.palmScaleFactor_);
-		
-		int smoothArea = (int) (Prefs.palmScaleFactor_ / 2);
-		int[] dx = new int[4 * (smoothArea * smoothArea + 1) + 1];
-		int[] dy = new int[4 * (smoothArea * smoothArea + 1) + 1];
-		int cnt = 0;
-		for (int i = - smoothArea; i <= smoothArea; i++) {
-			for (int j = - smoothArea; j <= smoothArea; j++) {
-				if (Math.sqrt(i*i + j*j) <= smoothArea) {
-					dx[cnt] = i; dy[cnt] = j; cnt++;
-				}
-			}
-		}
-		
-		float [][] m = new float[w][h];
-		float [][] n = new float[w][h];
-		int [] selected = frame_.getTrajsTable().getSelectedTrajectoriesOrAll();
-		int i,j;
-		for (i =0; i < selected.length; i++) {
-			Trajectory t = dataset_.getTrajectoryByIndex(selected[i]);
-			for (j = 1; j < t.size(); j++) {
-				if ( rect.contains(t.get(j-1).x, t.get(j-1).y)) {
-					int x = (int) ((t.get(j-1).x - rect.x) * Prefs.palmScaleFactor_);
-					int y = (int) ((t.get(j-1).y - rect.y) * Prefs.palmScaleFactor_) ;
-					for ( int k = 0; k < cnt; k++) {
-						int nx = x+dx[k];
-						int ny = y+dy[k];
-						if (nx>=0 && ny>=0 && nx < w && ny < h) {
-							n[x+dx[k]][y+dy[k]] += 1.0f;
-							m[x+dx[k]][y+dy[k]] += t.get(j).distance2(t.get(j-1));
-						}
-					}
-				}
-			}
-		}
-		
-		for (i = 0; i < rect.width; i ++) {
-			for (j = 0; j < rect.height; j++) {
-				if (n[i][j] > 0) {
-					m[i][j] = m[i][j] / n[i][j];
-				}
-			}
-		}
-		
-		FloatProcessor fp = new FloatProcessor(m);
-		FloatProcessor np = new FloatProcessor(n);
-		ImageStack stack = new ImageStack(w, h);
-		stack.addSlice("MobilityMap", fp);
-		stack.addSlice("MobilityCnt", np);
-		new ImagePlus(imp_.getTitle() + " MobilityMap", stack).show();
+		FlowAnalysis fa = new FlowAnalysis(dataset_);
+		fa.constructMobilityMap(imp_, frame_.getTrajsTable().getSelectedTrajectoriesOrAll());
 	}
 	
-	/**
-	 * Construct flow map.
-	 */
-	public void constructFlowMap() {
-		Rectangle rect;
-		Roi roi = imp_.getRoi();
-		if (roi!=null && !roi.isArea())
-			imp_.killRoi(); 
-		rect = imp_.getProcessor().getRoi();
-
-		float [][] dxs = new float[rect.width][rect.height];
-		float [][] dys = new float[rect.width][rect.height];
-		float [][] n = new float[rect.width][rect.height];
-		int [] selected = frame_.getTrajsTable().getSelectedTrajectoriesOrAll();
-		int i,j;
-		for (i =0; i < selected.length; i++) {
-			Trajectory t = dataset_.getTrajectoryByIndex(selected[i]);
-			for (j = 1; j < t.size(); j++) {
-				if ( rect.contains(t.get(j-1).x, t.get(j-1).y)) {
-					int x = (int) t.get(j-1).x - rect.x ;
-					int y = (int) t.get(j-1).y - rect.y ;
-					double dx = (t.get(j).x - t.get(j-1).x)/(t.get(j).frame-t.get(j-1).frame);
-					double dy = (t.get(j).y - t.get(j-1).y)/(t.get(j).frame-t.get(j-1).frame);
-					dxs[x][y] += dx;
-					dys[x][y] += dy;
-					n[x][y] += 1.0f;
-				}
-			}
-		}
-
-		float maxDx = -1.0f, maxDy = -1.0f;
-		for (i = 0; i < rect.width; i ++) {
-			for (j = 0; j < rect.height; j++) {
-				if (n[i][j] > 0) {
-					dxs[i][j] = dxs[i][j] / n[i][j];
-					dys[i][j] = dys[i][j] / n[i][j];
-					if (Math.abs(dxs[i][j]) > maxDx) 
-						maxDx = Math.abs(dxs[i][j]);
-					if (Math.abs(dys[i][j]) > maxDx) 
-						maxDy = Math.abs(dys[i][j]);
-				}
-			}
-		}
-		
-		GeneralPath gp = new GeneralPath();
-		float max = (maxDx > maxDy? maxDx:maxDy) * 2.0f;
-		for (i = 0; i < rect.width; i ++) {
-			for (j = 0; j < rect.height; j++) {
-				if (n[i][j] > 0) {
-					double x1 = dxs[i][j] / max;
-					double y1 = dys[i][j] / max;
-					double r1 = Math.sqrt(x1*x1 + y1 * y1);
-					gp.moveTo(i + 0.5f, j + 0.5f);
-					gp.lineTo(i + 0.5f + x1, j + 0.5f + y1);
-					if (r1 > 0.2) {
-						double x3 = x1 - x1 / r1 * 0.3;
-						double y3 = y1 - y1 / r1 * 0.3;
-						double x4 = x3 + y1 / r1 * 0.3 * 0.45;
-						double y4 = y3 - x1 / r1 * 0.3 * 0.45;
-						double x5 = x3 - y1 / r1 * 0.3 * 0.45;
-						double y5 = y3 + x1 / r1 * 0.3 * 0.45;
-						gp.moveTo(i + 0.5f + x4, j + 0.5f + y4);
-						gp.lineTo(i + 0.5f + x1, j + 0.5f + y1);
-						gp.lineTo(i + 0.5f + x5, j + 0.5f + y5);
-					}
-				}
-			}
-		}
-		
-		FloatProcessor fp = new FloatProcessor(n);
-		ImagePlus imp = new ImagePlus(imp_.getTitle() + " Flowmap", fp);
-		imp.show();
-		imp.setOverlay(gp, Color.yellow, new BasicStroke(1f));
-		
-	}
-
 	/**
 	 * Gets the Imagej image.
 	 *
