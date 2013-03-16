@@ -1,17 +1,7 @@
 package edu.uchc.octane.test;
 
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-
-import edu.uchc.octane.GaussianSPL;
 import edu.uchc.octane.NelderMeadSPL;
-import edu.uchc.octane.PFGWSPL;
-import edu.uchc.octane.PeakFinder;
 import edu.uchc.octane.SubPixelLocalization;
-import ij.ImagePlus;
-import ij.ImageStack;
-import ij.process.FloatProcessor;
-import ij.process.ImageProcessor;
 import ij.process.ShortProcessor;
 
 public class RefinerTest {
