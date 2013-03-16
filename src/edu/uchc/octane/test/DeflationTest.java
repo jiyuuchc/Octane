@@ -3,8 +3,7 @@ package edu.uchc.octane.test;
 import java.awt.Rectangle;
 import java.util.Arrays;
 
-import edu.uchc.octane.DeflationAnalysis;
-import edu.uchc.octane.GaussianSPL;
+import edu.uchc.octane.GaussianFitting;
 import edu.uchc.octane.Prefs;
 import ij.IJ;
 import ij.ImagePlus;
@@ -62,7 +61,7 @@ public class DeflationTest {
 		}
 		Arrays.sort(pixels);
 		ImageStack stack = new ImageStack(ip.getWidth(), ip.getHeight());
-		GaussianSPL spl = new GaussianSPL(true);
+		GaussianFitting spl = new GaussianFitting(true);
 		boolean [] labeled = new boolean[ip.getWidth() * ip.getHeight()];
 		Arrays.fill(labeled, false);
 		idx = pixels.length - 1;
@@ -78,7 +77,7 @@ public class DeflationTest {
 					break;
 				}
 			}
-			if ( spl.refine((double)x,(double)y) != 0 ) {
+			if ( spl.fitGaussianAt((double)x,(double)y, Prefs.sigma_, Prefs.kernelSize_) != 0 ) {
 				IJ.showMessage("Fitting error at:" + i + "X:" + x + "Y:" + y);
 			} else {
 				spl.deflate();

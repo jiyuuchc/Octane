@@ -101,7 +101,7 @@ public class DeflationAnalysisDialog extends NonBlockingGenericDialog {
 	void setupDialog() {  
 		addNumericField("Kernel Size (pixels)", Prefs.kernelSize_, 0);
 		addNumericField("PSF sigma (pixels)", Prefs.sigma_, 2);
-		addSlider("Intensity Threshold", 0, 40000.0, Prefs.deflationThreshold_);
+		addSlider("Intensity Threshold", 20, 40000.0, Prefs.deflationThreshold_);
 		addCheckbox("Zero Background", Prefs.zeroBackground_);
 
 		Vector<Scrollbar> sliders = (Vector<Scrollbar>)getSliders();

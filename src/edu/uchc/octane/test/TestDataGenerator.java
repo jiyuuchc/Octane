@@ -51,7 +51,7 @@ public class TestDataGenerator {
 	
 	static ShortProcessor randomMultipleSpots(int size, int N, double sigma2, int height, int bg) {
 		ShortProcessor ip = new ShortProcessor(size,size);
-		int halfSize = Math.max((int)(Math.sqrt(sigma2) * 3 + 0.5), 2);
+		int halfSize = Math.max((int)(Math.sqrt(sigma2/2) * 3 + 0.5), 2);
 		
 		for (int i =0; i < N; i++) {
 			double x = (int)(Math.random() * size);

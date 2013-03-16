@@ -1,4 +1,4 @@
-//FILE:          GaussianSPL.java
+//FILE:          GaussianFitting.java
 //PROJECT:       Octane
 //-----------------------------------------------------------------------------
 //
@@ -35,7 +35,7 @@ import ij.process.ImageProcessor;
 /**
  * Subpixel refiner by Gaussian fit.
  */
-public class GaussianSPL implements SubPixelLocalization, DifferentiableMultivariateRealFunction {
+public class GaussianFitting implements DifferentiableMultivariateRealFunction {
 	
 	private static final double defaultH_ = 200.0;
 	double sigma2_ = 1.73;
@@ -50,12 +50,14 @@ public class GaussianSPL implements SubPixelLocalization, DifferentiableMultivar
 	private int width_ = 0;
 	private int height_ = 0;
 	
+	private int windowSize_ = 2;
+
 	protected boolean zeroBg_;
 	
 	/**
 	 * Default constructor
 	 */
-	public GaussianSPL() {
+	public GaussianFitting() {
 		this(false);
 	}
 	
@@ -64,7 +66,7 @@ public class GaussianSPL implements SubPixelLocalization, DifferentiableMultivar
 	 *
 	 * @param b whether the data is zero-background
 	 */
-	public GaussianSPL(boolean b) {
+	public GaussianFitting(boolean b) {
 		zeroBg_ = b;
 		if (!b) {
 			parameters_ = new double[4];
@@ -76,9 +78,6 @@ public class GaussianSPL implements SubPixelLocalization, DifferentiableMultivar
 		gradients_ = new double[parameters_.length];
 	}
 	
-	/* (non-Javadoc)
-	 * @see edu.uchc.octane.SubPixelRefiner#setImageData(ij.process.ImageProcessor)
-	 */
 	public void setImageData(ImageProcessor ip) {
 
 		Object pixels = ip.getPixels();
@@ -121,31 +120,12 @@ public class GaussianSPL implements SubPixelLocalization, DifferentiableMultivar
 		return Math.exp(- x*x/sigma2_);
 	}
 
-	/* (non-Javadoc)
-	 * @see edu.uchc.octane.SubPixelRefiner#refine(double, double)
-	 */
-	@Override
-	public int refine(double x, double y) {
-		//int w = 1 + 2 * Prefs.kernelSize_;
-		sigma2_ = Prefs.sigma_ * Prefs.sigma_ * 2;
-//		if (x < Prefs.kernelSize_) {
-//			x0_ = Prefs.kernelSize_;
-//		} else if (x >= ip_.getWidth() - Prefs.kernelSize_) {
-//			x0_ = ip_.getWidth() - Prefs.kernelSize_ - 1;
-//		} else { 
-//			x0_ = (int) x;
-//		}
+	public int fitGaussianAt(double x, double y, double sigma, int size) {
+		sigma2_ = sigma * sigma * 2;
+		windowSize_ = size;
 		x0_ = (int) x;
-		parameters_[0] = x0_ + .5 - x;
-
-//		if (y < Prefs.kernelSize_) {
-//			y0_ = Prefs.kernelSize_;
-//		} else if (y >= ip_.getHeight() - Prefs.kernelSize_) {
-//			y0_ = ip_.getHeight() - Prefs.kernelSize_ - 1;
-//		} else { 
-//			y0_ = (int) y;
-//		}
 		y0_ = (int) y;
+		parameters_[0] = x0_ + .5 - x;
 		parameters_[1] = y0_ + .5 - y;
 
 		try {
@@ -158,17 +138,6 @@ public class GaussianSPL implements SubPixelLocalization, DifferentiableMultivar
 			return -2;
 		}
 
-		// report
-//		double hw = 0.5 + Prefs.kernelSize_;
-//		for (int xi = - Prefs.kernelSize_; xi <= Prefs.kernelSize_; xi++) {
-//			for (int yi = - Prefs.kernelSize_; yi <= Prefs.kernelSize_; yi++) {
-//				double xp = parameters_[0];
-//				double yp = parameters_[1];
-//				System.out.printf("%3d(%5f)\t", ip_.get(x0_ + xi, y0_ + yi), parameters_[2] * gauss(xp + xi) * gauss( yp + yi) + parameters_[3]);
-//			}
-//			System.out.println();
-//		}
-//		System.out.println();
 		if (parameters_[2] < 0) {
 			return -3;
 		}
@@ -192,14 +161,14 @@ public class GaussianSPL implements SubPixelLocalization, DifferentiableMultivar
 		
 		double m = 0;
 		double m2 = 0;
-		for (int xi = - Prefs.kernelSize_; xi <= Prefs.kernelSize_; xi++) {
-			for (int yi = - Prefs.kernelSize_; yi <= Prefs.kernelSize_; yi++) {
+		for (int xi = - windowSize_; xi <= windowSize_; xi++) {
+			for (int yi = - windowSize_; yi <= windowSize_; yi++) {
 				double v = pixelValue(x0_ + xi, y0_ + yi);
 				m += v;
 				m2 += v * v ;
 			}
 		}
-		int nPixels = (1 + 2 * Prefs.kernelSize_)*(1 + 2 * Prefs.kernelSize_);
+		int nPixels = (1 + 2 * windowSize_)*(1 + 2 * windowSize_);
 		m = m2 - m * m / nPixels; //variance of the grey values
 
 		e_ = nPixels * Math.log(m/vp.getValue())  ; // a MLestimator. See Nature Methods 5,687 - 694 
@@ -217,8 +186,8 @@ public class GaussianSPL implements SubPixelLocalization, DifferentiableMultivar
 		
 		double r = 0;
 		Arrays.fill(gradients_, 0);
-		for (int xi = - Prefs.kernelSize_; xi <= Prefs.kernelSize_; xi++) {
-			for (int yi = - Prefs.kernelSize_; yi <= Prefs.kernelSize_; yi++) {
+		for (int xi = - windowSize_; xi <= windowSize_; xi++) {
+			for (int yi = - windowSize_; yi <= windowSize_; yi++) {
 				double g = gauss(xp + xi)* gauss(yp + yi);
 				double delta = bg + h*g - pixelValue(x0_ + xi , y0_ + yi);
 				r += delta * delta;
@@ -267,42 +236,26 @@ public class GaussianSPL implements SubPixelLocalization, DifferentiableMultivar
 	}
 
 	public void deflate() {
-		for (int xi = - Prefs.kernelSize_; xi <= Prefs.kernelSize_; xi++) {
-			for (int yi = - Prefs.kernelSize_; yi <= Prefs.kernelSize_; yi++) {
+		for (int xi = - windowSize_; xi <= windowSize_; xi++) {
+			for (int yi = - windowSize_; yi <= windowSize_; yi++) {
 				double g = gauss(parameters_[0] + xi)* gauss(parameters_[1] + yi);
 				imageData_[x0_ + xi + width_ * (y0_ + yi)] -= g * parameters_[2];
 			}
 		}
 	}
 	
-	/* (non-Javadoc)
-	 * @see edu.uchc.octane.SubPixelRefiner#getXOut()
-	 */
-	@Override
 	public double getX() {
 		return (x0_ + .5 - parameters_[0]) ;
 	}
 
-	/* (non-Javadoc)
-	 * @see edu.uchc.octane.SubPixelRefiner#getYOut()
-	 */
-	@Override
 	public double getY() {
 		return (y0_ + .5 - parameters_[1]);
 	}
 
-	/* (non-Javadoc)
-	 * @see edu.uchc.octane.SubPixelRefiner#getHeightOut()
-	 */
-	@Override
 	public double getHeight() {
 		return parameters_[2];
 	}
 
-	/* (non-Javadoc)
-	 * @see edu.uchc.octane.SubPixelRefiner#getConfidenceEstimator()
-	 */
-	@Override
 	public double getError() {
 		return e_ ;
 	}

@@ -63,7 +63,7 @@ public class DeflationAnalysis {
 		}
 		Arrays.sort(pixels, 0, idx);
 
-		GaussianSPL spl = new GaussianSPL(bZeroBackground);
+		GaussianFitting spl = new GaussianFitting(bZeroBackground);
 
 		boolean [] labeled = new boolean[ip.getWidth() * ip.getHeight()];
 		spl.setImageData(ip);
@@ -88,7 +88,7 @@ public class DeflationAnalysis {
 			}
 
 			if (idx >= 0 ) {
-				int ret = spl.refine((double)x,(double)y);
+				int ret = spl.fitGaussianAt((double)x,(double)y, sigma, kernelSize);
 				if ( ret != 0 ) {
 					System.out.println("Fitting error at: " + idx + " X:" + x + ", Y:" + y + " returns:"+ ret);
 				} else {
