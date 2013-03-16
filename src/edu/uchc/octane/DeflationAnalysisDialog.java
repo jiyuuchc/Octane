@@ -24,6 +24,7 @@ import java.awt.Scrollbar;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.Vector;
+import java.util.prefs.Preferences;
 
 import ij.IJ;
 import ij.ImageListener;
@@ -47,8 +48,26 @@ public class DeflationAnalysisDialog extends NonBlockingGenericDialog {
 	
 	private SmNode[][] nodes_; 
 
+	Preferences prefs_ = null;
+	int kernelSize_;
+	double sigma_;
+	boolean zeroBg_;
+	int deflationThreshold_;
+	final static String KERNELSIZE_KEY = "kernelSize";
+	final static String SIGMA_KEY = "sigma";
+	final static String ZERO_BACKGROUND_KEY = "zeroBackground";
+	final static String DEFLATION_THRESHOLD= "deflationThreshold";
+	
 	public DeflationAnalysisDialog(ImagePlus imp) {
 		super("Set parameters:" + imp.getTitle());
+
+		prefs_ = Preferences.userNodeForPackage(getClass());
+		prefs_ = prefs_.node(getClass().getName());
+
+		kernelSize_ = prefs_.getInt(KERNELSIZE_KEY, 2);
+		sigma_ = prefs_.getDouble(SIGMA_KEY, 0.8);
+		zeroBg_ = prefs_.getBoolean(ZERO_BACKGROUND_KEY, false);
+		deflationThreshold_ = prefs_.getInt(DEFLATION_THRESHOLD, 100);
 
 		imp_ = imp;
 		module_ = new DeflationAnalysis();
@@ -98,11 +117,11 @@ public class DeflationAnalysisDialog extends NonBlockingGenericDialog {
 		ImagePlus.addImageListener(imageListener_);
 	}
 
-	void setupDialog() {  
-		addNumericField("Kernel Size (pixels)", Prefs.kernelSize_, 0);
-		addNumericField("PSF sigma (pixels)", Prefs.sigma_, 2);
-		addSlider("Intensity Threshold", 20, 40000.0, Prefs.deflationThreshold_);
-		addCheckbox("Zero Background", Prefs.zeroBackground_);
+	void setupDialog() {
+		addNumericField("Kernel Size (pixels)", kernelSize_, 0);
+		addNumericField("PSF sigma (pixels)", sigma_, 2);
+		addSlider("Intensity Threshold", 20, 40000.0, deflationThreshold_);
+		addCheckbox("Zero Background", zeroBg_);
 
 		Vector<Scrollbar> sliders = (Vector<Scrollbar>)getSliders();
 		sliders.get(0).setUnitIncrement(20); // default was 1 
@@ -114,10 +133,15 @@ public class DeflationAnalysisDialog extends NonBlockingGenericDialog {
 					return true;
 				}
 				
-				Prefs.kernelSize_ = (int) getNextNumber();
-				Prefs.sigma_ = getNextNumber();
-				Prefs.deflationThreshold_ = (int) getNextNumber();
-				Prefs.zeroBackground_ = (boolean) getNextBoolean();
+				if (wasOKed()) {
+					savePrefs();
+					return true;
+				}
+
+				kernelSize_ = (int) getNextNumber();
+				sigma_ = getNextNumber();
+				deflationThreshold_ = (int) getNextNumber();
+				zeroBg_ = (boolean) getNextBoolean();
 
 				updateResults();
 				return true;
@@ -145,7 +169,7 @@ public class DeflationAnalysisDialog extends NonBlockingGenericDialog {
 			
 			ImageProcessor ip = stack.getProcessor(frame);
 			
-			module_.process(ip, rect_, Prefs.kernelSize_, Prefs.sigma_, Prefs.deflationThreshold_, Prefs.zeroBackground_);
+			module_.process(ip, rect_, kernelSize_, sigma_, deflationThreshold_, zeroBg_);
 			int nParticles = module_.reportNumParticles();
 			if (nParticles > 0) {
 				SmNode [] nodesInFrame = new SmNode[nParticles];
@@ -172,7 +196,7 @@ public class DeflationAnalysisDialog extends NonBlockingGenericDialog {
 			return;
 		}
 
-		module_.process(imp_.getProcessor(), rect_, Prefs.kernelSize_, Prefs.sigma_, Prefs.deflationThreshold_, Prefs.zeroBackground_);
+		module_.process(imp_.getProcessor(), rect_, kernelSize_, sigma_, deflationThreshold_, zeroBg_);
 
 		int nParticles = module_.reportNumParticles();
 		if (nParticles <= 0) {
@@ -216,6 +240,17 @@ public class DeflationAnalysisDialog extends NonBlockingGenericDialog {
 	
 	public SmNode[][] getSmNodes() {
 		return nodes_;
+	}
+	
+	public void savePrefs() {
+		if (prefs_ == null) {
+			return;
+		}
+		
+		prefs_.putInt(KERNELSIZE_KEY, kernelSize_);
+		prefs_.putDouble(SIGMA_KEY, sigma_);
+		prefs_.putBoolean(ZERO_BACKGROUND_KEY, zeroBg_);
+		prefs_.putInt(DEFLATION_THRESHOLD, deflationThreshold_);
 	}
 
 }

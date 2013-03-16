@@ -124,7 +124,7 @@ public class OctanePlugin implements PlugIn{
 		String path;		
 		
 		if (cmd.equals("options")) {
-			PrefDialog.openDialog();
+			TrackingPrefDialog.openDialog();
 			return;
 		}
 		

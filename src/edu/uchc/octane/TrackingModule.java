@@ -219,7 +219,7 @@ public class TrackingModule {
 			nBonds = 0;
 
 			for (int j = 0; j < nodes_[curFrame_].length; j ++) {
-				if (nodes_[curFrame_][j].residue > Prefs.confidenceThreshold_) {
+				if (nodes_[curFrame_][j].residue > TrackingPrefDialog.errorThreshold_) {
 					double d = trackHead.distance2(nodes_[curFrame_][j]);
 					if (d <= threshold2_) { // don't miss the = sign
 						Bond b = new Bond();
@@ -284,9 +284,9 @@ public class TrackingModule {
 	 * @return the trajectories
 	 */
 	public Vector<Trajectory> doTracking() {
-		threshold_ = Prefs.trackerMaxDsp_;
+		threshold_ = TrackingPrefDialog.trackerMaxDsp_;
 		threshold2_ = threshold_ * threshold_;
-		maxBlinking_ = Prefs.trackerMaxBlinking_;
+		maxBlinking_ = TrackingPrefDialog.trackerMaxBlinking_;
 		nodes_ = dataset_.nodes_;
 
 		activeTracks_ = new LinkedList<Trajectory>();
@@ -297,7 +297,7 @@ public class TrackingModule {
 		for (int i = 0; i < nodes_[0].length; i ++ ) {
 			Trajectory t;
 			t = new Trajectory();
-			if ( nodes_[0][i].residue > Prefs.confidenceThreshold_) {
+			if ( nodes_[0][i].residue > TrackingPrefDialog.errorThreshold_) {
 				t.add(nodes_[0][i]);
 				activeTracks_.add(t);
 			} else {
@@ -340,7 +340,7 @@ public class TrackingModule {
 			for (int i = 0; i < nodes_[curFrame_].length; i++) {
 				if (! isTrackedParticle_[i]) {
 					assert(backwardBonds_[i] != null);
-					if (nodes_[curFrame_][i].residue > Prefs.confidenceThreshold_) {
+					if (nodes_[curFrame_][i].residue > TrackingPrefDialog.errorThreshold_) {
 						Trajectory t;
 						t = new Trajectory();
 						t.add(nodes_[curFrame_][i]);
