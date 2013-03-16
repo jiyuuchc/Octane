@@ -47,6 +47,8 @@ public class Prefs {
 	final static String SIGMA_KEY = "sigma";
 	final static String IFS_SCALE_FACTOR = "IFSRatio";
 	final static String PEAK_TOLERANCE = "peakTolerance";
+	final static String DEFLATION_THRESHOLD= "deflationThreshold";
+	final static String ZERO_BACKGROUND= "zeroBackground";
 	//static String lastWorkingDir;
 
 	public static boolean initialized = false;
@@ -75,7 +77,8 @@ public class Prefs {
 	public static double dspHistogramMin_ = 0;
 	public static double dspHistogramMax_ = 10;
 	public static double trackerLowerBound_ = 1.0;
-
+	public static int deflationThreshold_ = 100;
+	public static boolean zeroBackground_ = false;
 	static Preferences pref_;
 
 	/**
@@ -109,6 +112,8 @@ public class Prefs {
 		sigma_ = pref.getDouble(SIGMA_KEY, sigma_);
 		IFSScaleFactor_ = pref.getInt(IFS_SCALE_FACTOR, IFSScaleFactor_);
 		peakTolerance_ = pref.getInt(PEAK_TOLERANCE, peakTolerance_);
+		deflationThreshold_ = pref.getInt(DEFLATION_THRESHOLD, deflationThreshold_);
+		zeroBackground_ = pref.getBoolean(ZERO_BACKGROUND, zeroBackground_);
 		pref_ = pref;
 		initialized = true;
 	}
@@ -144,6 +149,8 @@ public class Prefs {
 		pref_.putDouble(SIGMA_KEY, sigma_);
 		pref_.putInt(IFS_SCALE_FACTOR, IFSScaleFactor_);
 		pref_.putInt(PEAK_TOLERANCE, peakTolerance_);
+		pref_.putInt(DEFLATION_THRESHOLD, deflationThreshold_);
+		pref_.putBoolean(ZERO_BACKGROUND, zeroBackground_);
 	}
 
 }

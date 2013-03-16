@@ -179,7 +179,7 @@ public class NelderMeadSPL implements SubPixelLocalization, MultivariateRealFunc
 	 * @see edu.uchc.octane.SubPixelRefiner#getResidue()
 	 */
 	@Override
-	public double getConfidenceEstimator() {
+	public double getError() {
 		return residue_ ;
 	}
 

@@ -52,7 +52,7 @@ public class NullSPL implements SubPixelLocalization {
 	}
 
 	@Override
-	public double getConfidenceEstimator() {
+	public double getError() {
 		return 0;
 	}
 

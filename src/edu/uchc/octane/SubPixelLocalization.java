@@ -67,5 +67,5 @@ public interface SubPixelLocalization {
 	 *
 	 * @return residue
 	 */
-	public double getConfidenceEstimator(); 
+	public double getError(); 
 }

@@ -80,10 +80,12 @@ public class OctanePlugin implements PlugIn{
 	 * Analyze current image stack
 	 */
 	public void analyze() {
-		ThresholdDialog dlg = new ThresholdDialog(imp_);
-		if (dlg.openDialog() == true) {
+		DeflationAnalysisDialog dlg = new DeflationAnalysisDialog(imp_);
+		dlg.showDialog();
+		if (dlg.wasOKed()) {
 			OctaneWindowControl ctlr = new OctaneWindowControl(imp_);
-			ctlr.setup(dlg.getProcessedNodes());
+			ctlr.setup(dlg.processAllFrames());
+			
 			dict_.put(imp_, ctlr);
 			ctlr.getWindow().addWindowListener(new WindowAdapter() {
 				@Override
@@ -125,7 +127,9 @@ public class OctanePlugin implements PlugIn{
 			PrefDialog.openDialog();
 			return;
 		}
+		
 		imp_ = WindowManager.getCurrentImage();
+		
 		if (imp_ == null || imp_.getStack().getSize() < 2) {
 			IJ.showMessage("This only works on a stack");
 			return;
@@ -174,6 +178,7 @@ public class OctanePlugin implements PlugIn{
 			}				
 		} catch (Exception e) {
 			IJ.showMessage("Can't load the file! Is it in the correct format? " + e.toString()); 
-		} 				
+		}
+		
 	}
 }

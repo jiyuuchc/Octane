@@ -199,7 +199,7 @@ public class PFGWSPL implements SubPixelLocalization {
 	  * @see edu.uchc.octane.SubPixelRefiner#getResidue()
 	  */
 	 @Override
-	 public double getConfidenceEstimator() {
+	 public double getError() {
 		 double m;
 		 m = new Variance(false).evaluate(pixels);
 		 return numPixels * Math.log(m/residue_);

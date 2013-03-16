@@ -1,9 +1,12 @@
 package edu.uchc.octane.test;
 
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
 
 import ij.ImagePlus;
+import edu.uchc.octane.DeflationAnalysisDialog;
 import edu.uchc.octane.OctaneWindowControl;
 import edu.uchc.octane.ThresholdDialog;
 
@@ -17,13 +20,19 @@ public class BrowserTest {
 			OctaneWindowControl b = new OctaneWindowControl(imp);
 			b.setup();
 		} else {
-			ThresholdDialog finderDlg = new ThresholdDialog(imp);
-			if (finderDlg.openDialog() == true) {
-				OctaneWindowControl b = new OctaneWindowControl(imp);
-				b.setup(finderDlg.getProcessedNodes());
-			} else {
-				imp.close();
+			DeflationAnalysisDialog dlg = new DeflationAnalysisDialog(imp);
+			dlg.showDialog();
+			if (dlg.wasOKed()) {
+				OctaneWindowControl ctlr = new OctaneWindowControl(imp);
+				ctlr.setup(dlg.processAllFrames());
 			}
+//			ThresholdDialog finderDlg = new ThresholdDialog(imp);
+//			if (finderDlg.openDialog() == true) {
+//				OctaneWindowControl b = new OctaneWindowControl(imp);
+//				b.setup(finderDlg.getProcessedNodes());
+//			} else {
+//				imp.close();
+//			}
 		}
 	}
 }

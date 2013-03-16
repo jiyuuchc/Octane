@@ -135,6 +135,7 @@ public class OctaneWindowControl implements ClipboardOwner{
 	 */
 	public void setup(TrajDataset data) {
 		dataset_ = data;
+		saveDataset();
 		createWindow();
 	}
 
@@ -145,6 +146,7 @@ public class OctaneWindowControl implements ClipboardOwner{
 	 */
 	public void setup(SmNode[][] nodes) {
 		dataset_ = TrajDataset.createDatasetFromNodes(nodes);
+		saveDataset();
 		createWindow();
 	}
 
@@ -300,33 +302,6 @@ public class OctaneWindowControl implements ClipboardOwner{
 			}
 		}
 	}
-
-//	/**
-//	 * Construct ifs stack.
-//	 */
-//	protected void constructIFS() {
-//		Palm.IFSType [] typeList = {
-//				Palm.IFSType.SPOT,
-//				Palm.IFSType.LINE,
-//				Palm.IFSType.SQUARE,
-//		};
-//
-//		GenericDialog dlg = new GenericDialog("Construct IFS");
-//		String[] items = { "Spot", "Line", "Square"};
-//		dlg.addChoice("IFS Type", items, "Spot");
-//		dlg.addNumericField("Scale Factor", Prefs.IFSScaleFactor_, 0);
-//		dlg.addNumericField("PSF width", Prefs.palmPSDWidth_, 3);
-//
-//		dlg.showDialog();
-//		if (dlg.wasCanceled())
-//			return;
-//		
-//		Palm palm = new Palm(dataset_);
-//	
-//		int [] selected = frame_.getTrajsTable().getSelectedTrajectoriesOrAll();
-//		
-//		palm.constructIFS(Palm.IFSType.SPOT, imp_, selected);
-//	}
 
 	/**
 	 * Construct PALM image.
