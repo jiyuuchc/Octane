@@ -37,14 +37,18 @@ import javax.swing.SwingWorker;
 public class Palm {
 
 	public enum PalmType {AVERAGE, HEAD, TAIL, ALLPOINTS, STACK};
-	// public enum IFSType {SPOT, LINE, SQUARE};
 	
 	boolean correctDrift_;
 	TrajDataset dataset_;
 
+	double palmScaleFactor_;
+	double palmPSFWidth_;
+	
+	double palmThreshold_ = 1e6;
+
 	int nPlotted_;
 	int nSkipped_;
-
+	
 	public Palm (TrajDataset dataset) {
 		dataset_ = dataset;
 	}
@@ -87,18 +91,21 @@ public class Palm {
 		}
 	}
 
-	public void constructPalm(PalmType palmType, final ImagePlus imp, final int [] selected) {
+	public void constructPalm(PalmType palmType, double scale, double psfSigma, final ImagePlus imp, final int [] selected) {
 		nPlotted_ = 0;
 		nSkipped_ = 0;
+		
+		palmScaleFactor_ = scale;
+		palmPSFWidth_ = psfSigma;
 
 		final Rectangle rect = getCurrentROI(imp);
 
 		if (palmType == PalmType.STACK) {
 			SwingWorker task = new SwingWorker<ImageStack, Void>() {
 				public ImageStack doInBackground() {
-					ImageStack is =  new ImageStack((int)(rect.width * Prefs.palmScaleFactor_), (int)(rect.height * Prefs.palmScaleFactor_));
+					ImageStack is =  new ImageStack((int)(rect.width * palmScaleFactor_), (int)(rect.height * palmScaleFactor_));
 					for (int i = 0; i < imp.getStack().getSize(); i++) {
-						ImageProcessor ip = new FloatProcessor((int)(rect.width * Prefs.palmScaleFactor_), (int)(rect.height * Prefs.palmScaleFactor_));
+						ImageProcessor ip = new FloatProcessor((int)(rect.width * palmScaleFactor_), (int)(rect.height * palmScaleFactor_));
 						is.addSlice(""+i, ip);
 					}
 					for ( int i = 0; i < selected.length; i ++) {
@@ -167,9 +174,9 @@ public class Palm {
 
 	FloatProcessor constructPalmTypeHeadOrTail(Rectangle rect, int [] selected, boolean isHead) {
 		double xs, ys;
-		double psdWidth = Prefs.palmPSDWidth_ * Prefs.palmScaleFactor_;
+		double psdWidth = palmPSFWidth_ * palmScaleFactor_;
 
-		FloatProcessor ip = new FloatProcessor((int) (rect.width * Prefs.palmScaleFactor_), (int) (rect.height * Prefs.palmScaleFactor_));	
+		FloatProcessor ip = new FloatProcessor((int) (rect.width * palmScaleFactor_), (int) (rect.height * palmScaleFactor_));	
 
 		for ( int i = 0; i < selected.length; i ++) {
 			Trajectory traj = dataset_.getTrajectoryByIndex(selected[i]);
@@ -186,8 +193,8 @@ public class Palm {
 				if (correctDrift_) {
 					node = dataset_.correctDrift(node);
 				}
-				xs = (node.x - rect.x)* Prefs.palmScaleFactor_;
-				ys = (node.y - rect.y)* Prefs.palmScaleFactor_;
+				xs = (node.x - rect.x)* palmScaleFactor_;
+				ys = (node.y - rect.y)* palmScaleFactor_;
 				gaussianImage(ip, xs, ys, psdWidth);
 				nPlotted_ ++;
 			} catch (OctaneException e) {
@@ -203,9 +210,9 @@ public class Palm {
 	FloatProcessor constructPalmTypeAverage(Rectangle rect, int [] selected) {
 		double xx, yy, xx2, yy2, xs, ys;
 
-		double psdWidth = Prefs.palmPSDWidth_ * Prefs.palmScaleFactor_;
+		double psdWidth = palmPSFWidth_ * palmScaleFactor_;
 		
-		FloatProcessor ip = new FloatProcessor((int) (rect.width * Prefs.palmScaleFactor_), (int) (rect.height * Prefs.palmScaleFactor_));		
+		FloatProcessor ip = new FloatProcessor((int) (rect.width * palmScaleFactor_), (int) (rect.height * palmScaleFactor_));		
 
 		try {
 			for ( int i = 0; i < selected.length; i ++) {
@@ -239,9 +246,9 @@ public class Palm {
 				xx2 /= traj.size();
 				yy2 /= traj.size();
 
-				if (xx2 - xx * xx < Prefs.palmThreshold_ && yy2 - yy * yy < Prefs.palmThreshold_) {
-					xs = (xx - rect.x)* Prefs.palmScaleFactor_;
-					ys = (yy - rect.y)* Prefs.palmScaleFactor_;
+				if (xx2 - xx * xx < palmThreshold_ && yy2 - yy * yy < palmThreshold_) {
+					xs = (xx - rect.x)* palmScaleFactor_;
+					ys = (yy - rect.y)* palmScaleFactor_;
 					gaussianImage(ip, xs, ys, psdWidth);
 					nPlotted_ ++;
 				} else {
@@ -259,9 +266,9 @@ public class Palm {
 	FloatProcessor constructPalmTypeAllPoints(Rectangle rect, int [] selected) {
 		double xs, ys;
 
-		double psdWidth = Prefs.palmPSDWidth_ * Prefs.palmScaleFactor_;
+		double psdWidth = palmPSFWidth_ * palmScaleFactor_;
 
-		FloatProcessor ip = new FloatProcessor((int) (rect.width * Prefs.palmScaleFactor_), (int) (rect.height * Prefs.palmScaleFactor_));
+		FloatProcessor ip = new FloatProcessor((int) (rect.width * palmScaleFactor_), (int) (rect.height * palmScaleFactor_));
 
 		try {
 			for ( int i = 0; i < selected.length; i ++) {
@@ -275,8 +282,8 @@ public class Palm {
 					if (correctDrift_) {
 						node = dataset_.correctDrift(node);
 					}
-					xs = (node.x - rect.x)* Prefs.palmScaleFactor_;
-					ys = (node.y - rect.y)* Prefs.palmScaleFactor_;
+					xs = (node.x - rect.x)* palmScaleFactor_;
+					ys = (node.y - rect.y)* palmScaleFactor_;
 					gaussianImage(ip, xs, ys, psdWidth);
 					nPlotted_ ++;
 				}
@@ -305,9 +312,9 @@ public class Palm {
 				}
 			}
 			ImageProcessor ip = stack.getProcessor(traj.get(i).frame);
-			double xs = (traj.get(i).x - rect.x) * Prefs.palmScaleFactor_;
-			double ys = (traj.get(i).y - rect.y) * Prefs.palmScaleFactor_;
-			gaussianImage(ip, xs, ys, Prefs.palmPSDWidth_ * Prefs.palmScaleFactor_);
+			double xs = (traj.get(i).x - rect.x) * palmScaleFactor_;
+			double ys = (traj.get(i).y - rect.y) * palmScaleFactor_;
+			gaussianImage(ip, xs, ys, palmPSFWidth_ * palmScaleFactor_);
 		}
 	}
 	
@@ -318,8 +325,8 @@ public class Palm {
 //		int [] xs = new int[traj.size()];
 //		int [] ys = new int[traj.size()];
 //		for (int i = 0; i < traj.size(); i ++) {
-//			xs[i] = (int)((traj.get(i).x - rect.x) * Prefs.IFSScaleFactor_);
-//			ys[i] = (int)((traj.get(i).y - rect.y) * Prefs.IFSScaleFactor_);			
+//			xs[i] = (int)((traj.get(i).x - rect.x) * IFSScaleFactor_);
+//			ys[i] = (int)((traj.get(i).y - rect.y) * IFSScaleFactor_);			
 //		}
 //		
 //		PolygonRoi roi = null;
@@ -352,9 +359,9 @@ public class Palm {
 //				ip.setColor(Toolbar.getForegroundColor());
 //				roi.drawPixels(ip);
 //			}
-//			int nx = (int)((traj.get(i).x - rect.x - 4) * Prefs.IFSScaleFactor_);
-//			int ny = (int)((traj.get(i).y - rect.y - 4) * Prefs.IFSScaleFactor_);
-//			roi = new Roi(nx,ny, 9 * Prefs.IFSScaleFactor_, 9 * Prefs.IFSScaleFactor_);
+//			int nx = (int)((traj.get(i).x - rect.x - 4) * IFSScaleFactor_);
+//			int ny = (int)((traj.get(i).y - rect.y - 4) * IFSScaleFactor_);
+//			roi = new Roi(nx,ny, 9 * IFSScaleFactor_, 9 * IFSScaleFactor_);
 //			ip = stack.getProcessor(frame ++);
 //			ip.setColor(Toolbar.getForegroundColor());
 //			roi.drawPixels(ip);

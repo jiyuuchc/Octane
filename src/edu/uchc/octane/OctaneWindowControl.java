@@ -257,7 +257,7 @@ public class OctaneWindowControl implements ClipboardOwner{
 	}
 
 	protected void drawOverlay() {
-		if (!Prefs.showOverlay_) {
+		if (!GlobalPrefs.showOverlay_) {
 			imp_.setOverlay(null);
 			return;
 		}
@@ -307,33 +307,13 @@ public class OctaneWindowControl implements ClipboardOwner{
 	 * Construct PALM image.
 	 */
 	protected void constructPalm() {
-		Palm.PalmType [] typeList = {
-				Palm.PalmType.AVERAGE,
-				Palm.PalmType.HEAD,
-				Palm.PalmType.TAIL,
-				Palm.PalmType.ALLPOINTS,
-				Palm.PalmType.STACK
-		};
-		GenericDialog dlg = new GenericDialog("Construct PALM");
-		String[] items = { "Average", "Head", "Tail", "All Points", "Stack"};
-		dlg.addChoice("PALM Type", items, "Average");
-		dlg.addNumericField("Scale Factor", Prefs.palmScaleFactor_, 0);
-		dlg.addNumericField("PSF width", Prefs.palmPSDWidth_, 3);
-
-		dlg.showDialog();
-		if (dlg.wasCanceled())
-			return;
-
-		Palm palm = new Palm(dataset_);
-		
-		int palmType = dlg.getNextChoiceIndex();
-		Prefs.palmScaleFactor_ = dlg.getNextNumber();
-		Prefs.palmPSDWidth_ = dlg.getNextNumber();
-
-		// palm.setCorrectDrift(dlg.getNextBoolean());
-		
-		int [] selected = frame_.getTrajsTable().getSelectedTrajectoriesOrAll();
-		palm.constructPalm(typeList[palmType], imp_, selected);
+		if (PalmParameters.openDialog()) {	
+			Palm palm = new Palm(dataset_);
+			int [] selected = frame_.getTrajsTable().getSelectedTrajectoriesOrAll();
+			
+			// palm.setCorrectDrift(dlg.getNextBoolean());
+			palm.constructPalm(PalmParameters.getPalmType(), PalmParameters.palmScaleFactor_, PalmParameters.palmPSFWidth_, imp_, selected);			
+		}
 	}
 
 	/**
@@ -421,7 +401,7 @@ public class OctaneWindowControl implements ClipboardOwner{
 		}
 		FloatProcessor ip = new FloatProcessor(1, d.length, d);
 		ImagePlus imp = new ImagePlus("", ip);
-		HistogramWindow hw = new HistogramWindow("Residue Histogram", imp, Prefs.histogramBins_);
+		HistogramWindow hw = new HistogramWindow("Residue Histogram", imp, GlobalPrefs.histogramBins_);
 		hw.setVisible(true);
 		imp.close();		
 	}
@@ -462,8 +442,8 @@ public class OctaneWindowControl implements ClipboardOwner{
 		}
 		FloatProcessor ip = new FloatProcessor(1, d.length, d);
 		ImagePlus imp = new ImagePlus("", ip);
-		HistogramWindow hw = new HistogramWindow("Displacement Histogram", imp, Prefs.histogramBins_, 
-				Prefs.dspHistogramMin_, Prefs.dspHistogramMax_);
+		HistogramWindow hw = new HistogramWindow("Displacement Histogram", imp, DspHistogramParameters.histogramBins_, 
+				DspHistogramParameters.dspHistogramMin_, DspHistogramParameters.dspHistogramMax_);
 		hw.setVisible(true);
 		imp.close();
 	}
@@ -508,11 +488,11 @@ public class OctaneWindowControl implements ClipboardOwner{
 		}
 		FloatProcessor ip = new FloatProcessor(1, d.length, d);
 		ImagePlus imp = new ImagePlus("", ip);
-		HistogramWindow hw = new HistogramWindow("Directional Displacement Histogram", imp, Prefs.histogramBins_);
+		HistogramWindow hw = new HistogramWindow("Directional Displacement Histogram", imp, GlobalPrefs.histogramBins_);
 		hw.setVisible(true);
 		imp.close();
 	}
-	
+
 	/**
 	 * Show mean square displacement.
 	 */

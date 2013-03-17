@@ -51,7 +51,6 @@ public class OctanePlugin implements PlugIn{
 	public OctanePlugin() {
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-			Prefs.loadPrefs();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -124,7 +123,7 @@ public class OctanePlugin implements PlugIn{
 		String path;		
 		
 		if (cmd.equals("options")) {
-			TrackingPrefDialog.openDialog();
+			TrackingParameters.openDialog();
 			return;
 		}
 		

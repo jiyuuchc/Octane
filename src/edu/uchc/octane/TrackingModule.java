@@ -219,7 +219,7 @@ public class TrackingModule {
 			nBonds = 0;
 
 			for (int j = 0; j < nodes_[curFrame_].length; j ++) {
-				if (nodes_[curFrame_][j].residue > TrackingPrefDialog.errorThreshold_) {
+				if (nodes_[curFrame_][j].residue > TrackingParameters.errorThreshold_) {
 					double d = trackHead.distance2(nodes_[curFrame_][j]);
 					if (d <= threshold2_) { // don't miss the = sign
 						Bond b = new Bond();
@@ -237,7 +237,9 @@ public class TrackingModule {
 			forwardBonds_[id] = Arrays.copyOf(bonds, nBonds);
 			if (nBonds > 1) {
 				Arrays.sort(forwardBonds_[id]);
-				if (forwardBonds_[id][0].bondLength <= Prefs.trackerLowerBound_) {
+				
+				// we won't do network search if the shortest link is small enough
+				if (forwardBonds_[id][0].bondLength <= TrackingParameters.trackerLowerBound_) {
 					forwardBonds_[id] = Arrays.copyOf(forwardBonds_[id], 1);
 				}
 			}
@@ -284,9 +286,9 @@ public class TrackingModule {
 	 * @return the trajectories
 	 */
 	public Vector<Trajectory> doTracking() {
-		threshold_ = TrackingPrefDialog.trackerMaxDsp_;
+		threshold_ = TrackingParameters.trackerMaxDsp_;
 		threshold2_ = threshold_ * threshold_;
-		maxBlinking_ = TrackingPrefDialog.trackerMaxBlinking_;
+		maxBlinking_ = TrackingParameters.trackerMaxBlinking_;
 		nodes_ = dataset_.nodes_;
 
 		activeTracks_ = new LinkedList<Trajectory>();
@@ -297,7 +299,7 @@ public class TrackingModule {
 		for (int i = 0; i < nodes_[0].length; i ++ ) {
 			Trajectory t;
 			t = new Trajectory();
-			if ( nodes_[0][i].residue > TrackingPrefDialog.errorThreshold_) {
+			if ( nodes_[0][i].residue > TrackingParameters.errorThreshold_) {
 				t.add(nodes_[0][i]);
 				activeTracks_.add(t);
 			} else {
@@ -340,7 +342,7 @@ public class TrackingModule {
 			for (int i = 0; i < nodes_[curFrame_].length; i++) {
 				if (! isTrackedParticle_[i]) {
 					assert(backwardBonds_[i] != null);
-					if (nodes_[curFrame_][i].residue > TrackingPrefDialog.errorThreshold_) {
+					if (nodes_[curFrame_][i].residue > TrackingParameters.errorThreshold_) {
 						Trajectory t;
 						t = new Trajectory();
 						t.add(nodes_[curFrame_][i]);

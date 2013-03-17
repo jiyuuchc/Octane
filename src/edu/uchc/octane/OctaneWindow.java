@@ -185,7 +185,7 @@ public class OctaneWindow extends JFrame {
 		chckbxmntmShowOverlay.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				JCheckBoxMenuItem cb = (JCheckBoxMenuItem) e.getSource();
-				Prefs.showOverlay_ = cb.getState();
+				GlobalPrefs.showOverlay_ = cb.getState();
 				ctlr_.drawOverlay();
 			}
 		});
@@ -208,21 +208,10 @@ public class OctaneWindow extends JFrame {
 		JMenuItem mntmDisplacementDistribution = new JMenuItem("Displacement Histogram");
 		mntmDisplacementDistribution.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e){
-				int stepsize = 1;
-				GenericDialog gd = new GenericDialog("Step Size Input");
-				gd.addNumericField("Step Size: ", stepsize, 0);
-				gd.addNumericField("Number of bins:", Prefs.histogramBins_, 0);
-				gd.addNumericField("Minimal value:", Prefs.dspHistogramMin_, 0);
-				gd.addNumericField("Maximal value:", Prefs.dspHistogramMax_, 0);
-				gd.showDialog();
-				if (gd.wasCanceled())
-					return;
-				stepsize = (int) gd.getNextNumber();
-				Prefs.histogramBins_ = (int) gd.getNextNumber();
-				Prefs.dspHistogramMin_ = gd.getNextNumber();
-				Prefs.dspHistogramMax_ = gd.getNextNumber();
+				if (DspHistogramParameters.showDialog()) {
+					ctlr_.showDisplacementHistogram(DspHistogramParameters.stepSize_);					
+				}
 				
-				ctlr_.showDisplacementHistogram(stepsize);
 			}
 		});
 		mnAnalysis.add(mntmDisplacementDistribution);
@@ -264,9 +253,20 @@ public class OctaneWindow extends JFrame {
 		mnImage.add(mntmComputeDrift);
 		
 		JMenuItem mntmImportDriftData = new JMenuItem("Import Drift Data ...");
+		mntmImportDriftData.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e){
+				// FIX IT
+			}
+		});
 		mnImage.add(mntmImportDriftData);
 		
 		JCheckBoxMenuItem mntmApplyDriftCompensation = new JCheckBoxMenuItem("Apply Drift Compensation");
+		mntmApplyDriftCompensation.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e){
+				JCheckBoxMenuItem cb = (JCheckBoxMenuItem) e.getSource();
+				GlobalPrefs.compensateDrift_ = cb.getState();
+			}
+		});
 		mnImage.add(mntmApplyDriftCompensation);
 		
 		mnImage.addSeparator();
@@ -489,7 +489,7 @@ public class OctaneWindow extends JFrame {
 		if (ctlr_ != null ) {
 			ctlr_.saveDataset();
 		}
-		Prefs.savePrefs();
+		GlobalPrefs.savePrefs();
 		super.dispose();
 	}
 	

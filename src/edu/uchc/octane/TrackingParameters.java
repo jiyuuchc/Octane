@@ -24,27 +24,24 @@ import ij.gui.GenericDialog;
 /**
  * The Preferences dialog .
  */
-public class TrackingPrefDialog {
+public class TrackingParameters {
 
 	final static String MAX_BLINKING_KEY = "trackerMaxBlinking";
 	final static String MAX_DISPLACEMENT_KEY = "trackerMaxDsp";
 	final static String ERROR_THRESHOLD_KEY = "errorThreshold";
 	
-	public static double trackerMaxDsp_ = 5;
-	public static int trackerMaxBlinking_ = 0;
-	public static double errorThreshold_ = 0;
+	private static Preferences prefs_ = GlobalPrefs.getRoot().node(TrackingParameters.class.getName());
 
-	private static Preferences prefs_ = null;
-
+	public static double trackerMaxDsp_ = prefs_.getDouble(MAX_DISPLACEMENT_KEY, 2.0);
+	public static int trackerMaxBlinking_ = prefs_.getInt(MAX_BLINKING_KEY, 0);
+	public static double errorThreshold_ = prefs_.getDouble(ERROR_THRESHOLD_KEY, -1.0);
+	public static double trackerLowerBound_ = 0.1;
+	
 	/**
 	 * Open dialog.
 	 */
 	static public void openDialog() {
-		if (prefs_ == null) {
-			prefs_ = Preferences.systemNodeForPackage(TrackingPrefDialog.class);
-			prefs_ = prefs_.node(TrackingPrefDialog.class.getName());
-		}
-		
+	
 		GenericDialog dlg = new GenericDialog("Tracking Options");
 		dlg.addMessage("- Tracking -");
 		dlg.addNumericField("Max Displacement", trackerMaxDsp_, 1);
