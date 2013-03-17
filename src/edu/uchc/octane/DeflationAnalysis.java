@@ -20,17 +20,12 @@ package edu.uchc.octane;
 
 import java.awt.Rectangle;
 import java.util.Arrays;
+
 import ij.process.ImageProcessor;
 
-public class DeflationAnalysis {
+public class DeflationAnalysis extends ParticleAnalysis {
 
-	double [] x_;
-	double [] y_;
-	double [] e_;
-	double [] h_;
-	int nParticles_;
-	
-	private class Pixel implements Comparable<Pixel> {
+	class Pixel implements Comparable<Pixel> {
 		
 		public int value;
 		public int x;
@@ -46,7 +41,7 @@ public class DeflationAnalysis {
 			return value - o.value; 
 		}
 	}
-	
+
 	public void process(ImageProcessor ip, Rectangle mask, int kernelSize, double sigma, int threshold, boolean bZeroBackground) {
 		Rectangle bbox = new Rectangle(kernelSize, kernelSize, ip.getWidth() - 2 * kernelSize, ip.getHeight() - 2 * kernelSize);
 		bbox = (Rectangle) mask.createIntersection(bbox);
@@ -106,25 +101,5 @@ public class DeflationAnalysis {
 				}
 			}
 		}
-	}
-
-	public double [] reportX() {
-		return x_;
-	}
-
-	public double [] reportY() {
-		return y_;
-	}
-	
-	public double [] reportH() {
-		return h_;
-	}
-
-	public double [] reportE() {
-		return e_;
-	}
-	
-	public int reportNumParticles() {
-		return nParticles_;
 	}
 }

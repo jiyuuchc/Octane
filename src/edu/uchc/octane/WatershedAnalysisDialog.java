@@ -1,21 +1,3 @@
-//FILE:          DeflationAnalysisDialog.java
-//PROJECT:       Octane
-//-----------------------------------------------------------------------------
-//
-// AUTHOR:       Ji Yu, jyu@uchc.edu, 3/30/13
-//
-// LICENSE:      This file is distributed under the BSD license.
-//               License text is included with the source distribution.
-//
-//               This file is distributed in the hope that it will be useful,
-//               but WITHOUT ANY WARRANTY; without even the implied warranty
-//               of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-//
-//               IN NO EVENT SHALL THE COPYRIGHT OWNER OR
-//               CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-//               INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES./**
-//
-
 package edu.uchc.octane;
 
 import java.awt.AWTEvent;
@@ -29,46 +11,55 @@ import ij.gui.DialogListener;
 import ij.gui.GenericDialog;
 import ij.process.ImageProcessor;
 
-public class DeflationAnalysisDialog extends ParticleAnalysisDialog {
+public class WatershedAnalysisDialog extends ParticleAnalysisDialog {
 
 	DialogListener dialogListener_;
 	
 	static Preferences prefs_ = null;
+
 	int kernelSize_;
 	double sigma_;
 	boolean zeroBg_;
-	int deflationThreshold_;
+	int watershedThreshold_;
+	int watershedNoise_;
 
 	final static String KERNELSIZE_KEY = "kernelSize";
 	final static String SIGMA_KEY = "sigma";
 	final static String ZERO_BACKGROUND_KEY = "zeroBackground";
-	final static String DEFLATION_THRESHOLD= "deflationThreshold";
+	final static String WATERSHED_THRESHOLD_KEY = "threshold";
+	final static String WATERSHED_NOISE_KEY = "noise";
 	
-	public DeflationAnalysisDialog(ImagePlus imp) {
-		super(imp, "Deflation parameters:" + imp.getTitle());
+	public WatershedAnalysisDialog(ImagePlus imp) {
+		super(imp, "Watershed parameters:" + imp.getTitle());
 
-		if ( prefs_ == null ) {
-			prefs_ = GlobalPrefs.getRoot().node(DeflationAnalysisDialog.class.getName());
+		if (prefs_ == null) {
+			prefs_ = GlobalPrefs.getRoot().node(WatershedAnalysisDialog.class.getName());
 		}
 		kernelSize_ = prefs_.getInt(KERNELSIZE_KEY, 2);
 		sigma_ = prefs_.getDouble(SIGMA_KEY, 0.8);
 		zeroBg_ = prefs_.getBoolean(ZERO_BACKGROUND_KEY, false);
-		deflationThreshold_ = prefs_.getInt(DEFLATION_THRESHOLD, 100);
+		watershedThreshold_ = prefs_.getInt(WATERSHED_THRESHOLD_KEY, 100);
+		watershedNoise_ = prefs_.getInt(WATERSHED_NOISE_KEY, 100);
 		
-		module_ = new DeflationAnalysis();
-		
+		module_ = new WatershedAnalysis();
+
 		setupDialog();
 
 	}
 
 	void setupDialog() {
+		
 		addNumericField("Kernel Size (pixels)", kernelSize_, 0);
 		addNumericField("PSF sigma (pixels)", sigma_, 2);
-		addSlider("Intensity Threshold", 20, 40000.0, deflationThreshold_);
 		addCheckbox("Zero Background", zeroBg_);
+		
+		addSlider("Intensity Threshold", 20, 40000.0, watershedThreshold_);
+		addSlider("Noise Threshold", 1, 5000.0, watershedNoise_);
+		
 
 		Vector<Scrollbar> sliders = (Vector<Scrollbar>)getSliders();
-		sliders.get(0).setUnitIncrement(20); // default was 1 
+		sliders.get(0).setUnitIncrement(20); // default was 1
+		sliders.get(1).setUnitIncrement(20); // default was 1
 
 		dialogListener_ = new DialogListener() {
 			@Override
@@ -79,8 +70,10 @@ public class DeflationAnalysisDialog extends ParticleAnalysisDialog {
 
 				kernelSize_ = (int) getNextNumber();
 				sigma_ = getNextNumber();
-				deflationThreshold_ = (int) getNextNumber();
 				zeroBg_ = (boolean) getNextBoolean();
+				
+				watershedThreshold_ = (int) getNextNumber();
+				watershedNoise_ = (int) getNextNumber();
 
 				updateResults();
 
@@ -99,7 +92,8 @@ public class DeflationAnalysisDialog extends ParticleAnalysisDialog {
 		prefs_.putInt(KERNELSIZE_KEY, kernelSize_);
 		prefs_.putDouble(SIGMA_KEY, sigma_);
 		prefs_.putBoolean(ZERO_BACKGROUND_KEY, zeroBg_);
-		prefs_.putInt(DEFLATION_THRESHOLD, deflationThreshold_);
+		prefs_.putInt(WATERSHED_THRESHOLD_KEY, watershedThreshold_);
+		prefs_.putInt(WATERSHED_NOISE_KEY, watershedNoise_);
 	}
 
 	@Override
@@ -114,8 +108,9 @@ public class DeflationAnalysisDialog extends ParticleAnalysisDialog {
 	@Override
 	public void processCurrentFrame(ImageProcessor ip) {
 		
-		DeflationAnalysis module = (DeflationAnalysis) module_;  
-		
-		module.process(ip, rect_, kernelSize_, sigma_, deflationThreshold_, zeroBg_);	
+		WatershedAnalysis module = (WatershedAnalysis) module_;  
+		module.setGaussianFitParameters(kernelSize_, sigma_, zeroBg_, true);
+		module.process(ip, rect_, watershedThreshold_, watershedNoise_);	
 	}
+
 }

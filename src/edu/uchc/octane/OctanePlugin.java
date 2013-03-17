@@ -31,6 +31,7 @@ import javax.swing.UIManager;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.WindowManager;
+import ij.gui.NonBlockingGenericDialog;
 import ij.io.FileInfo;
 import ij.plugin.PlugIn;
 
@@ -42,6 +43,7 @@ public class OctanePlugin implements PlugIn{
 
 	ImagePlus imp_;
 	OctaneWindowControl ctl_;
+	ParticleAnalysisDialog dlg_;
 
 	protected static HashMap<ImagePlus, OctanePlugin> dict_ = new HashMap<ImagePlus,OctanePlugin>();
 
@@ -85,25 +87,35 @@ public class OctanePlugin implements PlugIn{
 		});
 	}
 
-	void startImageAnalysis() {
-		DeflationAnalysisDialog dlg = new DeflationAnalysisDialog(imp_);
-
-		dlg.showDialog();
-
-		if (dlg.wasOKed()) {
-			SmNode [][] nodes = dlg.processAllFrames();
-			
-			if ( TrackingParameters.openDialog() ) { //wasOKed ?
-
-				TrajDataset data = TrajDataset.createDatasetFromNodes(nodes);
-				openWindow(data);
-				
-				return;
-			}
-		}
+	boolean startImageAnalysis() {
+		dlg_ = new WatershedAnalysisDialog(imp_);
 		
-		// if the action is cancelled
-		dict_.remove(imp_);
+		imp_.getWindow().addWindowListener(new WindowAdapter() {
+			
+			boolean wasVisible;
+			
+			@Override
+			public void windowIconified(WindowEvent e) {
+				wasVisible = dlg_.isVisible();
+				dlg_.setVisible(false);
+			}
+
+			@Override
+			public void windowDeiconified(WindowEvent e) {
+				if (dlg_.isDisplayable()) {
+					dlg_.setVisible(wasVisible);
+				}
+			}
+
+			@Override
+			public void windowClosed(WindowEvent e) {
+				dlg_.dispose();
+			}
+		});
+		
+		dlg_.showDialog();
+
+		return dlg_.wasOKed();
 	}
 
 	TrajDataset readDataset(File f) throws IOException, ClassNotFoundException {
@@ -145,19 +157,32 @@ public class OctanePlugin implements PlugIn{
 
 		if (dict_.containsKey(imp_)) { // window already open
 			OctanePlugin plugin = dict_.get(imp_);
-			if (plugin != null) {
+			if (plugin != null && cmd.equals("load")) {
 				plugin.ctl_.getWindow().setVisible(true);
+				return;
 			} else {
 				// do nothing
 			}
-			return;
 		}
+
+		if (cmd.equals("analyze")) {
 			
-		
-		if (cmd.equals("browser")) {
 			dict_.put(imp_, null);
-			startImageAnalysis();
-			return;
+			
+			if (startImageAnalysis()) { // wasOked?
+
+				SmNode [][] nodes = dlg_.processAllFrames();
+				
+				if ( TrackingParameters.openDialog() ) { //wasOKed ?
+
+					TrajDataset data = TrajDataset.createDatasetFromNodes(nodes);
+					openWindow(data);
+					
+					return;
+				} 
+			} 
+				
+			dict_.remove(imp_);				
 		}
 
 
