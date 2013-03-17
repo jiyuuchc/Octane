@@ -32,7 +32,7 @@ import java.awt.Rectangle;
  */
 public class FlowAnalysis {
 	
-	double IFSScaleFactor_ = 1;
+	static double scaleFactor_ = 1;
 	
 	TrajDataset dataset_;
 	
@@ -51,10 +51,10 @@ public class FlowAnalysis {
 		}
 		rect = imp.getProcessor().getRoi();
  
-		int w = (int)(rect.width * IFSScaleFactor_);
-		int h = (int)(rect.height * IFSScaleFactor_);
+		int w = (int)(rect.width * scaleFactor_);
+		int h = (int)(rect.height * scaleFactor_);
 		
-		int smoothArea = (int) (IFSScaleFactor_ / 2);
+		int smoothArea = (int) (scaleFactor_ / 2);
 		int[] dx = new int[4 * (smoothArea * smoothArea + 1) + 1];
 		int[] dy = new int[4 * (smoothArea * smoothArea + 1) + 1];
 		int cnt = 0;
@@ -76,8 +76,8 @@ public class FlowAnalysis {
 			Trajectory t = dataset_.getTrajectoryByIndex(selected[i]);
 			for (j = 1; j < t.size(); j++) {
 				if ( rect.contains(t.get(j-1).x, t.get(j-1).y)) {
-					int x = (int) ((t.get(j-1).x - rect.x) * IFSScaleFactor_);
-					int y = (int) ((t.get(j-1).y - rect.y) * IFSScaleFactor_) ;
+					int x = (int) ((t.get(j-1).x - rect.x) * scaleFactor_);
+					int y = (int) ((t.get(j-1).y - rect.y) * scaleFactor_) ;
 					for ( int k = 0; k < cnt; k++) {
 						int nx = x+dx[k];
 						int ny = y+dy[k];
