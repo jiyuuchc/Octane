@@ -40,7 +40,7 @@ public class TrackingParameters {
 	/**
 	 * Open dialog.
 	 */
-	static public void openDialog() {
+	static public boolean openDialog() {
 	
 		GenericDialog dlg = new GenericDialog("Tracking Options");
 		dlg.addMessage("- Tracking -");
@@ -50,7 +50,7 @@ public class TrackingParameters {
 
 		dlg.showDialog();
 		if (dlg.wasCanceled())
-			return;
+			return false;
 		
 		trackerMaxDsp_ = dlg.getNextNumber();
 		trackerMaxBlinking_ = (int) dlg.getNextNumber();
@@ -59,5 +59,7 @@ public class TrackingParameters {
 		prefs_.putInt(MAX_BLINKING_KEY,trackerMaxBlinking_);
 		prefs_.putDouble(MAX_DISPLACEMENT_KEY, trackerMaxDsp_);
 		prefs_.putDouble(ERROR_THRESHOLD_KEY , errorThreshold_);
+		
+		return true;
 	}
 }

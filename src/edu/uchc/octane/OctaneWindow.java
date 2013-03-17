@@ -42,7 +42,7 @@ import bsh.Interpreter;
  */
 public class OctaneWindow extends JFrame {
 
-	private OctaneWindowControl ctlr_ = null;
+	private OctaneWindowControl ctr_ = null;
 	private JSplitPane contentPane_;
 	private TrajsTable trajsTable_;
 	private NodesTable nodesTable_;
@@ -69,7 +69,7 @@ public class OctaneWindow extends JFrame {
 		JMenuItem mntmSave = new JMenuItem("Save");
 		mntmSave.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				ctlr_.saveDataset(); 
+				ctr_.saveDataset(); 
 			}
 		});
 		mnFile.add(mntmSave);
@@ -78,7 +78,7 @@ public class OctaneWindow extends JFrame {
 		mntmRebuild.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				setVisible(false);
-				ctlr_.rebuildTrajectories();
+				ctr_.rebuildTrajectories();
 				if (isDisplayable()) {
 					setVisible(true);
 				}
@@ -93,8 +93,8 @@ public class OctaneWindow extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				try {
 					JFileChooser fc = new JFileChooser();
-					if (fc.showSaveDialog(ctlr_.getWindow()) == JFileChooser.APPROVE_OPTION) {
-						ctlr_.exportTrajectories(fc.getSelectedFile());
+					if (fc.showSaveDialog(ctr_.getWindow()) == JFileChooser.APPROVE_OPTION) {
+						ctr_.exportTrajectories(fc.getSelectedFile());
 					}
 				} catch (IOException err) {
 					IJ.showMessage("Can't save file! " + err.getMessage()); 
@@ -108,8 +108,8 @@ public class OctaneWindow extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				try {
 					JFileChooser fc = new JFileChooser();
-					if (fc.showSaveDialog(ctlr_.getWindow()) == JFileChooser.APPROVE_OPTION) {
-						ctlr_.exportNodes(fc.getSelectedFile());
+					if (fc.showSaveDialog(ctr_.getWindow()) == JFileChooser.APPROVE_OPTION) {
+						ctr_.exportNodes(fc.getSelectedFile());
 					}
 				} catch (IOException err) {
 					IJ.showMessage("Can't save file! " + err.getMessage()); 
@@ -127,7 +127,7 @@ public class OctaneWindow extends JFrame {
 		JMenuItem mntmDelete = new JMenuItem("Delete");
 		mntmDelete.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				ctlr_.deleteSelectedTrajectories();
+				ctr_.deleteSelectedTrajectories();
 				trajsTable_.clearSelection();
 				trajsTable_.tableDataChanged();
 			}
@@ -136,7 +136,7 @@ public class OctaneWindow extends JFrame {
 		JMenuItem mntmCopy = new JMenuItem("Copy");
 		mntmCopy.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				ctlr_.copySelectedTrajectories();
+				ctr_.copySelectedTrajectories();
 			}
 		});
 		mnEdit.add(mntmCopy);
@@ -156,7 +156,7 @@ public class OctaneWindow extends JFrame {
 		mntmSelectRoi.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				trajsTable_.getSelectionModel().setValueIsAdjusting(true);
-				ctlr_.selectTrajectoriesWithinRoi();
+				ctr_.selectTrajectoriesWithinRoi();
 				trajsTable_.getSelectionModel().setValueIsAdjusting(false);
 			}
 		});
@@ -186,7 +186,7 @@ public class OctaneWindow extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				JCheckBoxMenuItem cb = (JCheckBoxMenuItem) e.getSource();
 				GlobalPrefs.showOverlay_ = cb.getState();
-				ctlr_.drawOverlay();
+				ctr_.drawOverlay();
 			}
 		});
 		mnView.add(chckbxmntmShowOverlay);
@@ -200,7 +200,7 @@ public class OctaneWindow extends JFrame {
 		JMenuItem mntmTraceLengthDistribution = new JMenuItem("Trajectory Length Histogram");
 		mntmTraceLengthDistribution.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				ctlr_.showLengthHistogram();
+				ctr_.showLengthHistogram();
 			}
 		});
 		mnAnalysis.add(mntmTraceLengthDistribution);
@@ -209,7 +209,7 @@ public class OctaneWindow extends JFrame {
 		mntmDisplacementDistribution.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e){
 				if (DspHistogramParameters.showDialog()) {
-					ctlr_.showDisplacementHistogram(DspHistogramParameters.stepSize_);					
+					ctr_.showDisplacementHistogram(DspHistogramParameters.stepSize_);					
 				}
 				
 			}
@@ -225,7 +225,7 @@ public class OctaneWindow extends JFrame {
 				if (gd.wasCanceled())
 					return;
 				int maxSteps = (int) gd.getNextNumber();
-				ctlr_.showMSD(maxSteps);
+				ctr_.showMSD(maxSteps);
 			}
 		});
 		mnAnalysis.add(mntmMsd);
@@ -233,7 +233,7 @@ public class OctaneWindow extends JFrame {
 		JMenuItem mntmResidueHistogram = new JMenuItem("Residue Histogram");
 		mntmResidueHistogram.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				ctlr_.showResidueHistogram();
+				ctr_.showResidueHistogram();
 			}
 		});
 		mnAnalysis.add(mntmResidueHistogram);
@@ -247,7 +247,7 @@ public class OctaneWindow extends JFrame {
 		JMenuItem mntmComputeDrift = new JMenuItem("Compute Drift");
 		mntmComputeDrift.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e){
-				ctlr_.computeDrift();
+				ctr_.computeDrift();
 			}
 		});
 		mnImage.add(mntmComputeDrift);
@@ -274,7 +274,7 @@ public class OctaneWindow extends JFrame {
 		JMenuItem mntmPalm = new JMenuItem("PALM");
 		mntmPalm.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				ctlr_.constructPalm();
+				ctr_.constructPalm();
 			}
 		});
 		mnImage.add(mntmPalm);
@@ -298,7 +298,7 @@ public class OctaneWindow extends JFrame {
 		JMenuItem mntmMobilityMap = new JMenuItem("Mobility Map");
 		mntmMobilityMap.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e){
-				ctlr_.constructMobilityMap();
+				ctr_.constructMobilityMap();
 			}
 		});
 		mnImage.add(mntmMobilityMap);
@@ -314,10 +314,10 @@ public class OctaneWindow extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				JFileChooser fc = new JFileChooser();
-				if (fc.showOpenDialog(ctlr_.getWindow()) == JFileChooser.APPROVE_OPTION) {
+				if (fc.showOpenDialog(ctr_.getWindow()) == JFileChooser.APPROVE_OPTION) {
 					Interpreter bsh = new Interpreter();
 					try {
-						bsh.set("octaneData", ctlr_.getData());
+						bsh.set("octaneData", ctr_.getData());
 						bsh.source(fc.getSelectedFile().getPath());
 					} catch (Exception e1) {
 						IJ.log(e1.toString());
@@ -367,20 +367,20 @@ public class OctaneWindow extends JFrame {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				if (e.getClickCount() == 2 ) {
-					ctlr_.animate();
+					ctr_.animate();
 				}
 			}
 		});
 		trajsTable_.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
-				ctlr_.stopAnimation();
+				ctr_.stopAnimation();
 				
 				if (e.getValueIsAdjusting()) {
 					return;
 				}
 				
-				ctlr_.getImp().killRoi();
+				ctr_.getImp().killRoi();
 				
 				if (nodesTable_ != null) {
 					populateNodesTable();
@@ -390,7 +390,7 @@ public class OctaneWindow extends JFrame {
 		trajsTable_.getModel().addTableModelListener(new TableModelListener() {
 			@Override
 			public void tableChanged(TableModelEvent e) {
-				ctlr_.drawOverlay();
+				ctr_.drawOverlay();
 			}
 		});		
 		trajListScrollPane.setViewportView(trajsTable_);
@@ -417,7 +417,7 @@ public class OctaneWindow extends JFrame {
 		JButton btnCopy = new JButton("Copy");
 		btnCopy.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				ctlr_.copySelectedTrajectories();
+				ctr_.copySelectedTrajectories();
 			}
 		});
 		btnCopy.setToolTipText("Copy selected tracks to clipboard");
@@ -458,7 +458,7 @@ public class OctaneWindow extends JFrame {
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
 				if (!e.getValueIsAdjusting())
-					ctlr_.drawBox();
+					ctr_.drawBox();
 			}
 		} );
 		nodesTableScrollPane.setViewportView(nodesTable_);
@@ -473,11 +473,11 @@ public class OctaneWindow extends JFrame {
 	}
 
 	public OctaneWindowControl getController() {
-		return ctlr_;
+		return ctr_;
 	}
 	
 	public void setController(OctaneWindowControl ctlr) {
-		ctlr_  = ctlr;
+		ctr_  = ctlr;
 		trajsTable_.setData(ctlr.getData());
 	}
 	
@@ -486,8 +486,8 @@ public class OctaneWindow extends JFrame {
 	 */
 	public void dispose() {
 		this.setVisible(false);
-		if (ctlr_ != null ) {
-			ctlr_.saveDataset();
+		if (ctr_ != null ) {
+			ctr_.saveDataset();
 		}
 		GlobalPrefs.savePrefs();
 		super.dispose();
@@ -535,7 +535,7 @@ public class OctaneWindow extends JFrame {
 	private void populateNodesTable() {
 		if (trajsTable_.getSelectedRowCount() > 0) {
 			int index = trajsTable_.getSelectedTrajectoryIndex();
-			nodesTable_.setData(ctlr_.getData().getTrajectoryByIndex(index));
+			nodesTable_.setData(ctr_.getData().getTrajectoryByIndex(index));
 		} else {
 			nodesTable_.setData(null);
 		}

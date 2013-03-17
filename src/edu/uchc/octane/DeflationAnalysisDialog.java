@@ -53,6 +53,7 @@ public class DeflationAnalysisDialog extends NonBlockingGenericDialog {
 	double sigma_;
 	boolean zeroBg_;
 	int deflationThreshold_;
+
 	final static String KERNELSIZE_KEY = "kernelSize";
 	final static String SIGMA_KEY = "sigma";
 	final static String ZERO_BACKGROUND_KEY = "zeroBackground";

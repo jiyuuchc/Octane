@@ -41,10 +41,10 @@ import ij.plugin.PlugIn;
 public class OctanePlugin implements PlugIn{
 
 	ImagePlus imp_;
+	OctaneWindowControl ctl_;
 
-	protected static HashMap<ImagePlus, OctaneWindowControl> dict_ = new HashMap<ImagePlus,OctaneWindowControl>();
-	
-	
+	protected static HashMap<ImagePlus, OctanePlugin> dict_ = new HashMap<ImagePlus,OctanePlugin>();
+
 	/**
 	 * Constructor
 	 */
@@ -52,132 +52,145 @@ public class OctanePlugin implements PlugIn{
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		} catch (Exception e) {
-			e.printStackTrace();
+			System.err.println(e.getMessage());
 		}
 	}
 
-	/**
-	 * Open browser.
-	 *
-	 * @param dataset a prior built dataset
-	 * @throws IOException 
-	 * @throws ClassNotFoundException 
-	 */
-	public void openWindow(TrajDataset dataset) throws IOException, ClassNotFoundException {
-		OctaneWindowControl ctlr = new OctaneWindowControl(imp_);
-		ctlr.setup(dataset);
-		dict_.put(imp_, ctlr);
-		ctlr.getWindow().addWindowListener(new WindowAdapter() {
+	void openWindow(TrajDataset dataset) {
+		ctl_ = new OctaneWindowControl(imp_);
+		
+		ctl_.setup(dataset);
+		dict_.put(imp_, this); // keep the reference to the plugin alive
+
+		imp_.getWindow().addWindowListener(new WindowAdapter() {
+
+			boolean wasVisible;
+
+			@Override
+			public void windowIconified(WindowEvent e) {
+				wasVisible = ctl_.getWindow().isVisible();
+				ctl_.getWindow().setVisible(false);
+			}
+			
+			@Override
+			public void windowDeiconified(WindowEvent e) {
+				ctl_.getWindow().setVisible(wasVisible);
+			}
+			
 			@Override
 			public void windowClosed(WindowEvent e) {
+				ctl_.getWindow().dispose();
 				dict_.remove(imp_);
 			}
 		});
 	}
 
-	/**
-	 * Analyze current image stack
-	 */
-	public void analyze() {
+	void startImageAnalysis() {
 		DeflationAnalysisDialog dlg = new DeflationAnalysisDialog(imp_);
+
 		dlg.showDialog();
+
 		if (dlg.wasOKed()) {
-			OctaneWindowControl ctlr = new OctaneWindowControl(imp_);
-			ctlr.setup(dlg.processAllFrames());
+			SmNode [][] nodes = dlg.processAllFrames();
 			
-			dict_.put(imp_, ctlr);
-			ctlr.getWindow().addWindowListener(new WindowAdapter() {
-				@Override
-				public void windowClosed(WindowEvent e) {
-					dict_.remove(imp_);
-				}
-			});
-		} else {
-			dict_.remove(imp_);
+			if ( TrackingParameters.openDialog() ) { //wasOKed ?
+
+				TrajDataset data = TrajDataset.createDatasetFromNodes(nodes);
+				openWindow(data);
+				
+				return;
+			}
 		}
+		
+		// if the action is cancelled
+		dict_.remove(imp_);
 	}
-	
+
 	TrajDataset readDataset(File f) throws IOException, ClassNotFoundException {
 		TrajDataset dataset;
-		try {
-			IJ.getInstance().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-			IJ.showStatus("Loading data ...");
-			dataset = TrajDataset.loadDataset(f);
-		} finally {
-			IJ.showStatus("");
-			IJ.getInstance().setCursor(Cursor.getDefaultCursor());
-		}
+		IJ.getInstance().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+		IJ.showStatus("Loading data ...");
+		dataset = TrajDataset.loadDataset(f);
+		IJ.showStatus("");
+		IJ.getInstance().setCursor(Cursor.getDefaultCursor());
 		return dataset;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see ij.plugin.PlugIn#run(java.lang.String)
 	 */
 	@Override
 	public void run(String cmd) {
+		String path;
+
 		if (!IJ.isJava16()) {
-			IJ.showMessage("Octane requires Java version 1.6 or higher. Please upgrade the JVM.");
+			IJ.error("Octane requires Java version 1.6 or higher. Please upgrade the JVM.");
 			return;
 		}
-		
-		String path;		
-		
-		if (cmd.equals("options")) {
-			TrackingParameters.openDialog();
-			return;
-		}
-		
-		imp_ = WindowManager.getCurrentImage();
-		
+
+		imp_ = WindowManager.getCurrentImage();		
+
 		if (imp_ == null || imp_.getStack().getSize() < 2) {
-			IJ.showMessage("This only works on a stack");
+			IJ.error("This only works on an opened image stack.");
 			return;
 		}
+
 		FileInfo fi = imp_.getOriginalFileInfo();
 		if (fi != null) {
 			path = fi.directory; 
 		} else {
-			IJ.showMessage("Can't find image's disk location. You must save the data under a unique folder.");
+			IJ.error("Can't find image's disk location. You must save the data on disk first.");
 			return;
 		}
 
 		if (dict_.containsKey(imp_)) { // window already open
-			dict_.get(imp_).getWindow().setVisible(true);
+			OctanePlugin plugin = dict_.get(imp_);
+			if (plugin != null) {
+				plugin.ctl_.getWindow().setVisible(true);
+			} else {
+				// do nothing
+			}
 			return;
 		}
 			
-		try {
-			if (cmd.equals("browser")) {
-				dict_.put(imp_, null);
-				analyze();
-				return;
-			} 
-			if (cmd.equals("load")){					
-				if (path != null) {
-					File file = new File(path + File.separator + imp_.getTitle() + ".dataset");
-					if (file.exists()) { 
-						openWindow(readDataset(file));
-						return;
-					}
-				}
-				IJ.showMessage("You don't seem to have a previously saved " +
-				"analysis at the default location. Please specify another path.");
-				JFileChooser fc = new JFileChooser();
-				if (fc.showOpenDialog(IJ.getApplet()) == JFileChooser.APPROVE_OPTION) {
-					openWindow(readDataset(fc.getSelectedFile()));
-				}
-				return;
-			} 
-			if (cmd.equals("import")) { 
-				JFileChooser fc = new JFileChooser();
-				if (fc.showOpenDialog(IJ.getApplet()) == JFileChooser.APPROVE_OPTION) {
-					openWindow(TrajDataset.importDatasetFromText(fc.getSelectedFile()));
-				}
-				return;
-			}				
-		} catch (Exception e) {
-			IJ.showMessage("Can't load the file! Is it in the correct format? " + e.toString()); 
-		}
 		
+		if (cmd.equals("browser")) {
+			dict_.put(imp_, null);
+			startImageAnalysis();
+			return;
+		}
+
+
+		if (cmd.equals("load")){					
+			assert(path != null); 
+			File file = new File(path + File.separator + imp_.getTitle() + ".dataset");
+			if (file.exists()) { 
+				try { 
+					openWindow(readDataset(file));
+				} catch (IOException e) {
+					IJ.error("An IO error occured reading file: " + file.getName() + "\n " 
+							+ e.getLocalizedMessage());
+				} catch (ClassNotFoundException e) {
+					IJ.error("Can't recognize the file format: " + file.getName() + "\n" 
+							+ e.getLocalizedMessage());
+				}
+			} else {
+				IJ.error("Can't find previous analysis results." 
+						+ " It needs to be saved in the same folder as your image data.");
+			}
+			return;
+		}
+
+		if (cmd.equals("import")) { 
+			JFileChooser fc = new JFileChooser();
+			if (fc.showOpenDialog(IJ.getApplet()) == JFileChooser.APPROVE_OPTION) {
+				try {
+					openWindow(TrajDataset.importDatasetFromText(fc.getSelectedFile()));
+				} catch (IOException e) {
+					IJ.error("An IO error occured reading file: " + fc.getSelectedFile().getName());
+				}
+			}
+			return;
+		}
 	}
 }

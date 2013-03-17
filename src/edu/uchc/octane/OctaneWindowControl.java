@@ -67,12 +67,6 @@ public class OctaneWindowControl implements ClipboardOwner{
 	protected Animator animator_ = null;	
 	OctaneWindow frame_ = null;
 
-	//double [] drift_x_; 
-	//double [] drift_y_;
-	//boolean useFiducial_;
-	
-	public enum IFSType {GaussianSpot, LineOverlay, SquareOverlay};
-
 	/**
 	 * Constructor
 	 *
@@ -87,25 +81,6 @@ public class OctaneWindowControl implements ClipboardOwner{
 		if (fi != null) {
 			path_ = fi.directory; 
 		} 
-		
-		imp.getWindow().addWindowListener(new WindowAdapter() {
-			boolean isVisible;
-			@Override
-			public void windowIconified(WindowEvent e) {
-				isVisible = frame_.isVisible();
-				frame_.setVisible(false);
-			}
-			
-			@Override
-			public void windowDeiconified(WindowEvent e) {
-				frame_.setVisible(isVisible);
-			}
-			
-			@Override
-			public void windowClosed(WindowEvent e) {
-				frame_.dispose();
-			}
-		});
 		
 		imp.getCanvas().addMouseListener(new MouseAdapter() {
 			@Override
@@ -351,8 +326,10 @@ public class OctaneWindowControl implements ClipboardOwner{
 	 * Rebuild trajectories.
 	 */
 	public void rebuildTrajectories(){
-		dataset_.reTrack();
-		frame_.getTrajsTable().setData(dataset_);
+		if (TrackingParameters.openDialog() == true) {
+			dataset_.reTrack();
+			frame_.getTrajsTable().setData(dataset_);
+		}
 	}
 
 	/**
