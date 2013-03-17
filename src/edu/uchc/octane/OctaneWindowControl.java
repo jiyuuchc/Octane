@@ -414,7 +414,7 @@ public class OctaneWindowControl implements ClipboardOwner{
 			d[i] = dl.get(i).doubleValue();
 		}
 		if (d.length <= 1) {
-			IJ.showMessage("Not enough data point. Stepsize too large?");
+			IJ.error(GlobalPrefs.PACKAGE_NAME, "Not enough data point. Stepsize too large?");
 			return;
 		}
 		FloatProcessor ip = new FloatProcessor(1, d.length, d);
@@ -460,7 +460,7 @@ public class OctaneWindowControl implements ClipboardOwner{
 			d[i] = dl.get(i).doubleValue();
 		}
 		if (d.length <= 1) {
-			IJ.showMessage("Not enough data point. Stepsize too large?");
+			IJ.error(GlobalPrefs.PACKAGE_NAME, "Not enough data point. Stepsize too large?");
 			return;
 		}
 		FloatProcessor ip = new FloatProcessor(1, d.length, d);
@@ -566,7 +566,7 @@ public class OctaneWindowControl implements ClipboardOwner{
 			File file = new File(pathname);
 			dataset_.saveDataset(file);
 		} catch (IOException e) {
-			IJ.showMessage("IOError: Failed to save file.");
+			IJ.error(GlobalPrefs.PACKAGE_NAME, "IOError: Failed to save file.");
 		}
 		
 	}

@@ -24,6 +24,8 @@ import java.util.prefs.Preferences;
  */
 public class GlobalPrefs {
 
+	final static String PACKAGE_NAME = "Octane";
+	
 	final static String SHOW_OVERLAY_KEY = "ShowOverlay";
 	final static String HISTOGRAM_BINS_KEY = "histogramBins";
 	final static String COMPENSATE_DRIFT_KEY = "compensateDrift";

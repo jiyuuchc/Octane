@@ -97,7 +97,7 @@ public class OctaneWindow extends JFrame {
 						ctr_.exportTrajectories(fc.getSelectedFile());
 					}
 				} catch (IOException err) {
-					IJ.showMessage("Can't save file! " + err.getMessage()); 
+					IJ.error(GlobalPrefs.PACKAGE_NAME, "Can't save file! " + err.getMessage()); 
 				}
 			}
 		});
@@ -112,7 +112,7 @@ public class OctaneWindow extends JFrame {
 						ctr_.exportNodes(fc.getSelectedFile());
 					}
 				} catch (IOException err) {
-					IJ.showMessage("Can't save file! " + err.getMessage()); 
+					IJ.error(GlobalPrefs.PACKAGE_NAME, "Can't save file! " + err.getMessage()); 
 				}
 			}
 		});
