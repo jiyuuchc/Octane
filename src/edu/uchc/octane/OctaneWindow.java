@@ -255,7 +255,7 @@ public class OctaneWindow extends JFrame {
 		JMenuItem mntmImportDriftData = new JMenuItem("Import Drift Data ...");
 		mntmImportDriftData.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e){
-				// FIX IT
+				ctr_.importDriftData();
 			}
 		});
 		mnImage.add(mntmImportDriftData);

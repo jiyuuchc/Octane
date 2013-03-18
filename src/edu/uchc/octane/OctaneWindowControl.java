@@ -41,6 +41,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import javax.swing.JFileChooser;
+
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.GenericDialog;
@@ -667,5 +669,16 @@ public class OctaneWindowControl implements ClipboardOwner{
 		plotWinY.show();
 		Plot plotWinZ = new Plot("Z-Drift", "T/T-frame", "Drift (pixel)", f, dz);
 		plotWinZ.show();		
+	}
+	
+	public void importDriftData() {
+		JFileChooser fc = new JFileChooser();
+		if (fc.showOpenDialog(IJ.getApplet()) == JFileChooser.APPROVE_OPTION) {
+			try {
+				dataset_.importDriftData(fc.getSelectedFile());
+			} catch (IOException e) {
+				IJ.error("An IO error occured reading file: " + fc.getSelectedFile().getName());
+			}
+		}
 	}
 }

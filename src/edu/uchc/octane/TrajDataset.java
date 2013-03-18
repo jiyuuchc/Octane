@@ -313,13 +313,13 @@ public class TrajDataset{
 	}
 	
 	/**
-	 * Import dataset from peak position text file.
+	 * Import drift data from text file.
 	 *
 	 * @param file the file
 	 * @throws IOException
 	 * @throws OctaneException 
 	 */
-	public void importDriftData(File file) throws IOException, OctaneException {
+	public void importDriftData(File file) throws IOException{
 		BufferedReader br;
 		String line; 
 		br = new BufferedReader(new FileReader(file));
@@ -350,7 +350,12 @@ public class TrajDataset{
 		if (cnt != nFrames) {
 			throw new IOException("Error import drift data: wrong format");
 		}
-		dcm_.setDriftData(drift_x, drift_y, drift_z);
+		
+		try {
+			dcm_.setDriftData(drift_x, drift_y, drift_z);
+		} catch (OctaneException e) {
+			// already checked the size.
+		}
 	}
 
 	public void estimateDrift(int [] selection) {

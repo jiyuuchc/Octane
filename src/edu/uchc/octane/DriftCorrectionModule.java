@@ -17,6 +17,12 @@
 //
 package edu.uchc.octane;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.text.ParseException;
+
 public class DriftCorrectionModule {
 	TrajDataset dataset_;
 
@@ -165,4 +171,48 @@ public class DriftCorrectionModule {
 		correctedNode.z -= drift_z_[frame-1];
 		return correctedNode;
 	}
+	
+//	public void importDriftCorrectionData(File file) throws IOException, ParseException {
+//		BufferedReader br;
+//		String line;
+//		int nFrames = dataset_.getMaximumFrameNumber();
+//		
+//		drift_x_ = new double[nFrames];
+//		drift_y_ = new double[nFrames];
+//		drift_z_ = new double[nFrames];
+//
+//		br = new BufferedReader(new FileReader(file));
+//		int curFrame = 1;
+//		while (null != (line = br.readLine())) {
+//			if (line.startsWith("#") || line.startsWith("//")) {
+//				continue;
+//			}
+//			if (line.trim().isEmpty()) {
+//				continue;
+//			}
+//			
+//			String[] items = line.split("[,\\s]");
+//			
+//			if (items.length < 2 || items.length > 3) {
+//				throw(new ParseException(line, 0));
+//			}
+//			
+//			drift_x_[curFrame -1] = Double.parseDouble(items[0]);
+//			drift_y_[curFrame -1] = Double.parseDouble(items[1]);
+//			
+//			if (items.length == 3) {
+//				drift_z_[curFrame -1] = Double.parseDouble(items[2]);
+//			}
+//			
+//			curFrame ++;
+//		}			
+//		
+//		br.close();
+//		
+//		if (curFrame != nFrames + 1) {
+//			throw(new ParseException(line, 0));
+//		}
+//		
+//		hasDriftCorrectionData_ = true;
+//	}
 }
