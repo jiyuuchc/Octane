@@ -45,9 +45,9 @@ public class TrackingParameters {
 	
 		GenericDialog dlg = new GenericDialog("Tracking Options");
 		dlg.addMessage("- Tracking -");
-		dlg.addNumericField("Max Displacement", trackerMaxDsp_, 1);
+		dlg.addNumericField("Max Displacement (pixels)", trackerMaxDsp_, 1);
 		dlg.addNumericField("Max Blinking", (double)trackerMaxBlinking_, 0);
-		dlg.addNumericField("Max Blinking", (double)trackerLowerBound_, 3);
+		dlg.addNumericField("Resolution (pixels)", (double)trackerLowerBound_, 3);
 		dlg.addNumericField("Confidence Threshold", errorThreshold_, 0);
 
 		dlg.showDialog();
