@@ -29,13 +29,14 @@ public class TrackingParameters {
 	final static String MAX_BLINKING_KEY = "trackerMaxBlinking";
 	final static String MAX_DISPLACEMENT_KEY = "trackerMaxDsp";
 	final static String ERROR_THRESHOLD_KEY = "errorThreshold";
+	final static String LOWER_BOUND_KEY = "lowerBound";
 	
 	private static Preferences prefs_ = GlobalPrefs.getRoot().node(TrackingParameters.class.getName());
 
 	public static double trackerMaxDsp_ = prefs_.getDouble(MAX_DISPLACEMENT_KEY, 2.0);
 	public static int trackerMaxBlinking_ = prefs_.getInt(MAX_BLINKING_KEY, 0);
 	public static double errorThreshold_ = prefs_.getDouble(ERROR_THRESHOLD_KEY, -1.0);
-	public static double trackerLowerBound_ = 0.1;
+	public static double trackerLowerBound_ = prefs_.getDouble(LOWER_BOUND_KEY, 0.1);
 	
 	/**
 	 * Open dialog.
@@ -46,6 +47,7 @@ public class TrackingParameters {
 		dlg.addMessage("- Tracking -");
 		dlg.addNumericField("Max Displacement", trackerMaxDsp_, 1);
 		dlg.addNumericField("Max Blinking", (double)trackerMaxBlinking_, 0);
+		dlg.addNumericField("Max Blinking", (double)trackerLowerBound_, 3);
 		dlg.addNumericField("Confidence Threshold", errorThreshold_, 0);
 
 		dlg.showDialog();
@@ -59,7 +61,7 @@ public class TrackingParameters {
 		prefs_.putInt(MAX_BLINKING_KEY,trackerMaxBlinking_);
 		prefs_.putDouble(MAX_DISPLACEMENT_KEY, trackerMaxDsp_);
 		prefs_.putDouble(ERROR_THRESHOLD_KEY , errorThreshold_);
-		
+		prefs_.putDouble(LOWER_BOUND_KEY, trackerLowerBound_);
 		return true;
 	}
 }

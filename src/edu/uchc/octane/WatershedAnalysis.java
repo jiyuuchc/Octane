@@ -114,9 +114,13 @@ public class WatershedAnalysis extends ParticleAnalysis{
 
 	public void process(ImageProcessor ip, Rectangle mask, int threshold, int noise) {
 		
+		int border = 1;
+		
 		if (isGaussianFit_) {
 			g_ = new GaussianFitting(isZeroBg_);
 			g_.setImageData(ip);
+			
+			border = kernelSize_;
 		}
 
 		width_ = ip.getWidth();
@@ -124,7 +128,7 @@ public class WatershedAnalysis extends ParticleAnalysis{
 		
 		int [] offsets = {-width_, -width_ + 1, +1, +width_ + 1, +width_, +width_ - 1, -1, -width_ - 1};
 	
-		final int border = 1;
+
 		Rectangle bbox = new Rectangle(border, border, width_ - 2 * border, height_ - 2 * border);
 		bbox = bbox.intersection(mask);
 
@@ -199,7 +203,7 @@ public class WatershedAnalysis extends ParticleAnalysis{
 				
 				if (isGaussianFit_) {
 					int result = g_.fitGaussianAt(p.x, p.y, sigma_, kernelSize_);
-					if (result >= 0) {
+					if (result >= 0 && g_.getHeight() > noise ) {
 						x_[nParticles_] = g_.getX();
 						y_[nParticles_] = g_.getY();
 						h_[nParticles_] = g_.getHeight();

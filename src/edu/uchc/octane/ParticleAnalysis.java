@@ -18,6 +18,8 @@
 
 package edu.uchc.octane;
 
+import ij.gui.PointRoi;
+
 public abstract class ParticleAnalysis {
 
 	double [] x_;
@@ -57,4 +59,19 @@ public abstract class ParticleAnalysis {
 		return nodes;
 	}
 
+	public PointRoi createPointRoi() {
+		PointRoi roi = null;
+
+		if (nParticles_ > 0) {
+			int [] xi = new int[nParticles_];
+			int [] yi = new int[nParticles_];
+			for (int i = 0; i < nParticles_; i ++ ) {
+				xi[i] = (int) x_[i];
+				yi[i] = (int) y_[i];
+			}
+			roi = new PointRoi(xi, yi, nParticles_);
+		} 
+		
+		return roi;
+	}
 }
