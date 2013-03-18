@@ -83,7 +83,6 @@ public class TestDataGenerator {
 		imp.show();
 		imp.getCanvas().zoomIn(0,0);
 		imp.getCanvas().zoomIn(0,0);
-
 	}
 
 }

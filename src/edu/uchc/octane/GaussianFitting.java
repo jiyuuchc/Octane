@@ -13,8 +13,7 @@
 //
 //               IN NO EVENT SHALL THE COPYRIGHT OWNER OR
 //               CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-//               INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES./**
-//
+//               INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES.
 
 package edu.uchc.octane;
 
@@ -29,6 +28,7 @@ import org.apache.commons.math.optimization.DifferentiableMultivariateRealOptimi
 import org.apache.commons.math.optimization.GoalType;
 import org.apache.commons.math.optimization.RealPointValuePair;
 import org.apache.commons.math.optimization.direct.PowellOptimizer;
+import org.apache.commons.math.util.FastMath;
 
 import ij.process.ImageProcessor;
 
@@ -116,10 +116,6 @@ public class GaussianFitting implements DifferentiableMultivariateRealFunction {
 		}
 	}
 
-	private double gauss(double x) {
-		return Math.exp(- x*x/sigma2_);
-	}
-
 	public int fitGaussianAt(double x, double y, double sigma, int size) {
 		sigma2_ = sigma * sigma * 2;
 		windowSize_ = size;
@@ -178,7 +174,7 @@ public class GaussianFitting implements DifferentiableMultivariateRealFunction {
 	 * @see org.apache.commons.math.analysis.MultivariateRealFunction#value(double[])
 	 */
 	@Override
-	public double value(double[] p) throws FunctionEvaluationException,IllegalArgumentException {
+	public double value(double[] p) {
 		double xp = p[0];
 		double yp = p[1];
 		double h = p[2];
@@ -188,11 +184,11 @@ public class GaussianFitting implements DifferentiableMultivariateRealFunction {
 		Arrays.fill(gradients_, 0);
 		for (int xi = - windowSize_; xi <= windowSize_; xi++) {
 			for (int yi = - windowSize_; yi <= windowSize_; yi++) {
-				double g = gauss(xp + xi)* gauss(yp + yi);
+				double g = FastMath.exp( -((xp + xi) * (xp + xi) + (yp + yi) * (yp + yi)) / sigma2_);
 				double delta = bg + h*g - pixelValue(x0_ + xi , y0_ + yi);
 				r += delta * delta;
-				gradients_[0] += -4 * delta * h * g * (xp + xi)  / sigma2_ ;
-				gradients_[1] += -4 * delta * h * g * (yp + yi)  / sigma2_ ; 
+				gradients_[0] += - 4 * delta * h * g * ( xp + xi)  / sigma2_ ;
+				gradients_[1] += - 4 * delta * h * g * ( yp + yi)  / sigma2_ ; 
 				gradients_[2] += 2 * delta * g;
 				if (! zeroBg_) {
 					gradients_[3] += 2 * delta;
@@ -206,17 +202,13 @@ public class GaussianFitting implements DifferentiableMultivariateRealFunction {
 	 * @see org.apache.commons.math.analysis.DifferentiableMultivariateRealFunction#partialDerivative(int)
 	 */
 	@Override
-	public MultivariateRealFunction partialDerivative(int k) {
-//		k_ = k;
-//		return new MultivariateRealFunction() {
-//			@Override
-//			public double value(double[] point)
-//					throws FunctionEvaluationException,
-//					IllegalArgumentException {
-//				return gradients_[k_];
-//			}
-//		};
-		return null;
+	public MultivariateRealFunction partialDerivative(final int k) {
+		return new MultivariateRealFunction() {
+			@Override
+			public double value(double[] point) {
+				return gradients_[k];
+			}
+		};
 	}
 
 	/* (non-Javadoc)
@@ -226,9 +218,7 @@ public class GaussianFitting implements DifferentiableMultivariateRealFunction {
 	public MultivariateVectorialFunction gradient() {
 		return new MultivariateVectorialFunction() {
 			@Override
-			public double[] value(double[] point)
-					throws FunctionEvaluationException,
-					IllegalArgumentException {
+			public double[] value(double[] point) {
 				return gradients_;
 			}
 			
@@ -238,7 +228,8 @@ public class GaussianFitting implements DifferentiableMultivariateRealFunction {
 	public void deflate() {
 		for (int xi = - windowSize_; xi <= windowSize_; xi++) {
 			for (int yi = - windowSize_; yi <= windowSize_; yi++) {
-				double g = gauss(parameters_[0] + xi)* gauss(parameters_[1] + yi);
+				double g = FastMath.exp( 
+						- ((parameters_[0] + xi)* (parameters_[0] + xi) + (parameters_[1] + yi) * (parameters_[1] + yi))/sigma2_);
 				imageData_[x0_ + xi + width_ * (y0_ + yi)] -= g * parameters_[2];
 			}
 		}
