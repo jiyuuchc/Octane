@@ -29,8 +29,6 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseAdapter;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.awt.geom.Arc2D;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.Rectangle2D;
@@ -45,7 +43,6 @@ import javax.swing.JFileChooser;
 
 import ij.IJ;
 import ij.ImagePlus;
-import ij.gui.GenericDialog;
 import ij.gui.HistogramWindow;
 import ij.gui.ImageCanvas;
 import ij.gui.Plot;
