@@ -1,0 +1,11 @@
+Version 1.4
+
++ Implemented stage drift correction functions in PALM.
++ Improved particle analysis algorithm. Detect >99% particles when density <= 0.1 particle/um^2
++ Cleaned up the UI.
++ Some of the testing modules are now included in the code.
++ Data import from text file should be a bit "smarter" now
++ Bug fixes
+
+
+ 
