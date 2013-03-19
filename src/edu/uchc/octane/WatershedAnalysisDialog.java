@@ -41,8 +41,6 @@ public class WatershedAnalysisDialog extends ParticleAnalysisDialog {
 		watershedThreshold_ = prefs_.getInt(WATERSHED_THRESHOLD_KEY, 100);
 		watershedNoise_ = prefs_.getInt(WATERSHED_NOISE_KEY, 100);
 		
-		module_ = new WatershedAnalysis();
-
 		setupDialog();
 
 	}
@@ -106,11 +104,12 @@ public class WatershedAnalysisDialog extends ParticleAnalysisDialog {
 	}
 	
 	@Override
-	public void processCurrentFrame(ImageProcessor ip) {
+	public WatershedAnalysis processCurrentFrame(ImageProcessor ip) {
 		
-		WatershedAnalysis module = (WatershedAnalysis) module_;  
+		WatershedAnalysis module = new WatershedAnalysis();  
 		module.setGaussianFitParameters(kernelSize_, sigma_, zeroBg_, true);
-		module.process(ip, rect_, watershedThreshold_, watershedNoise_);	
+		module.process(ip, rect_, watershedThreshold_, watershedNoise_);
+		return module;
 	}
 
 }

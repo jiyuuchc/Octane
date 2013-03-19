@@ -1,6 +1,7 @@
 package edu.uchc.octane.test;
 
 import edu.uchc.octane.GaussianFitting;
+import edu.uchc.octane.GaussianFittingM3;
 import ij.process.ShortProcessor;
 
 public class GaussianFittingTest {

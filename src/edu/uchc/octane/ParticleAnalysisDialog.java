@@ -35,9 +35,13 @@ public abstract class ParticleAnalysisDialog extends NonBlockingGenericDialog {
 	
 	ImageListener imageListener_;
 	
-	ParticleAnalysis module_ = null;
 	private SmNode[][] nodes_ = null;  
 	
+	Integer lastFrame_;
+	Integer nFound_;
+	
+	final static int nThreads_ = 4;
+
 	public ParticleAnalysisDialog(ImagePlus imp, String title) {
 		super(title);
 
@@ -72,27 +76,63 @@ public abstract class ParticleAnalysisDialog extends NonBlockingGenericDialog {
 		imp_.killRoi();
 		IJ.log("Particle Analysis -- Searching for particles:");
 
-		ImageStack stack = imp_.getImageStack();
+		final ImageStack stack = imp_.getImageStack();
 		
 		nodes_ = new SmNode[stack.getSize()][];
 		
-		int nFound = 0;
-		for (int frame = 1; frame <= stack.getSize(); frame++) {
-			if ((frame % 50) == 0) {
-				IJ.log("Processed: "+ frame + "frames.");
+		lastFrame_ = 0;
+		nFound_ = 0;
+
+		class ProcessThread extends Thread {
+
+			public void run() {
+				int curFrame = 1;
+				do {
+					synchronized(lastFrame_) {
+						if (lastFrame_ < stack.getSize()) {
+							lastFrame_ ++;
+							curFrame = lastFrame_;
+						} else {
+							return;
+						}
+					}
+					if ((curFrame % 50) == 0) {
+						IJ.log("Processed: "+ curFrame + "frames.");
+					}
+					
+					IJ.showProgress(curFrame, stack.getSize());
+					
+					ImageProcessor ip = stack.getProcessor(curFrame);
+					
+					ParticleAnalysis module = processCurrentFrame(ip);
+					
+					nodes_[curFrame - 1] = module.createSmNodes(curFrame);
+
+					int nParticles = module.reportNumParticles();
+					
+					synchronized(nFound_) {
+						nFound_ += nParticles;
+					}
+
+				} while(curFrame < stack.getSize());
 			}
-			
-			IJ.showProgress(frame, stack.getSize());
-			
-			ImageProcessor ip = stack.getProcessor(frame);
-			
-			processCurrentFrame(ip);
-			
-			nodes_[frame - 1] = module_.createSmNodes(frame);
-			int nParticles = module_.reportNumParticles();
-			nFound += nParticles;
 		}
-		IJ.log(imp_.getTitle() + "- Found " + nFound + " particles.");
+		
+		ProcessThread [] threads = new ProcessThread[nThreads_];
+		
+		for (int i = 0; i < nThreads_; i++ ) {
+			threads[i] =  new ProcessThread();
+			threads[i].start();
+		}
+		
+		for (int i = 0; i < nThreads_; i++ ) {
+			try {
+				threads[i].join();
+			} catch (InterruptedException e) {
+			}
+		}
+		
+		IJ.log(imp_.getTitle() + "- Found " + nFound_ + " particles.");
 		
 		return nodes_;
 	}
@@ -102,9 +142,9 @@ public abstract class ParticleAnalysisDialog extends NonBlockingGenericDialog {
 			return;
 		}
 
-		processCurrentFrame(imp_.getProcessor());
+		ParticleAnalysis module = processCurrentFrame(imp_.getProcessor());
 		
-		int nParticles = module_.reportNumParticles();
+		int nParticles = module.reportNumParticles();
 		if (nParticles <= 0) {
 			imp_.killRoi();
 			return;
@@ -113,8 +153,8 @@ public abstract class ParticleAnalysisDialog extends NonBlockingGenericDialog {
 		PointRoi roi;
 
 		if (nParticles > 0) {
-			double [] x = module_.reportX();
-			double [] y = module_.reportY();
+			double [] x = module.reportX();
+			double [] y = module.reportY();
 			int [] xi = new int[nParticles];
 			int [] yi = new int[nParticles];
 			for (int i = 0; i < nParticles; i ++ ) {
@@ -140,5 +180,5 @@ public abstract class ParticleAnalysisDialog extends NonBlockingGenericDialog {
 		return nodes_;
 	}	
 	
-	abstract public void processCurrentFrame(ImageProcessor ip);
+	abstract public ParticleAnalysis processCurrentFrame(ImageProcessor ip);
 }

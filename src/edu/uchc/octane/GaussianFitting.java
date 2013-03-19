@@ -146,7 +146,7 @@ public class GaussianFitting implements DifferentiableMultivariateRealFunction {
 	}
 	
 	void fit() throws ConvergenceException, FunctionEvaluationException, IllegalArgumentException {
-		DifferentiableMultivariateRealOptimizer gno = new PowellOptimizer();
+		PowellOptimizer gno = new PowellOptimizer();
 		//gno.setMaxIterations(500);
 		parameters_[2] = pixelValue(x0_ , y0_);
 		if (!zeroBg_) {
@@ -181,18 +181,12 @@ public class GaussianFitting implements DifferentiableMultivariateRealFunction {
 		double bg = zeroBg_?0:p[3];
 		
 		double r = 0;
-		Arrays.fill(gradients_, 0);
+
 		for (int xi = - windowSize_; xi <= windowSize_; xi++) {
 			for (int yi = - windowSize_; yi <= windowSize_; yi++) {
 				double g = FastMath.exp( -((xp + xi) * (xp + xi) + (yp + yi) * (yp + yi)) / sigma2_);
 				double delta = bg + h*g - pixelValue(x0_ + xi , y0_ + yi);
 				r += delta * delta;
-				gradients_[0] += - 4 * delta * h * g * ( xp + xi)  / sigma2_ ;
-				gradients_[1] += - 4 * delta * h * g * ( yp + yi)  / sigma2_ ; 
-				gradients_[2] += 2 * delta * g;
-				if (! zeroBg_) {
-					gradients_[3] += 2 * delta;
-				}
 			}
 		}
 		return r;

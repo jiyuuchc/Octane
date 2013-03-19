@@ -34,7 +34,7 @@ public class GlobalPrefs {
 
 	public static boolean showOverlay_ = prefs_.getBoolean(SHOW_OVERLAY_KEY, false);
 	public static int histogramBins_ = prefs_.getInt(HISTOGRAM_BINS_KEY , 20);
-	public static boolean compensateDrift_ = prefs_.getBoolean(COMPENSATE_DRIFT_KEY, false);
+	public static boolean compensateDrift_ = prefs_.getBoolean(COMPENSATE_DRIFT_KEY, false); 
 	
 	public static Preferences getRoot() {
 		return prefs_;

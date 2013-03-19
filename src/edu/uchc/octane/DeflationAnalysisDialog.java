@@ -55,8 +55,6 @@ public class DeflationAnalysisDialog extends ParticleAnalysisDialog {
 		zeroBg_ = prefs_.getBoolean(ZERO_BACKGROUND_KEY, false);
 		deflationThreshold_ = prefs_.getInt(DEFLATION_THRESHOLD, 100);
 		
-		module_ = new DeflationAnalysis();
-		
 		setupDialog();
 
 	}
@@ -112,10 +110,12 @@ public class DeflationAnalysisDialog extends ParticleAnalysisDialog {
 	}
 	
 	@Override
-	public void processCurrentFrame(ImageProcessor ip) {
+	public DeflationAnalysis processCurrentFrame(ImageProcessor ip) {
 		
-		DeflationAnalysis module = (DeflationAnalysis) module_;  
+		DeflationAnalysis module = new DeflationAnalysis();  
 		
-		module.process(ip, rect_, kernelSize_, sigma_, deflationThreshold_, zeroBg_);	
+		module.process(ip, rect_, kernelSize_, sigma_, deflationThreshold_, zeroBg_);
+		
+		return module;
 	}
 }
