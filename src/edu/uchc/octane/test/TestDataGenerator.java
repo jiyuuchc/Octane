@@ -17,7 +17,7 @@ public class TestDataGenerator {
 		short [] pixels = (short[])ip.getPixels();
 		
 		for (int i = 0; i < pixels.length; i++) {
-			pixels[i] += (int) (noise * randn() + 0.5);
+			pixels[i] += (short) (noise * randn() + 0.5);
 		}
 	}
 	

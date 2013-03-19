@@ -49,7 +49,7 @@ public class WatershedAnalysisDialog extends ParticleAnalysisDialog {
 		
 		addNumericField("Kernel Size (pixels)", kernelSize_, 0);
 		addNumericField("PSF sigma (pixels)", sigma_, 2);
-		addCheckbox("Zero Background", zeroBg_);
+		addCheckbox("Preprocess background", zeroBg_);
 		
 		addSlider("Intensity Threshold", 20, 40000.0, watershedThreshold_);
 		addSlider("Noise Threshold", 1, 5000.0, watershedNoise_);

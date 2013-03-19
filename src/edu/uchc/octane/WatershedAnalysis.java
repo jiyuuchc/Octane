@@ -27,12 +27,13 @@ import ij.process.ImageProcessor;
 
 public class WatershedAnalysis extends ParticleAnalysis{
 	
-	boolean isGaussianFit_ = false;
+	boolean bDoGaussianFit_ = false;
+	boolean bDoDeflation_;
 	
 	int kernelSize_;
 	double sigma_;
 	boolean isZeroBg_;
-	boolean isDeflation_;
+
 	
 	GaussianFitting g_ = null;
 	
@@ -99,24 +100,24 @@ public class WatershedAnalysis extends ParticleAnalysis{
 		kernelSize_ = kernelSize;
 		sigma_ = sigma;
 		isZeroBg_ = bZeroBackground;
-		isDeflation_ = bDeflation;
+		bDoDeflation_ = bDeflation;
 		
-		isGaussianFit_ = true;
+		bDoGaussianFit_ = true;
 	}
 
 	public void setGaussianFit(boolean b) {
-		isGaussianFit_ = b;
+		bDoGaussianFit_ = b;
 	}
 	
 	public boolean isGaussianFit() {
-		return isGaussianFit_;
+		return bDoGaussianFit_;
 	}
 
 	public void process(ImageProcessor ip, Rectangle mask, int threshold, int noise) {
 		
 		int border = 1;
 		
-		if (isGaussianFit_) {
+		if (bDoGaussianFit_) {
 			g_ = new GaussianFitting(isZeroBg_);
 			g_.setImageData(ip);
 			
@@ -201,7 +202,7 @@ public class WatershedAnalysis extends ParticleAnalysis{
 
 			if (isMax) {
 				
-				if (isGaussianFit_) {
+				if (bDoGaussianFit_) {
 					int result = g_.fitGaussianAt(p.x, p.y, sigma_, kernelSize_);
 					if (result >= 0 && g_.getHeight() > noise ) {
 						x_[nParticles_] = g_.getX();
@@ -210,7 +211,7 @@ public class WatershedAnalysis extends ParticleAnalysis{
 						e_[nParticles_] = g_.getError();
 						nParticles_++;
 						
-						if (isDeflation_) {
+						if (bDoDeflation_) {
 							g_.deflate();
 						}
 					}

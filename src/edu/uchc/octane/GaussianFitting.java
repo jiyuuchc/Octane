@@ -17,14 +17,11 @@
 
 package edu.uchc.octane;
 
-import java.util.Arrays;
-
 import org.apache.commons.math.FunctionEvaluationException;
 import org.apache.commons.math.analysis.DifferentiableMultivariateRealFunction;
 import org.apache.commons.math.analysis.MultivariateRealFunction;
 import org.apache.commons.math.analysis.MultivariateVectorialFunction;
 import org.apache.commons.math.ConvergenceException;
-import org.apache.commons.math.optimization.DifferentiableMultivariateRealOptimizer;
 import org.apache.commons.math.optimization.GoalType;
 import org.apache.commons.math.optimization.RealPointValuePair;
 import org.apache.commons.math.optimization.direct.PowellOptimizer;
@@ -88,12 +85,12 @@ public class GaussianFitting implements DifferentiableMultivariateRealFunction {
 		if (pixels instanceof byte[]) {
 			byte[] b = (byte[])pixels;
 			for (int i = 0; i < b.length; i++) {
-				imageData_[i] = (double) (b[i] & 0xff);
+				imageData_[i] = (double) (b[i] & 0xff);  //assume unsigned
 			}
 		} else if (pixels instanceof short[]) {
 			short [] b = (short [])pixels;
 			for (int i = 0; i < b.length; i++) {
-				imageData_[i] = (double) (b[i] & 0xffff);
+				imageData_[i] = (double) (b[i] & 0xffff); //assume unsigned
 			}
 		} else if (pixels instanceof float[]) {
 			float [] b = (float [])pixels;
@@ -121,9 +118,9 @@ public class GaussianFitting implements DifferentiableMultivariateRealFunction {
 		windowSize_ = size;
 		x0_ = (int) x;
 		y0_ = (int) y;
-		parameters_[0] = x0_ + .5 - x;
-		parameters_[1] = y0_ + .5 - y;
-
+		parameters_[0] = 0; 
+		parameters_[1] = 0; 
+		
 		try {
 			fit();
 		} catch (ConvergenceException e) {
@@ -140,7 +137,7 @@ public class GaussianFitting implements DifferentiableMultivariateRealFunction {
 
 		return 0;
 	}
-	
+
 	private double pixelValue(int x, int y) {
 		return imageData_[x + y * width_];
 	}
@@ -184,7 +181,7 @@ public class GaussianFitting implements DifferentiableMultivariateRealFunction {
 
 		for (int xi = - windowSize_; xi <= windowSize_; xi++) {
 			for (int yi = - windowSize_; yi <= windowSize_; yi++) {
-				double g = FastMath.exp( -((xp + xi) * (xp + xi) + (yp + yi) * (yp + yi)) / sigma2_);
+				double g = FastMath.exp( -(( -xp + xi) * ( -xp + xi) + ( -yp + yi) * ( -yp + yi)) / sigma2_);
 				double delta = bg + h*g - pixelValue(x0_ + xi , y0_ + yi);
 				r += delta * delta;
 			}
@@ -230,11 +227,11 @@ public class GaussianFitting implements DifferentiableMultivariateRealFunction {
 	}
 	
 	public double getX() {
-		return (x0_ + .5 - parameters_[0]) ;
+		return (x0_ + .5 + parameters_[0]) ;
 	}
 
 	public double getY() {
-		return (y0_ + .5 - parameters_[1]);
+		return (y0_ + .5 + parameters_[1]);
 	}
 
 	public double getHeight() {
