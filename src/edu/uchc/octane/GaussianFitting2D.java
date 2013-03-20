@@ -15,7 +15,7 @@ public class GaussianFitting2D extends BaseGaussianFitting {
 	double [] parameters_;
 	double v_;
 	boolean zeroBg_ = false;
-	boolean floatingSigma_ = false;
+	boolean floatingSigma_ = true;
 
 	public void setZeroBackground(boolean b) {
 		zeroBg_ = b;

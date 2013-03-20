@@ -1,8 +1,10 @@
 package edu.uchc.octane.test;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import org.apache.commons.math3.stat.StatUtils;
+import org.apache.commons.math3.util.FastMath;
 
 import edu.uchc.octane.BaseGaussianFitting;
 import edu.uchc.octane.GaussianFitting2D;
@@ -10,9 +12,7 @@ import edu.uchc.octane.GaussianFitting2D;
 import ij.process.ShortProcessor;
 
 public class GaussianFittingTest {
-	final static int size = 5;
-	final static double sigma = 1;
-	
+
 	class ErrorCalculation {
 		double[] d;
 		int cnt;
@@ -27,7 +27,7 @@ public class GaussianFittingTest {
 		}
 		
 		public double getVariance() {
-			return StatUtils.variance(d);
+			return FastMath.sqrt(StatUtils.variance(d));
 		}
 	}
 
@@ -38,6 +38,11 @@ public class GaussianFittingTest {
 	ErrorCalculation dZ;
 	
 	public Long test1() {
+
+		final int size = 2;
+		final double sigma = 1;
+	
+		setModule(new GaussianFitting2D());
 		
 		double xOffset = (Math.random() - 0.5) ;
 		double yOffset = (Math.random() - 0.5) ;
@@ -53,13 +58,13 @@ public class GaussianFittingTest {
 
 		TestDataGenerator.addShotNoise(ip, 1);
 
-		long start = System.currentTimeMillis();
+		long start = System.nanoTime();
 		module_.setImageData(ip);
-		module_.preProcessBackground();
+		//module_.preProcessBackground();
 		module_.setupInitals(size , size , sigma, (int) (size));
 		double [] p = module_.fit();
 
-		long duration = System.currentTimeMillis() - start;
+		long duration = System.nanoTime() - start;
 
 		System.out.println(
 				" X:" + (xOffset - module_.getX() + size ) + 
@@ -68,7 +73,7 @@ public class GaussianFittingTest {
 
 		dX.addNumber(xOffset - module_.getX() + size);
 		dY.addNumber(yOffset - module_.getY() + size);
-		
+		dZ.addNumber(FastMath.sqrt(p[p.length-1]/2) - sigma);
 		return duration;
 	}
 	
@@ -80,25 +85,35 @@ public class GaussianFittingTest {
 		dY = new ErrorCalculation(N);
 		dZ = new ErrorCalculation(N);
 
+		int nFailed = 0;
 		for (int i = 0; i < N; i++) {
 			Method method = null;
 			try {
 				method = getClass().getMethod(testName);
 				t += (Long) (method.invoke(this));
+			} catch (InvocationTargetException e) {
+				// usually means that the fitting failed.
+				System.out.print("Test throw an exception " + e.getCause().toString());
+				System.out.println(" Test failed");
+				nFailed ++;
 			} catch (Exception e) {
+				e.printStackTrace();
 				System.out.println(e.toString());
 			}
 		}
-		System.out.println("Average time " + (double) t/N + "ms");
+		System.out.println(testName + " excecuted " + N + " times. Failed " + nFailed + " Times");
+		System.out.println("Average time " + (double) (t/ (N - nFailed)) + "ns");
 		System.out.println("X error: " + dX.getVariance());
 		System.out.println("Y error: " + dY.getVariance());
 		System.out.println("Z error: " + dZ.getVariance());
 	}
+
+	public void setModule(BaseGaussianFitting m) {
+		module_ = m;
+	}
 	
 	public static void main(String [] arg) {
-		GaussianFittingTest gft = new GaussianFittingTest();
-		
-		gft.module_ = new GaussianFitting2D();
+		final GaussianFittingTest gft = new GaussianFittingTest();
 		
 		gft.repeatTest(100, "test1");
 	}
