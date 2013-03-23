@@ -58,7 +58,7 @@ public abstract class ParticleAnalysis {
 		if (nParticles_ > 0) {
 			nodes = new SmNode[nParticles_];
 			for (int i = 0; i < nParticles_; i++) {
-				nodes[i] = new SmNode(x_[i], y_[i], 0d, frameNum, (int) h_[i], e_[i]);
+				nodes[i] = new SmNode(x_[i], y_[i], z_[i], frameNum, (int) h_[i], e_[i]);
 			}
 		} 
 		return nodes;

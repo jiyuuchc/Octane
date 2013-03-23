@@ -6,7 +6,7 @@ import ij.process.ImageProcessor;
 public class AnalysisDialog3DSimple extends AnalysisDialog2D {
 
 	String calibrationStr_ = null; 
-	double [] c_;
+	double [] c_ = new double[3];
 
 	final static String CALIBRATION_KEY = "calibrationString";
 
@@ -14,15 +14,13 @@ public class AnalysisDialog3DSimple extends AnalysisDialog2D {
 		super(imp);
 		
 		setTitle("Simple 3D analysis");
-		
-		calibrationStr_ = prefs_.get(CALIBRATION_KEY, "0.8, 0, 0.18");
-		
-		c_ = new double[3];
 	}
 
 	@Override
 	void setupDialog() {
 		super.setupDialog();
+		
+		calibrationStr_ = prefs_.get(CALIBRATION_KEY, "0.8, 0, 0.18");
 		addStringField("Z calibration: ", calibrationStr_);
 	}
 

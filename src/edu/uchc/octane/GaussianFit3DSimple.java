@@ -37,7 +37,7 @@ public class GaussianFit3DSimple extends GaussianFit {
 			return ret;
 		}
 		
-		double sigma = ret[ret.length - 1];
+		double sigma = FastMath.sqrt(ret[ret.length - 1] / 2);
 		if (sigma <= sigmaMin_) { // smaller than the min possible value 
 			if ((sigmaMin_ - sigma) <  (errTol_ * sigmaMin_)) { // only a little
 				z_ = zMin_;

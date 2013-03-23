@@ -3,8 +3,10 @@ package edu.uchc.octane.test;
 import java.awt.Rectangle;
 
 import ij.ImagePlus;
+import ij.process.ImageProcessor;
 import ij.process.ShortProcessor;
 import edu.uchc.octane.GaussianFit;
+import edu.uchc.octane.GaussianFit3DSimple;
 import edu.uchc.octane.WatershedAnalysis;
 
 public class ParticleAnalysisTest {
@@ -22,20 +24,21 @@ public class ParticleAnalysisTest {
 	static final double sigma = 0.8;
 	static final int kernelSize = 2;
 	
+	static ImagePlus showImg(String title, ImageProcessor ip) {
+		ImagePlus imp = new ImagePlus(title, ip);
+		imp.show();
+		imp.getCanvas().zoomIn(0, 0);
+		imp.getCanvas().zoomIn(0, 0);
+		return imp;
+	}
 	
 	public static void watershedTest1(WatershedAnalysis module) {
 		ShortProcessor ip = new ShortProcessor(imgSize, imgSize);
 		TestDataGenerator.randomMultipleSpots(ip, nParticles, sigma2, peakIntensity, bgIntensity);
 		TestDataGenerator.addShotNoise(ip, 1);
 		
-		ImagePlus imp = new ImagePlus("Test Image", ip);
-		ImagePlus imp2 = new ImagePlus("Test Image", ip);
-		imp.show();
-		imp.getCanvas().zoomIn(0, 0);
-		imp.getCanvas().zoomIn(0, 0);
-		imp2.show();
-		imp2.getCanvas().zoomIn(0, 0);
-		imp2.getCanvas().zoomIn(0, 0);
+		ImagePlus imp = showImg("Test Image", ip);
+		showImg("Test Image", ip);
 
 		module.setGaussianFitModule(new GaussianFit());
 		module.setGaussianFitParameters(kernelSize, sigma, false, true);
@@ -78,12 +81,38 @@ public class ParticleAnalysisTest {
 		
 	}
 
+	public static void watershedTest3(WatershedAnalysis module) {
+		ShortProcessor ip = new ShortProcessor(imgSize, imgSize);
+		TestDataGenerator.randomMultipleSpots(ip, nParticles, sigma2, peakIntensity, bgIntensity);
+		TestDataGenerator.addShotNoise(ip, 1);
+		
+		ImagePlus imp = showImg("Test Image", ip);
+		showImg("Test Image", ip);
+
+		GaussianFit3DSimple fitModule = new GaussianFit3DSimple();
+		fitModule.setCalibrationValues(new double[] {0.7, 0, 0.018});
+
+		module.setGaussianFitModule(fitModule);
+		
+		module.setGaussianFitParameters(kernelSize, sigma, false, true);
+		Rectangle mask = new Rectangle(0, 0, imgSize, imgSize);
+		
+		long start = System.currentTimeMillis();
+		module.process(ip, mask, bgIntensity, peakIntensity / 6);
+		long duration = System.currentTimeMillis() - start;
+
+		imp.setRoi(module.createPointRoi());
+		// n += module.reportNumParticles();
+		System.out.println("Time lapsed: " + duration + " ms. Detected particles: " + module.reportNumParticles());
+		// totalTime += duration;
+	}
+	
 	public static void main(String[] args){
 		
 		// WaterShed test
 		WatershedAnalysis module = new WatershedAnalysis();
 		
-		watershedTest1(module);
+		watershedTest3(module);
 		
 		//watershedTest2(module);
 

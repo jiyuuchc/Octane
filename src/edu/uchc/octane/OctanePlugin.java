@@ -44,6 +44,8 @@ public class OctanePlugin implements PlugIn{
 	OctaneWindowControl ctl_;
 	ParticleAnalysisDialog dlg_;
 
+	String cmd_;
+	
 	protected static HashMap<ImagePlus, OctanePlugin> dict_ = new HashMap<ImagePlus,OctanePlugin>();
 
 	/**
@@ -87,7 +89,11 @@ public class OctanePlugin implements PlugIn{
 	}
 
 	boolean startImageAnalysis() {
-		dlg_ = new AnalysisDialog2D(imp_);
+		if (cmd_.endsWith("2D")) {
+			dlg_ = new AnalysisDialog2D(imp_);
+		} else {
+			dlg_ = new AnalysisDialog3DSimple(imp_);
+		}
 		
 		imp_.getWindow().addWindowListener(new WindowAdapter() {
 			
@@ -132,6 +138,8 @@ public class OctanePlugin implements PlugIn{
 	 */
 	@Override
 	public void run(String cmd) {
+		cmd_ = cmd;
+		
 		String path;
 
 		if (!IJ.isJava16()) {
@@ -164,7 +172,7 @@ public class OctanePlugin implements PlugIn{
 			}
 		}
 
-		if (cmd.equals("analyze")) {
+		if (cmd.startsWith("analyze")) {
 			
 			dict_.put(imp_, null);
 			

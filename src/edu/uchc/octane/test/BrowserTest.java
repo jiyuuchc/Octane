@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 
 import ij.ImagePlus;
+import edu.uchc.octane.AnalysisDialog3DSimple;
 import edu.uchc.octane.DeflationAnalysisDialog;
 import edu.uchc.octane.OctaneWindowControl;
 import edu.uchc.octane.ParticleAnalysisDialog;
@@ -19,7 +20,7 @@ public class BrowserTest {
 			OctaneWindowControl b = new OctaneWindowControl(imp);
 			b.setup();
 		} else {
-			ParticleAnalysisDialog dlg = new AnalysisDialog2D(imp);
+			ParticleAnalysisDialog dlg = new AnalysisDialog3DSimple(imp);
 			dlg.showDialog();
 			if (dlg.wasOKed()) {
 				OctaneWindowControl ctlr = new OctaneWindowControl(imp);
