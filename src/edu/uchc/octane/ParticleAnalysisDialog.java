@@ -44,8 +44,6 @@ public abstract class ParticleAnalysisDialog extends NonBlockingGenericDialog {
 	Integer lastFrame_;
 	Integer nFound_;
 	
-	final static int nThreads_ = 4;
-
 	public ParticleAnalysisDialog(ImagePlus imp, String title) {
 		super(title);
 
@@ -143,14 +141,14 @@ public abstract class ParticleAnalysisDialog extends NonBlockingGenericDialog {
 			}
 		}
 		
-		ProcessThread [] threads = new ProcessThread[nThreads_];
+		ProcessThread [] threads = new ProcessThread[GlobalPrefs.nThread_];
 		
-		for (int i = 0; i < nThreads_; i++ ) {
+		for (int i = 0; i < GlobalPrefs.nThread_; i++ ) {
 			threads[i] =  new ProcessThread();
 			threads[i].start();
 		}
 		
-		for (int i = 0; i < nThreads_; i++ ) {
+		for (int i = 0; i < GlobalPrefs.nThread_; i++ ) {
 			try {
 				threads[i].join();
 			} catch (InterruptedException e) {

@@ -23,18 +23,19 @@ import java.util.prefs.Preferences;
  * The Preferences.
  */
 public class GlobalPrefs {
+	private static Preferences prefs_ = Preferences.userNodeForPackage(GlobalPrefs.class); 
 
 	final static String PACKAGE_NAME = "Octane";
 	
 	final static String SHOW_OVERLAY_KEY = "ShowOverlay";
 	final static String HISTOGRAM_BINS_KEY = "histogramBins";
 	final static String COMPENSATE_DRIFT_KEY = "compensateDrift";
+	final static String NUM_THREAD_KEY = "numThread";	
 	
-	private static Preferences prefs_ = Preferences.userNodeForPackage(GlobalPrefs.class); 
-
 	public static boolean showOverlay_ = prefs_.getBoolean(SHOW_OVERLAY_KEY, false);
-	public static int histogramBins_ = prefs_.getInt(HISTOGRAM_BINS_KEY , 20);
 	public static boolean compensateDrift_ = prefs_.getBoolean(COMPENSATE_DRIFT_KEY, false); 
+	public static int histogramBins_ = prefs_.getInt(HISTOGRAM_BINS_KEY , 20);
+	public static int nThread_ = prefs_.getInt(NUM_THREAD_KEY , 4);
 	
 	public static Preferences getRoot() {
 		return prefs_;
@@ -45,8 +46,8 @@ public class GlobalPrefs {
 	 */
 	public static void savePrefs() {
 		prefs_.putBoolean(SHOW_OVERLAY_KEY, showOverlay_);
-		prefs_.putInt(HISTOGRAM_BINS_KEY, histogramBins_);
 		prefs_.putBoolean(COMPENSATE_DRIFT_KEY, compensateDrift_);
-		
+		prefs_.putInt(HISTOGRAM_BINS_KEY, histogramBins_);
+		prefs_.putInt(NUM_THREAD_KEY, nThread_);
 	}
 }
