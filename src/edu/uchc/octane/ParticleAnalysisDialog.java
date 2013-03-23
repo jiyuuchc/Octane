@@ -23,10 +23,13 @@ import ij.IJ;
 import ij.ImageListener;
 import ij.ImagePlus;
 import ij.ImageStack;
+import ij.gui.DialogListener;
+import ij.gui.GenericDialog;
 import ij.gui.NonBlockingGenericDialog;
 import ij.gui.PointRoi;
 import ij.process.ImageProcessor;
 
+import java.awt.AWTEvent;
 import java.awt.Rectangle;
 
 public abstract class ParticleAnalysisDialog extends NonBlockingGenericDialog {
@@ -34,7 +37,8 @@ public abstract class ParticleAnalysisDialog extends NonBlockingGenericDialog {
 	Rectangle rect_;
 	
 	ImageListener imageListener_;
-	
+	DialogListener dialogListener_;
+
 	private SmNode[][] nodes_ = null;  
 	
 	Integer lastFrame_;
@@ -70,6 +74,27 @@ public abstract class ParticleAnalysisDialog extends NonBlockingGenericDialog {
 		};
 
 		ImagePlus.addImageListener(imageListener_);
+		
+		dialogListener_ = new DialogListener() {
+			@Override
+			public boolean dialogItemChanged(GenericDialog dlg, AWTEvent evt) {
+				if (dlg == null) {
+					return true;
+				}
+				
+				boolean result;
+				result = updateParameters();
+				if (result = true) {
+					updateResults();
+
+					return true;
+				} else {
+					return false;
+				}
+			}
+		};
+
+		addDialogListener(dialogListener_);
 	}
 
 	public SmNode[][] processAllFrames() {
@@ -181,4 +206,5 @@ public abstract class ParticleAnalysisDialog extends NonBlockingGenericDialog {
 	}	
 	
 	abstract public ParticleAnalysis processCurrentFrame(ImageProcessor ip);
+	abstract public boolean updateParameters();
 }

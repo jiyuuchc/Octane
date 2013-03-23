@@ -6,8 +6,8 @@ import java.lang.reflect.Method;
 import org.apache.commons.math3.stat.StatUtils;
 import org.apache.commons.math3.util.FastMath;
 
-import edu.uchc.octane.BaseGaussianFitting;
-import edu.uchc.octane.GaussianFitting2D;
+import edu.uchc.octane.BaseGaussianFit;
+import edu.uchc.octane.GaussianFit;
 
 import ij.process.ShortProcessor;
 
@@ -31,7 +31,7 @@ public class GaussianFittingTest {
 		}
 	}
 
-	BaseGaussianFitting module_;
+	BaseGaussianFit module_;
 	
 	ErrorCalculation dX;
 	ErrorCalculation dY;
@@ -42,7 +42,7 @@ public class GaussianFittingTest {
 		final int size = 2;
 		final double sigma = 1;
 	
-		setModule(new GaussianFitting2D());
+		setModule(new GaussianFit());
 		
 		double xOffset = (Math.random() - 0.5) ;
 		double yOffset = (Math.random() - 0.5) ;
@@ -59,9 +59,9 @@ public class GaussianFittingTest {
 		TestDataGenerator.addShotNoise(ip, 1);
 
 		long start = System.nanoTime();
-		module_.setImageData(ip);
+		module_.setImageData(ip, false);
 		//module_.preProcessBackground();
-		module_.setupInitals(size , size , sigma, (int) (size));
+		module_.setupInitalValues(size , size , sigma, (int) (size));
 		double [] p = module_.fit();
 
 		long duration = System.nanoTime() - start;
@@ -108,7 +108,7 @@ public class GaussianFittingTest {
 		System.out.println("Z error: " + dZ.getVariance());
 	}
 
-	public void setModule(BaseGaussianFitting m) {
+	public void setModule(BaseGaussianFit m) {
 		module_ = m;
 	}
 	

@@ -4,6 +4,7 @@ import java.awt.Rectangle;
 
 import ij.ImagePlus;
 import ij.process.ShortProcessor;
+import edu.uchc.octane.GaussianFit;
 import edu.uchc.octane.WatershedAnalysis;
 
 public class ParticleAnalysisTest {
@@ -36,6 +37,7 @@ public class ParticleAnalysisTest {
 		imp2.getCanvas().zoomIn(0, 0);
 		imp2.getCanvas().zoomIn(0, 0);
 
+		module.setGaussianFitModule(new GaussianFit());
 		module.setGaussianFitParameters(kernelSize, sigma, false, true);
 		Rectangle mask = new Rectangle(0, 0, imgSize, imgSize);
 		
@@ -58,6 +60,7 @@ public class ParticleAnalysisTest {
 			TestDataGenerator.randomMultipleSpots(ip, nParticles, sigma2, peakIntensity, bgIntensity);
 			TestDataGenerator.addShotNoise(ip, 1);
 
+			module.setGaussianFitModule(new GaussianFit());
 			module.setGaussianFitParameters(kernelSize, sigma, false, true);
 			Rectangle mask = new Rectangle(0, 0, imgSize, imgSize);
 

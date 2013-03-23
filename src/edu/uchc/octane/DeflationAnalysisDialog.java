@@ -18,21 +18,16 @@
 
 package edu.uchc.octane;
 
-import java.awt.AWTEvent;
 import java.awt.Scrollbar;
 import java.awt.event.ActionEvent;
 import java.util.Vector;
 import java.util.prefs.Preferences;
 
 import ij.ImagePlus;
-import ij.gui.DialogListener;
-import ij.gui.GenericDialog;
 import ij.process.ImageProcessor;
 
 public class DeflationAnalysisDialog extends ParticleAnalysisDialog {
 
-	DialogListener dialogListener_;
-	
 	static Preferences prefs_ = null;
 	int kernelSize_;
 	double sigma_;
@@ -67,26 +62,6 @@ public class DeflationAnalysisDialog extends ParticleAnalysisDialog {
 
 		Vector<Scrollbar> sliders = (Vector<Scrollbar>)getSliders();
 		sliders.get(0).setUnitIncrement(20); // default was 1 
-
-		dialogListener_ = new DialogListener() {
-			@Override
-			public boolean dialogItemChanged(GenericDialog dlg, AWTEvent evt) {
-				if (dlg == null) {
-					return true;
-				}
-
-				kernelSize_ = (int) getNextNumber();
-				sigma_ = getNextNumber();
-				deflationThreshold_ = (int) getNextNumber();
-				zeroBg_ = (boolean) getNextBoolean();
-
-				updateResults();
-
-				return true;
-			}
-		};
-
-		addDialogListener(dialogListener_);
 	}
 
 	public void savePrefs() {
@@ -117,5 +92,16 @@ public class DeflationAnalysisDialog extends ParticleAnalysisDialog {
 		module.process(ip, rect_, kernelSize_, sigma_, deflationThreshold_, zeroBg_);
 		
 		return module;
+	}
+
+	@Override
+	public boolean updateParameters() {
+		kernelSize_ = (int) getNextNumber();
+		sigma_ = getNextNumber();
+		deflationThreshold_ = (int) getNextNumber();
+		zeroBg_ = (boolean) getNextBoolean();
+		
+		return true;
+		
 	}
 }

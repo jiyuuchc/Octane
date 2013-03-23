@@ -10,18 +10,16 @@ import org.apache.commons.math3.optim.nonlinear.scalar.GoalType;
 import org.apache.commons.math3.optim.nonlinear.scalar.ObjectiveFunction;
 import org.apache.commons.math3.optim.nonlinear.scalar.noderiv.PowellOptimizer;
 
-public class GaussianFitting2D extends BaseGaussianFitting {
+public class GaussianFit extends BaseGaussianFit {
 
 	double [] parameters_;
 	double v_;
-	boolean zeroBg_ = false;
-	boolean floatingSigma_ = true;
+	boolean floatingSigma_ = false;
 
 	public void setZeroBackground(boolean b) {
-		zeroBg_ = b;
-		bg_ = 0;
+		bZeroBg_ = b;
 	}
-	
+
 	public void setFloatingSigma(boolean b) {
 		floatingSigma_ = b;
 	}
@@ -30,13 +28,13 @@ public class GaussianFitting2D extends BaseGaussianFitting {
 	public double [] fit() {
 		
 		if (floatingSigma_) {
-			if (zeroBg_) {
+			if (bZeroBg_) {
 				parameters_ = new double[] {0, 0, pixelValue(0, 0) - bg_, sigma2_};
 			} else {
 				parameters_ = new double[] {0, 0, pixelValue(0, 0) - bg_, bg_, sigma2_};
 			}			
 		} else {
-			if (zeroBg_) {
+			if (bZeroBg_) {
 				parameters_ = new double[] {0, 0, pixelValue(0, 0) - bg_};
 			} else {
 				parameters_ = new double[] {0, 0, pixelValue(0, 0) - bg_, bg_};
@@ -50,7 +48,7 @@ public class GaussianFitting2D extends BaseGaussianFitting {
 			public double value(double[] point) {
 				
 				parameters_ = point;
-				double bg = zeroBg_ ? 0 : point[3]; 
+				double bg = bZeroBg_ ? 0 : point[3]; 
 					
 				double v = 0;
 				
@@ -118,18 +116,12 @@ public class GaussianFitting2D extends BaseGaussianFitting {
 				double v = pixelValue(xi, yi);
 				m += v;
 				m2 += v * v ;
-			}
+			} 
 		}
 
 		int nPixels = (1 + 2 * windowSize_)*(1 + 2 * windowSize_);
 		m = m2 - m * m / nPixels; //variance of the grey values
 
 		return nPixels * FastMath.log(m / v_);
-	}
-
-	@Override
-	public void preProcessBackground() {
-		super.preProcessBackground();
-		setZeroBackground(true);
 	}
 }

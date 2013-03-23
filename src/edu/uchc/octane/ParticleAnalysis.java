@@ -24,6 +24,7 @@ public abstract class ParticleAnalysis {
 
 	double [] x_;
 	double [] y_;
+	double [] z_;
 	double [] e_;
 	double [] h_;
 	int nParticles_;
@@ -34,6 +35,10 @@ public abstract class ParticleAnalysis {
 
 	public double [] reportY() {
 		return y_;
+	}
+	
+	public double [] reportZ() {
+		return z_;
 	}
 	
 	public double [] reportH() {

@@ -1,20 +1,15 @@
 package edu.uchc.octane;
 
-import java.awt.AWTEvent;
 import java.awt.Scrollbar;
 import java.awt.event.ActionEvent;
 import java.util.Vector;
 import java.util.prefs.Preferences;
 
 import ij.ImagePlus;
-import ij.gui.DialogListener;
-import ij.gui.GenericDialog;
 import ij.process.ImageProcessor;
 
-public class WatershedAnalysisDialog extends ParticleAnalysisDialog {
+public class AnalysisDialog2D extends ParticleAnalysisDialog {
 
-	DialogListener dialogListener_;
-	
 	static Preferences prefs_ = null;
 
 	int kernelSize_;
@@ -29,11 +24,11 @@ public class WatershedAnalysisDialog extends ParticleAnalysisDialog {
 	final static String WATERSHED_THRESHOLD_KEY = "threshold";
 	final static String WATERSHED_NOISE_KEY = "noise";
 	
-	public WatershedAnalysisDialog(ImagePlus imp) {
+	public AnalysisDialog2D(ImagePlus imp) {
 		super(imp, "Watershed parameters:" + imp.getTitle());
 
 		if (prefs_ == null) {
-			prefs_ = GlobalPrefs.getRoot().node(WatershedAnalysisDialog.class.getName());
+			prefs_ = GlobalPrefs.getRoot().node(this.getClass().getName());
 		}
 		kernelSize_ = prefs_.getInt(KERNELSIZE_KEY, 2);
 		sigma_ = prefs_.getDouble(SIGMA_KEY, 0.8);
@@ -58,28 +53,6 @@ public class WatershedAnalysisDialog extends ParticleAnalysisDialog {
 		Vector<Scrollbar> sliders = (Vector<Scrollbar>)getSliders();
 		sliders.get(0).setUnitIncrement(20); // default was 1
 		sliders.get(1).setUnitIncrement(20); // default was 1
-
-		dialogListener_ = new DialogListener() {
-			@Override
-			public boolean dialogItemChanged(GenericDialog dlg, AWTEvent evt) {
-				if (dlg == null) {
-					return true;
-				}
-
-				kernelSize_ = (int) getNextNumber();
-				sigma_ = getNextNumber();
-				zeroBg_ = (boolean) getNextBoolean();
-				
-				watershedThreshold_ = (int) getNextNumber();
-				watershedNoise_ = (int) getNextNumber();
-
-				updateResults();
-
-				return true;
-			}
-		};
-
-		addDialogListener(dialogListener_);
 	}
 
 	public void savePrefs() {
@@ -106,10 +79,21 @@ public class WatershedAnalysisDialog extends ParticleAnalysisDialog {
 	@Override
 	public WatershedAnalysis processCurrentFrame(ImageProcessor ip) {
 		
-		WatershedAnalysis module = new WatershedAnalysis();  
+		WatershedAnalysis module = new WatershedAnalysis();
+		module.setGaussianFitModule(new GaussianFit());
 		module.setGaussianFitParameters(kernelSize_, sigma_, zeroBg_, true);
 		module.process(ip, rect_, watershedThreshold_, watershedNoise_);
 		return module;
 	}
-
+	
+	@Override
+	public boolean updateParameters() {
+		kernelSize_ = (int) getNextNumber();
+		sigma_ = getNextNumber();
+		zeroBg_ = (boolean) getNextBoolean();
+		watershedThreshold_ = (int) getNextNumber();
+		watershedNoise_ = (int) getNextNumber();
+		
+		return true;
+	}
 }

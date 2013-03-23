@@ -27,15 +27,14 @@ import ij.process.ImageProcessor;
 
 public class WatershedAnalysis extends ParticleAnalysis{
 	
-	boolean bDoGaussianFit_ = false;
+//	boolean bDoGaussianFit_ = false;
 	boolean bDoDeflation_;
 	
 	int kernelSize_;
 	double sigma_;
 	boolean isZeroBg_;
-
 	
-	GaussianFitting g_ = null;
+	GaussianFit g_ = null;
 	
 	class Pixel implements Comparable<Pixel> {
 		
@@ -96,30 +95,36 @@ public class WatershedAnalysis extends ParticleAnalysis{
 		}
 	}
 	
+	public void setGaussianFitModule(GaussianFit module) {
+		if (module != null) {
+			//bDoGaussianFit_ = true;
+			g_ = module;
+		} else {
+			//bDoGaussianFit_ = false;
+			g_ = null;
+		}
+	}
+	
+	public BaseGaussianFit getGaussianFitModule() {
+		return g_;
+	}
+
 	public void setGaussianFitParameters(int kernelSize, double sigma, boolean bZeroBackground, boolean bDeflation) {
 		kernelSize_ = kernelSize;
 		sigma_ = sigma;
 		isZeroBg_ = bZeroBackground;
 		bDoDeflation_ = bDeflation;
 		
-		bDoGaussianFit_ = true;
-	}
-
-	public void setGaussianFit(boolean b) {
-		bDoGaussianFit_ = b;
-	}
-	
-	public boolean isGaussianFit() {
-		return bDoGaussianFit_;
+		//bDoGaussianFit_ = true;
 	}
 
 	public void process(ImageProcessor ip, Rectangle mask, int threshold, int noise) {
 		
 		int border = 1;
 		
-		if (bDoGaussianFit_) {
-			g_ = new GaussianFitting(isZeroBg_);
-			g_.setImageData(ip);
+		if (g_ != null) {
+
+			g_.setImageData(ip, isZeroBg_);
 			
 			border = kernelSize_;
 		}
@@ -148,6 +153,7 @@ public class WatershedAnalysis extends ParticleAnalysis{
 		nParticles_ = 0;
 		x_ = new double[pixels.size()];
 		y_ = new double[pixels.size()];
+		z_ = new double[pixels.size()];
 		h_ = new double[pixels.size()];
 		e_ = new double[pixels.size()];
 		 
@@ -202,24 +208,32 @@ public class WatershedAnalysis extends ParticleAnalysis{
 
 			if (isMax) {
 				
-				if (bDoGaussianFit_) {
-					int result = g_.fitGaussianAt(p.x, p.y, sigma_, kernelSize_);
-					if (result >= 0 && g_.getHeight() > noise ) {
+				if (g_ != null ) {
+
+					g_.setupInitalValues(p.x, p.y, sigma_, kernelSize_);
+					
+					double [] result = g_.fit();
+					
+					if (result != null && g_.getH() > noise ) {
 						x_[nParticles_] = g_.getX();
 						y_[nParticles_] = g_.getY();
-						h_[nParticles_] = g_.getHeight();
-						e_[nParticles_] = g_.getError();
+						z_[nParticles_] = g_.getZ();
+						h_[nParticles_] = g_.getH();
+						e_[nParticles_] = g_.getE();
 						nParticles_++;
 						
 						if (bDoDeflation_) {
 							g_.deflate();
 						}
+
 					}
 				} else {
+
 					x_[nParticles_] = (double) p.x;
 					y_[nParticles_] = (double) p.y;
 					h_[nParticles_] = (double) p.value;
 					nParticles_++;
+
 				}
 			}
 		}

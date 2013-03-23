@@ -26,12 +26,13 @@ import ij.process.ImageProcessor;
 /**
  * Subpixel refiner by Gaussian fit.
  */
-public abstract class BaseGaussianFitting {
+public abstract class BaseGaussianFit {
 
 	protected int x0_,y0_; 
 	protected double sigma2_;
 	protected int windowSize_;
 	protected double bg_ = 0;
+	protected boolean bZeroBg_ = false;
 	
 	private float [] imageData_;
 	private int width_;
@@ -50,10 +51,10 @@ public abstract class BaseGaussianFitting {
 	/**
 	 * Default constructor
 	 */
-	public BaseGaussianFitting() {
+	public BaseGaussianFit() {
 	}
 	
-	public void setImageData(ImageProcessor ip) {
+	public void setImageData(ImageProcessor ip, boolean bPreProcessBackground) {
 
 		Object pixels = ip.getPixels();
 		width_ = ip.getWidth();
@@ -82,7 +83,13 @@ public abstract class BaseGaussianFitting {
 			}
 		}
 		
-		bg_ = ip.getAutoThreshold();
+		bZeroBg_ = bPreProcessBackground;
+		if (bPreProcessBackground) {
+			bg_ = 0;
+			preProcessBackground();
+		} else {
+			bg_ = ip.getAutoThreshold();
+		}
 	}
 	
 	public void preProcessBackground() {
@@ -100,7 +107,7 @@ public abstract class BaseGaussianFitting {
 		}
 	}
 
-	public void setupInitals(int x, int y, double sigma, int size) {
+	public void setupInitalValues(int x, int y, double sigma, int size) {
 		sigma2_ = sigma * sigma * 2;
 		windowSize_ = size;
 		x0_ = (int) x;

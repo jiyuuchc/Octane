@@ -7,7 +7,7 @@ import ij.ImagePlus;
 import edu.uchc.octane.DeflationAnalysisDialog;
 import edu.uchc.octane.OctaneWindowControl;
 import edu.uchc.octane.ParticleAnalysisDialog;
-import edu.uchc.octane.WatershedAnalysisDialog;
+import edu.uchc.octane.AnalysisDialog2D;
 
 public class BrowserTest {
 	public static void main(String[] args) throws IOException, ClassNotFoundException {
@@ -19,7 +19,7 @@ public class BrowserTest {
 			OctaneWindowControl b = new OctaneWindowControl(imp);
 			b.setup();
 		} else {
-			ParticleAnalysisDialog dlg = new WatershedAnalysisDialog(imp);
+			ParticleAnalysisDialog dlg = new AnalysisDialog2D(imp);
 			dlg.showDialog();
 			if (dlg.wasOKed()) {
 				OctaneWindowControl ctlr = new OctaneWindowControl(imp);

@@ -31,7 +31,6 @@ import javax.swing.UIManager;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.WindowManager;
-import ij.gui.NonBlockingGenericDialog;
 import ij.io.FileInfo;
 import ij.plugin.PlugIn;
 
@@ -88,7 +87,7 @@ public class OctanePlugin implements PlugIn{
 	}
 
 	boolean startImageAnalysis() {
-		dlg_ = new WatershedAnalysisDialog(imp_);
+		dlg_ = new AnalysisDialog2D(imp_);
 		
 		imp_.getWindow().addWindowListener(new WindowAdapter() {
 			
