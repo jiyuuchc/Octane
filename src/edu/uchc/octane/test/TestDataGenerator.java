@@ -53,10 +53,10 @@ public class TestDataGenerator {
 		int halfSize = Math.max((int)(Math.sqrt(sigma2/2) * 4 + 0.5), 2);
 		
 		for (int i =0; i < N; i++) {
-			double x = (int)(Math.random() * (ip.getWidth() - halfSize * 2)) + halfSize;
-			double y = (int)(Math.random() * (ip.getHeight() - halfSize * 2)) + halfSize;
-			int x0 = (int)(x + 0.5);
-			int y0 = (int)(y + 0.5);
+			double x = (Math.random() * (ip.getWidth() - halfSize * 2)) + halfSize;
+			double y = (Math.random() * (ip.getHeight() - halfSize * 2)) + halfSize;
+			int x0 = (int)(x + .5 );
+			int y0 = (int)(y + .5);
 			xPositions[i] = x;
 			yPositions[i] = y;
 			for (int xi = -halfSize; xi <= halfSize; xi ++) {

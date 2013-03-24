@@ -67,7 +67,7 @@ public class GaussianFit extends BaseGaussianFit {
 			pvp = optimizer.optimize(
 					new ObjectiveFunction(func),
 					new InitialGuess(parameters_),
-					new MaxEval(1000),
+					new MaxEval(10000),
 					GoalType.MINIMIZE);
 		} catch (TooManyEvaluationsException e) {
 			return null;

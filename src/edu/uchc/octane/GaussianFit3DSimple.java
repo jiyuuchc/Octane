@@ -4,7 +4,7 @@ import org.apache.commons.math.util.FastMath;
 
 public class GaussianFit3DSimple extends GaussianFit {
 	
-	final static double errTol_ = 0.05; 
+	final static double errTol_ = 0.1; 
 
 	double [] calibration_ = null;
 	double z_ = 0;
@@ -47,7 +47,7 @@ public class GaussianFit3DSimple extends GaussianFit {
 			}
 		}
 		
-		z_ = FastMath.sqrt(sigma - sigmaMin_)/calibration_[2] + zMin_;
+		z_ = FastMath.sqrt((sigma - sigmaMin_)/calibration_[2]) + zMin_;
 		
 		return ret;
 	}
