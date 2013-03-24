@@ -1,0 +1,4 @@
+Octane
+=======
+
+The Octane is a program we developed to facilitate works involved in super-resolution optical imaging (PALM, STORM etc). By providing an intuitive graphical user interface front end, we hope it can serve as a useful tool for a wide range of scientists, including experimental biologists as well as physicists. The program runs as a plugin of the (extremely versatile) ImageJ software, thus can be used on any image format that is supported by ImageJ.

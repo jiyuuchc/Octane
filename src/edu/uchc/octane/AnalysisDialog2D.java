@@ -49,7 +49,6 @@ public class AnalysisDialog2D extends ParticleAnalysisDialog {
 		addSlider("Intensity Threshold", 20, 40000.0, watershedThreshold_);
 		addSlider("Noise Threshold", 1, 5000.0, watershedNoise_);
 		
-
 		Vector<Scrollbar> sliders = (Vector<Scrollbar>)getSliders();
 		sliders.get(0).setUnitIncrement(20); // default was 1
 		sliders.get(1).setUnitIncrement(20); // default was 1
