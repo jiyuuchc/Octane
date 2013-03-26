@@ -19,6 +19,9 @@ package edu.uchc.octane;
 
 import java.util.Arrays;
 
+import org.apache.commons.math3.util.FastMath;
+import org.apache.commons.math3.optim.PointValuePair;
+
 import ij.plugin.filter.BackgroundSubtracter;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
@@ -29,22 +32,18 @@ import ij.process.ImageProcessor;
 public abstract class BaseGaussianFit {
 
 	protected int x0_,y0_; 
-	protected double sigma2_;
 	protected int windowSize_;
 	protected double bg_ = 0;
 	protected boolean bZeroBg_ = false;
+	
+	PointValuePair pvp_;
 	
 	private float [] imageData_;
 	private int width_;
 	private int height_;
 	
 	public abstract double [] fit(); 
-	public abstract double getValueExcludingBackground(int xi, int yi);	
-	public abstract double getX(); 
-	public abstract double getY(); 
-	public abstract double getZ(); 
-	public abstract double getH();
-	public abstract double getE();
+	public abstract double getValueExcludingBackground(int xi, int yi, double [] point);	
 	
 	public final static int backgroundFilterSize_ = 4;
 	
@@ -107,22 +106,54 @@ public abstract class BaseGaussianFit {
 		}
 	}
 
-	public void setupInitalValues(int x, int y, double sigma, int size) {
-		sigma2_ = sigma * sigma * 2;
+	public void setFittingRegion(int x0, int y0, int size) {
 		windowSize_ = size;
-		x0_ = (int) x;
-		y0_ = (int) y;		
+		x0_ = (int) x0;
+		y0_ = (int) y0;		
 	}
-	
+
 	public void deflate() {
 		for (int xi = - windowSize_; xi <= windowSize_; xi++) {
 			for (int yi = - windowSize_; yi <= windowSize_; yi++) {
-				imageData_[x0_ + xi + width_ * (y0_ + yi)] -= getValueExcludingBackground(xi, yi);
+				imageData_[x0_ + xi + width_ * (y0_ + yi)] -= getValueExcludingBackground(xi, yi, pvp_.getPoint());
 			}
 		}
 	}
 
 	protected double pixelValue(int xi, int yi) {
 		return imageData_[xi + x0_ + (yi + y0_) * width_];
+	}
+	
+	public double getX() {
+		return pvp_.getPoint()[0] + x0_;
+	}
+
+	public double getY() {
+		return pvp_.getPoint()[1] + y0_;
+	}
+
+	public double getZ() {
+		return 0;
+	}
+
+	public double getH() {
+		return pvp_.getPoint()[2];
+	}
+
+	public double getE() {
+		double m = 0;
+		double m2 = 0;
+		for (int xi = - windowSize_; xi <= windowSize_; xi++) {
+			for (int yi = - windowSize_; yi <= windowSize_; yi++) {
+				double v = pixelValue(xi, yi);
+				m += v;
+				m2 += v * v ;
+			} 
+		}
+
+		int nPixels = (1 + 2 * windowSize_)*(1 + 2 * windowSize_);
+		m = m2 - m * m / nPixels; //variance of the grey values
+
+		return nPixels * FastMath.log(m / pvp_.getValue());
 	}
 }

@@ -52,7 +52,7 @@ import ij.io.FileInfo;
 import ij.process.FloatProcessor;
 import ij.process.ShortProcessor;
 
-import org.apache.commons.math.stat.descriptive.SummaryStatistics;
+import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 
 
 /**

@@ -52,7 +52,7 @@ public class GaussianFittingTest {
 	Long test0(double xOffset, double yOffset){
 		long start = System.nanoTime();
 
-		module_.setupInitalValues(size, size , sigma, (int) (size));
+		module_.setFittingRegion(size, size , (int) (size));
 		double [] p = module_.fit();
 		
 		if (p == null) {
@@ -198,7 +198,7 @@ public class GaussianFittingTest {
 		for (int i = 0; i < N; i++) {
 			long start = System.nanoTime();
 
-			module_.setupInitalValues((int)(pos[0][i] +.5), (int)(pos[1][i]+.5), sigma, (int) (size));
+			module_.setFittingRegion((int)(pos[0][i] +.5), (int)(pos[1][i]+.5), (int) (size));
 			double [] p = module_.fit();
 			long duration = System.nanoTime() - start;
 			
@@ -227,6 +227,7 @@ public class GaussianFittingTest {
 		final GaussianFittingTest gft = new GaussianFittingTest();
 		
 		GaussianFit3DSimple m = new GaussianFit3DSimple();
+		m.setPreferredSigmaValue(sigma);
 		m.setCalibrationValues(new double[]{0, 1, 0.0000000009});
 
 		gft.setModule(m);

@@ -210,7 +210,8 @@ public class WatershedAnalysis extends ParticleAnalysis{
 				
 				if (g_ != null ) {
 
-					g_.setupInitalValues(p.x, p.y, sigma_, kernelSize_);
+					g_.setFittingRegion(p.x, p.y, kernelSize_);
+					g_.setPreferredSigmaValue(sigma_);
 					
 					double [] result = g_.fit();
 					

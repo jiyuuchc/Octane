@@ -1,6 +1,6 @@
 package edu.uchc.octane;
 
-import org.apache.commons.math.util.FastMath;
+import org.apache.commons.math3.util.FastMath;
 
 public class GaussianFit3DSimple extends GaussianFit {
 	
