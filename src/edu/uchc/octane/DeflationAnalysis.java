@@ -58,10 +58,10 @@ public class DeflationAnalysis extends ParticleAnalysis {
 		}
 		Arrays.sort(pixels, 0, idx);
 
-		GaussianFitting spl = new GaussianFitting(bZeroBackground);
+		GaussianFit spl = new GaussianFit();
 
 		boolean [] labeled = new boolean[ip.getWidth() * ip.getHeight()];
-		spl.setImageData(ip);
+		spl.setImageData(ip, bZeroBackground);
 
 		nParticles_ = 0;
 		x_ = new double[idx];
@@ -83,14 +83,16 @@ public class DeflationAnalysis extends ParticleAnalysis {
 			}
 
 			if (idx >= 0 ) {
-				int ret = spl.fitGaussianAt((double)x,(double)y, sigma, kernelSize);
-				if ( ret != 0 ) {
+				spl.setFittingRegion(x, y, kernelSize);
+				spl.setPreferredSigmaValue(sigma);
+				double [] ret = spl.fit();
+				if ( ret == null ) {
 					System.out.println("Fitting error at: " + idx + " X:" + x + ", Y:" + y + " returns:"+ ret);
 				} else {
 					x_[nParticles_] = spl.getX();
 					y_[nParticles_] = spl.getY();
-					h_[nParticles_] = spl.getHeight();
-					e_[nParticles_] = spl.getError();
+					h_[nParticles_] = spl.getH();
+					e_[nParticles_] = spl.getE();
 					nParticles_ ++;
 					spl.deflate();
 				}

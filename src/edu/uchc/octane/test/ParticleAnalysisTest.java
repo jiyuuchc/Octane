@@ -2,8 +2,8 @@ package edu.uchc.octane.test;
 
 import java.awt.Rectangle;
 
-import org.apache.commons.math.stat.StatUtils;
-import org.apache.commons.math.util.FastMath;
+import org.apache.commons.math3.stat.StatUtils;
+import org.apache.commons.math3.util.FastMath;
 
 import ij.ImagePlus;
 import ij.process.ImageProcessor;
