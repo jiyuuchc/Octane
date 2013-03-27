@@ -286,7 +286,7 @@ public class OctaneWindowControl implements ClipboardOwner{
 			int [] selected = frame_.getTrajsTable().getSelectedTrajectoriesOrAll();
 			
 			// palm.setCorrectDrift(dlg.getNextBoolean());
-			palm.constructPalm(PalmParameters.getPalmType(), PalmParameters.palmScaleFactor_, PalmParameters.palmPSFWidth_, imp_, selected);			
+			palm.constructPalm(imp_, selected);			
 		}
 	}
 

@@ -32,7 +32,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Writer;
 import java.util.ArrayList;
-import java.util.InputMismatchException;
 import java.util.Scanner;
 import java.util.Vector;
 
@@ -375,7 +374,11 @@ public class TrajDataset{
 	}
 
 	public SmNode correctDrift(SmNode node) throws OctaneException {
-		return dcm_.correctDrift(node);
+		if (GlobalPrefs.compensateDrift_) {
+			return dcm_.correctDrift(node);
+		} else {
+			return node;
+		}
 	}
 	
 }
