@@ -77,7 +77,7 @@ public class AnalysisDialog2D extends ParticleAnalysisDialog {
 	}
 	
 	@Override
-	public WatershedAnalysis processCurrentFrame(ImageProcessor ip) {
+	public WatershedAnalysis processCurrentFrame(ImageProcessor ip) throws InterruptedException {
 		
 		WatershedAnalysis module = new WatershedAnalysis();
 		module.setGaussianFitModule(new GaussianFit());

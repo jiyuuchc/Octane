@@ -44,6 +44,8 @@ public abstract class ParticleAnalysisDialog extends NonBlockingGenericDialog {
 	Integer lastFrame_;
 	Integer nFound_;
 	
+	private volatile Thread prevProcess_ = null;
+	
 	public ParticleAnalysisDialog(ImagePlus imp, String title) {
 		super(title);
 
@@ -124,7 +126,13 @@ public abstract class ParticleAnalysisDialog extends NonBlockingGenericDialog {
 					
 					ImageProcessor ip = stack.getProcessor(curFrame);
 					
-					ParticleAnalysis module = processCurrentFrame(ip);
+					ParticleAnalysis module;
+					
+					try {
+						module = processCurrentFrame(ip);
+					} catch (InterruptedException e) {
+						return;
+					}
 					
 					nodes_[curFrame - 1] = module.createSmNodes(curFrame);
 
@@ -162,29 +170,49 @@ public abstract class ParticleAnalysisDialog extends NonBlockingGenericDialog {
 			return;
 		}
 
-		ParticleAnalysis module = processCurrentFrame(imp_.getProcessor());
-		
-		int nParticles = module.reportNumParticles();
-		if (nParticles <= 0) {
-			imp_.killRoi();
-			return;
+		class CurrentProcessThread extends Thread {
+			@Override
+			public void run() {
+				ParticleAnalysis module;
+				try {
+					module = processCurrentFrame(imp_.getProcessor());
+				} catch (InterruptedException e) {
+					return;
+				}
+
+				int nParticles = module.reportNumParticles();
+				if (nParticles <= 0) {
+					imp_.killRoi();
+					return;
+				}
+				
+				PointRoi roi;
+
+				if (nParticles > 0) {
+					double [] x = module.reportX();
+					double [] y = module.reportY();
+					int [] xi = new int[nParticles];
+					int [] yi = new int[nParticles];
+					for (int i = 0; i < nParticles; i ++ ) {
+						xi[i] = (int) x[i];
+						yi[i] = (int) y[i];
+					}
+					roi = new PointRoi(xi, yi, nParticles);
+					
+					imp_.setRoi(roi);
+				} 
+			}
 		}
 		
-		PointRoi roi;
-
-		if (nParticles > 0) {
-			double [] x = module.reportX();
-			double [] y = module.reportY();
-			int [] xi = new int[nParticles];
-			int [] yi = new int[nParticles];
-			for (int i = 0; i < nParticles; i ++ ) {
-				xi[i] = (int) x[i];
-				yi[i] = (int) y[i];
+		synchronized(this) {
+			if (prevProcess_ != null) {
+				prevProcess_.interrupt();
 			}
-			roi = new PointRoi(xi, yi, nParticles);
-			
-			imp_.setRoi(roi);
-		} 
+
+			prevProcess_ = new CurrentProcessThread();
+		}
+		
+		prevProcess_.start();
 	}
 
 	@Override 
@@ -200,6 +228,6 @@ public abstract class ParticleAnalysisDialog extends NonBlockingGenericDialog {
 		return nodes_;
 	}	
 	
-	abstract public ParticleAnalysis processCurrentFrame(ImageProcessor ip);
+	abstract public ParticleAnalysis processCurrentFrame(ImageProcessor ip) throws InterruptedException;
 	abstract public boolean updateParameters();
 }

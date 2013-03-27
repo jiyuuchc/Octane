@@ -118,7 +118,7 @@ public class WatershedAnalysis extends ParticleAnalysis{
 		//bDoGaussianFit_ = true;
 	}
 
-	public void process(ImageProcessor ip, Rectangle mask, int threshold, int noise) {
+	public void process(ImageProcessor ip, Rectangle mask, int threshold, int noise) throws InterruptedException {
 		
 		int border = 1;
 		
@@ -164,6 +164,10 @@ public class WatershedAnalysis extends ParticleAnalysis{
 		int [] listOfIndexes = new int[width_ * height_];
  
 		for (Pixel p : pixels) {
+			
+			if (Thread.interrupted()) {
+				throw( new InterruptedException() );
+			}
 
 			int index = p.x + width_ * p.y;
 			

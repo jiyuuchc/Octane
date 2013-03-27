@@ -35,7 +35,7 @@ public class AnalysisDialog3DSimple extends AnalysisDialog2D {
 	}
 
 	@Override
-	public WatershedAnalysis processCurrentFrame(ImageProcessor ip) {
+	public WatershedAnalysis processCurrentFrame(ImageProcessor ip) throws InterruptedException {
 		
 		WatershedAnalysis module = new WatershedAnalysis();
 		

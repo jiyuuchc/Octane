@@ -35,7 +35,7 @@ public class ParticleAnalysisTest {
 		return imp;
 	}
 	
-	public static void watershedTest1(WatershedAnalysis module) {
+	public static void watershedTest1(WatershedAnalysis module) throws InterruptedException {
 		ShortProcessor ip = new ShortProcessor(imgSize, imgSize);
 		TestDataGenerator.randomMultipleSpots(ip, nParticles, sigma2, peakIntensity, bgIntensity);
 		TestDataGenerator.addShotNoise(ip, 1);
@@ -57,7 +57,7 @@ public class ParticleAnalysisTest {
 
 	}
 	
-	public static void watershedTest2(WatershedAnalysis module) {
+	public static void watershedTest2(WatershedAnalysis module) throws InterruptedException {
 		ShortProcessor ip = new ShortProcessor(imgSize, imgSize);
 		long totalTime = 0;
 		int n = 0;
@@ -84,7 +84,7 @@ public class ParticleAnalysisTest {
 		
 	}
 
-	public static void watershedTest3(WatershedAnalysis module) {
+	public static void watershedTest3(WatershedAnalysis module) throws InterruptedException {
 		ShortProcessor ip = new ShortProcessor(imgSize, imgSize);
 		TestDataGenerator.randomMultipleSpots(ip, nParticles, sigma2, peakIntensity, bgIntensity);
 		TestDataGenerator.addShotNoise(ip, 1);
@@ -126,7 +126,11 @@ public class ParticleAnalysisTest {
 		// WaterShed test
 		WatershedAnalysis module = new WatershedAnalysis();
 		
-		watershedTest3(module);
+		try {
+			watershedTest3(module);
+		} catch (InterruptedException e) {
+//			e.printStackTrace();
+		}
 		
 		//watershedTest2(module);
 
