@@ -1,4 +1,4 @@
-//FILE:          TrackingPrefDialog.java
+//FILE:          TrackingParameters.java
 //PROJECT:       Octane
 //-----------------------------------------------------------------------------
 //
