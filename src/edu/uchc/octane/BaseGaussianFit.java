@@ -22,6 +22,8 @@ import java.util.Arrays;
 import org.apache.commons.math3.util.FastMath;
 import org.apache.commons.math3.optim.PointValuePair;
 
+import ij.IJ;
+import ij.macro.Interpreter;
 import ij.plugin.filter.BackgroundSubtracter;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
@@ -100,7 +102,8 @@ public abstract class BaseGaussianFit {
 		
 		BackgroundSubtracter bs = new BackgroundSubtracter();
 		bs.rollingBallBackground(fp, backgroundFilterSize_, true, fp.isInvertedLut(), false, false, true);
-		
+		IJ.showProgress(1.0);
+
 		for (int i = 0; i < imageData_.length; i++) {
 			imageData_[i] -= backgroundData[i];
 		}

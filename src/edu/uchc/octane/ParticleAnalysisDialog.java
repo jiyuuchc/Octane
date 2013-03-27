@@ -80,11 +80,8 @@ public abstract class ParticleAnalysisDialog extends NonBlockingGenericDialog {
 					return true;
 				}
 				
-				boolean result;
-				result = updateParameters();
-				if (result = true) {
+				if (updateParameters() == true) {
 					updateResults();
-
 					return true;
 				} else {
 					return false;

@@ -55,6 +55,7 @@ public class AnalysisDialog2D extends ParticleAnalysisDialog {
 	}
 
 	public void savePrefs() {
+
 		if (prefs_ == null) {
 			return;
 		}
@@ -88,8 +89,19 @@ public class AnalysisDialog2D extends ParticleAnalysisDialog {
 	@Override
 	public boolean updateParameters() {
 		kernelSize_ = (int) getNextNumber();
+		
+		if (kernelSize_ <= 0 || kernelSize_ > 10) {
+			return false;
+		}
+			
 		sigma_ = getNextNumber();
+		
+		if (sigma_ <=0 ) {
+			return false;
+		}
+		
 		zeroBg_ = (boolean) getNextBoolean();
+		
 		watershedThreshold_ = (int) getNextNumber();
 		watershedNoise_ = (int) getNextNumber();
 		

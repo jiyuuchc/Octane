@@ -53,7 +53,9 @@ public class AnalysisDialog3DSimple extends AnalysisDialog2D {
 
 	@Override
 	public boolean updateParameters() {
-		super.updateParameters();
+		if (!super.updateParameters()) {
+			return false;
+		}
 		
 		calibrationStr_ = this.getNextString();
 		
@@ -67,7 +69,11 @@ public class AnalysisDialog3DSimple extends AnalysisDialog2D {
 		}
 		
 		for (int i = 0; i < 3; i++) {
-			c_[i] = Double.parseDouble(substrs[i]);
+			try {
+				c_[i] = Double.parseDouble(substrs[i]);
+			} catch (NumberFormatException e) {
+				return false;
+			}
 		}
 		
 		GaussianFit3DSimple fittingModule = new GaussianFit3DSimple();
