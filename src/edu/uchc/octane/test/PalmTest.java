@@ -22,7 +22,7 @@ public class PalmTest {
 			selected[i] = i;
 		}
 			
-		if (PalmParameters.openDialog()) {
+		if (PalmParameters.openDialog(false)) {
 			palmModule.constructPalm(imp, selected);
 		}		
 	}

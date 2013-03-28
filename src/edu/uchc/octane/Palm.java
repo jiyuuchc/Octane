@@ -29,7 +29,6 @@ import java.awt.Color;
 import java.awt.Rectangle;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.util.concurrent.ExecutionException;
 
 import javax.swing.SwingWorker;
 
@@ -43,19 +42,32 @@ public class Palm {
 	int nSkipped_;
 	
 	public enum PalmType {AVERAGE, HEAD, TAIL, ALLPOINTS, TIMELAPSE};
-	public enum ZRenderMode {NONE, COLOR, STACK}; 
+	//public enum ZRenderMode {NONE, COLOR, STACK}; 
 	
 	private boolean correctDrift_;
+	
 	private TrajDataset dataset_;
+	private ImagePlus imp_;
 
-	private ZRenderMode zRenderMode_;
+	private Rectangle rect_;
+	
 	private double palmScaleFactor_;
-	private double palmPSFWidth_;
 	
 	private final double palmThreshold_ = 1e6;
 
 	int lut_[] = null;
+	
+	boolean bRenderStack_;
+	boolean bRenderInColor_;
+	int nSlices_;
+	int width_, height_;
+	double sigma_, sigmaZ_;
 	double zMin_, zMax_;
+	double zBottom_, zTop_;
+
+
+	private FloatProcessor [] ips_;
+	private ImageStack stack_;
 
 	public Palm (TrajDataset dataset) {
 		dataset_ = dataset;
@@ -78,14 +90,6 @@ public class Palm {
 		return rect;
 	}
 	
-//	public void setCorrectDrift(boolean b) {
-//		correctDrift_ = b;
-//	}
-//	
-//	public boolean getCorrectDrift() {
-//		return correctDrift_;
-//	}
-
 	public int getNPlotted() {
 		return nPlotted_;
 	}
@@ -107,8 +111,8 @@ public class Palm {
 		}
 		return node;
 	}
-
-	void gaussianImage(ImageProcessor [] ips, double xs, double ys, double w, double z) {
+	
+	private int getColor(double z) {
 		int zIndex;
 		if (z < zMin_) {
 			zIndex = 0;
@@ -117,449 +121,338 @@ public class Palm {
 		} else {
 			zIndex = (int)((z - zMin_) / (zMax_ - zMin_) * lut_.length);
 		}
-		gaussianImage(ips, xs, ys, w, zIndex);
-	}
-
-	void gaussianImage(ImageProcessor [] ips, double xs, double ys, double w, int zIndex) {
-		
-		if (ips.length != 3) {
-			throw (new IllegalArgumentException()); 
-		}
 		
 		int rgb = lut_[zIndex];
-		int r = (rgb&0xff0000)>>16;
-		int g = (rgb&0xff00)>>8;
-		int b = rgb&0xff;
-		int width = ips[0].getWidth();
-		int height = ips[0].getHeight();
-		for (int x = FastMath.max(0, (int)(xs - 3*w)); x < FastMath.min(width, (int)(xs + 3*w)); x ++) {
-			for (int y = FastMath.max(0, (int)(ys - 3*w)); y < FastMath.min(height, (int)(ys + 3*w)); y++) {
-				double v = 100 * FastMath.exp( -((x-xs) * (x-xs) + (y-ys)*(y-ys))/(2.0*w*w) );
+		
+		return rgb;
+	}
+	
+	private void increasePixelValue(int idx, int x, int y, double v) {
+		ImageProcessor ip = ips_[idx];
+		ip.setf(x, y, ip.getf(x,y) + (float)v);
+	}
+	
+	private void increaseColorPixelValue(int idx, int x, int y, double v, int r, int g, int b) {
+		increasePixelValue(idx * 3, x, y, v * r);
+		increasePixelValue(idx * 3 + 1, x, y, v * g);
+		increasePixelValue(idx * 3 + 2, x, y, v * b);
+	}
+
+	private void renderGaussianSpot(double xs, double ys, double z) {
+		int r = 0, g = 0, b = 0;
+		double zs = 0;
+		
+		if (bRenderInColor_) {
+			int rgb = getColor(z);
+			r = (rgb&0xff0000)>>16;
+			g = (rgb&0xff00)>>8;
+			b = rgb&0xff;
+		}
+		
+		if (bRenderStack_) {
+			zs = (z - zBottom_) * palmScaleFactor_;
+		}
+		
+		double sigma2 = 2 * sigma_ * sigma_;
+		double sigmaz2 = 2 * sigmaZ_ * sigmaZ_;
+
+		for (int x = FastMath.max(0, (int)(xs - 3 * sigma_)); x < FastMath.min(width_, (int)(xs + 3 * sigma_)); x ++) {
+			for (int y = FastMath.max(0, (int)(ys - 3 * sigma_)); y < FastMath.min(height_, (int)(ys + 3 * sigma_)); y++) {
+						
+				double v = FastMath.exp( - ((x-xs) * (x-xs) + (y-ys)*(y-ys)) / sigma2 );
 				
-				ips[0].setf(x, y, (float)v * r + ips[0].getf(x,y));
-				ips[1].setf(x, y, (float)v * g + ips[1].getf(x,y));
-				ips[2].setf(x, y, (float)v * b + ips[2].getf(x,y));
+				if (bRenderStack_) {
+
+					for (int zi = FastMath.max(0, (int)(zs - 3 * sigmaZ_)); zi < FastMath.min(nSlices_, zs + 3 * sigmaZ_); zi++) {
+
+						double intensity = FastMath.exp(-(zi - zs) * (zi-zs) / sigmaz2);
+
+						if (bRenderInColor_) {
+							
+							increaseColorPixelValue(zi, x, y, intensity * v, r, g, b);
+
+						} else {
+							
+							increasePixelValue(zi, x, y, intensity * v * 255);
+						}
+					}
+				} else { // not render to stack
+					
+					if (bRenderInColor_) {
+						
+						increaseColorPixelValue(0, x, y, v , r, g, b);
+
+					} else {
+
+						increasePixelValue(0, x, y, v * 255);
+					}
+				}
 			}
 		}
 	}
 
-	void gaussianImage(ImageProcessor ip, double xs, double ys, double w) {
-		for (int x = FastMath.max(0, (int)(xs - 3*w)); x < FastMath.min(ip.getWidth(), (int)(xs + 3*w)); x ++) {
-			for (int y = FastMath.max(0, (int)(ys - 3*w)); y < FastMath.min(ip.getHeight(), (int)(ys + 3*w)); y++) {
-				double v = 100 * FastMath.exp( -((x-xs) * (x-xs) + (y-ys)*(y-ys))/(2.0*w*w) );
-				ip.setf(x, y, (float)v + ip.getf(x,y));
+	
+	void renderGaussianSpot(SmNode node) {
+		node = getCorrectedNode(node);
+		
+		double xs = (node.x - rect_.x) * palmScaleFactor_;
+		double ys = (node.y - rect_.y) * palmScaleFactor_;
+
+		renderGaussianSpot(xs, ys, node.z);
+	}
+	
+	void renderGaussianSpotInMovie(SmNode node) {
+		int r = 0, g = 0, b = 0;
+		
+		node = getCorrectedNode(node);
+		
+		if (bRenderInColor_) {
+			int rgb = getColor(node.z);
+			r = (rgb&0xff0000)>>16;
+			g = (rgb&0xff00)>>8;
+			b = rgb&0xff;
+		}
+		
+		double xs = (node.x - rect_.x) * palmScaleFactor_;
+		double ys = (node.y - rect_.y) * palmScaleFactor_;
+		double sigma2 = 2 * sigma_ * sigma_;
+
+
+		for (int x = FastMath.max(0, (int)(xs - 3 * sigma_)); x < FastMath.min(width_, (int)(xs + 3 * sigma_)); x ++) {
+			for (int y = FastMath.max(0, (int)(ys - 3 * sigma_)); y < FastMath.min(height_, (int)(ys + 3 * sigma_)); y++) {
+						
+				double v = FastMath.exp( - ((x-xs) * (x-xs) + (y-ys)*(y-ys)) / sigma2 );
+				
+				if (bRenderInColor_) {
+
+					increaseColorPixelValue(node.frame - 1, x, y, v , r, g, b);
+
+				} else {
+
+					increasePixelValue(node.frame - 1, x, y, v * 255);
+				}
 			}
 		}
 	}
 
-	ColorProcessor renderRGB(FloatProcessor [] ips) {
-		if (ips.length != 3) {
-			throw (new IllegalArgumentException()); 
+	void renderAverage(Trajectory traj) {
+		if (traj == null) {
+			return;
+		}
+		
+		SmNode node;
+		
+		node = traj.get(0);
+		node = getCorrectedNode(node);
+		
+		double xx= node.x;
+		double yy= node.y;
+		double zz = node.z;
+		double xx2 = xx*xx;
+		double yy2 = yy*yy;
+		double zz2 = zz*zz;
+
+		for (int j = 1; j < traj.size(); j++ ) {
+			node = traj.get(j);
+			node = getCorrectedNode(node);
+			xx += node.x;
+			yy += node.y;
+			zz += node.z;
+			xx2 += node.x * node.x;
+			yy2 += node.y * node.y;
+			zz2 += node.z * node.z;
+		}
+
+		xx /= traj.size();
+		yy /= traj.size();
+		zz /= traj.size();
+		xx2 /= traj.size();
+		yy2 /= traj.size();
+		zz2 /= traj.size();
+
+		if (xx2 - xx * xx < palmThreshold_ && yy2 - yy * yy < palmThreshold_) {
+			double xs = (xx - rect_.x)* palmScaleFactor_;
+			double ys = (yy - rect_.y)* palmScaleFactor_;
+			double zs = zz;
+			
+			renderGaussianSpot(xs, ys, zs);
+			
+			nPlotted_ ++;
+			
+		} else {
+		
+			nSkipped_ ++;
+		}
+	}
+	
+	void renderAllPoints(Trajectory traj) {
+		if (traj == null ) {
+			return;
+		}
+
+		for (int j = 0; j < traj.size(); j++ ) {
+			renderGaussianSpot(traj.get(j));
+			nPlotted_ ++;
+		}
+
+	}
+
+	void renderMovie(Trajectory traj) {
+		if (traj == null ) {
+			return;
+		}
+
+		for (int i = 0; i < traj.size(); i++ ) {
+			renderGaussianSpotInMovie(traj.get(i));
+		}
+	}
+	
+	void processColor() {
+
+		if (! bRenderInColor_) {
+			return;
 		}
 		
 		double max = 0 ;
-		for (int i = 0; i < 3; i ++) {
-			FloatProcessor ip = ips[i];
+		for (int i = 0; i < ips_.length; i++) {
+			FloatProcessor ip = ips_[i];
 			float [] pixels = (float [])ip.getPixels();
-			
+
 			for (int j = 0; j < pixels.length; j++) {
 				max = FastMath.max(max, pixels[j]);
 			}
 		}
 		
-		ColorProcessor cp = new ColorProcessor(ips[0].getWidth(), ips[0].getHeight());
+		stack_ = new ImageStack(width_, height_);
 		
-		for (int i = 0; i < cp.getWidth() * cp.getHeight(); i++) {
-			int r = (int)(ips[0].getf(i) * 255 / max);
-			int g = (int)(ips[1].getf(i) * 255 / max);
-			int b = (int)(ips[2].getf(i) * 255 / max);
-			int rgb = r << 16 | g << 8 | b ;
-			cp.set(i,rgb);
+		for (int i = 0; i < ips_.length; i += 3) {
+			ColorProcessor cp = new ColorProcessor(width_, height_);
+			
+			for (int j = 0; j < width_ * height_; i++) {
+				int r = (int)(ips_[i].getf(j) * 255 / max);
+				int g = (int)(ips_[i + 1].getf(j) * 255 / max);
+				int b = (int)(ips_[i + 2].getf(j) * 255 / max);
+				int rgb = r << 16 | g << 8 | b ;
+				cp.set(j, rgb);
+			}
+			
+			stack_.addSlice(cp);
 		}
-		
-		return cp;
-		
 	}
 	
 	public void constructPalm(final ImagePlus imp, final int [] selected) {
 		nPlotted_ = 0;
 		nSkipped_ = 0;
 		
-		PalmType palmType = PalmParameters.getPalmType();
-		
-		palmScaleFactor_ = PalmParameters.palmScaleFactor_;
-		palmPSFWidth_ = PalmParameters.palmPSFWidth_;
-		zRenderMode_ = PalmParameters.getZRenderMode(); 
-		zMin_ = PalmParameters.zMin_;
-		zMax_ = PalmParameters.zMax_;
+		final PalmType palmType = PalmParameters.getPalmType();
 		
 		correctDrift_ = GlobalPrefs.compensateDrift_;
+		imp_ = imp;
+		palmScaleFactor_ = PalmParameters.palmScaleFactor_;
+		rect_ = getCurrentROI(imp);
+		width_ = (int) (rect_.width * palmScaleFactor_);
+		height_ = (int) (rect_.height * palmScaleFactor_);
+		sigma_ = PalmParameters.palmPSFWidth_ * palmScaleFactor_;
+		sigmaZ_ = PalmParameters.zSigma_; 
 
-		final Rectangle rect = getCurrentROI(imp);
+		bRenderInColor_ = PalmParameters.isRenderInColor(); 
+		bRenderStack_ = PalmParameters.isRenderStack();
+
+		zMin_ = PalmParameters.lutMin_;
+		zMax_ = PalmParameters.lutMax_;
 		
-		if (palmType == PalmType.TIMELAPSE) {
+		if (bRenderStack_) {
+			zBottom_ = PalmParameters.zBottom_;
+			zTop_ = PalmParameters.zTop_;
+			nSlices_ = (int) ((zTop_ - zBottom_) * PalmParameters.palmScaleFactor_);
+
+		} else if (palmType == PalmType.TIMELAPSE) {
 			
-			ImageStack stack = constructPalmTimeLapse(imp, rect, selected);
-
-			if (stack != null) {
-				ImagePlus img = imp.createImagePlus();
-				img.setStack("PALMStack-" + imp.getTitle(), stack);
-				img.show();
-			}
-
+			nSlices_ = imp.getStackSize();
+		
 		} else {
 			
-			ImageProcessor ip = null; 
-
-			switch (palmType) {
-			case HEAD:
-				ip = constructPalmTypeHeadOrTail(rect, selected, true);
-				break;
-			case TAIL:
-				ip = constructPalmTypeHeadOrTail(rect, selected, false);
-				break;
-			case AVERAGE:
-				ip = constructPalmTypeAverage(rect, selected);
-				break;
-			case ALLPOINTS:
-				ip = constructPalmTypeAllPoints(rect, selected);
-				break;
-			}
-
-			if (ip != null ) {
-				ImagePlus img = new ImagePlus("PALM-" + imp.getTitle(), ip);
-				img.show();
-			}
-
-			IJ.log(String.format("Plotted %d molecules, skipped %d molecules.", getNPlotted(), getNSkipped()));
+			nSlices_ = 1;
 		}
-	}
 
-	ImageStack constructPalmTimeLapse(final ImagePlus imp, final Rectangle rect, final int [] selected) {
-
-		class MySwingWorker extends SwingWorker<ImageStack, Void> {
-			ImageStack stack_ = null;
+		int nImages = nSlices_ * (bRenderInColor_ ? 3 : 1);
+		ips_ = new FloatProcessor[nImages];
+		
+		for (int i = 0; i < nImages; i ++ ) {
 			
-			public ImageStack doInBackground() {
-				ImageStack is =  new ImageStack((int)(rect.width * palmScaleFactor_), (int)(rect.height * palmScaleFactor_));
-				for (int i = 0; i < imp.getStack().getSize(); i++) {
-					ImageProcessor ip = new FloatProcessor((int)(rect.width * palmScaleFactor_), (int)(rect.height * palmScaleFactor_));
-					is.addSlice(""+i, ip);
-				}
-				for ( int i = 0; i < selected.length; i ++) {
-					Trajectory traj = dataset_.getTrajectoryByIndex(selected[i]);
-					rendeTrajectory(traj, rect, is);
-					firePropertyChange("Progress", i, i + 1);
-				}
-				return is;
-			}
+			ips_[i]= new FloatProcessor(width_, height_);
+	
+		}
+		
+		doConstructPALM(palmType, selected);
+		
+	}
+	
+	void doConstructPALM(final PalmType type, final int [] selected) {
+		
+		class MySwingWorker extends SwingWorker<Void, Void> {
 
 			@Override
-			public void done() {
-				try {
-					stack_ = get();
-				} 
-				catch (InterruptedException ignore) {}
-				catch (ExecutionException e) {
-					IJ.showMessage("Error constructing PALM stack ");
-					Throwable cause = e.getCause();
-					if (cause != null) {
-						System.err.println(cause.getLocalizedMessage());
-					} else {
-						System.err.println(e.getLocalizedMessage());
-					}						
+			public Void doInBackground() {
+				ImagePlus imp = null;
+				
+				for ( int i = 0; i < selected.length; i ++) {					
+					Trajectory traj = dataset_.getTrajectoryByIndex(selected[i]);
+					
+					switch (type) {
+					case HEAD:
+						renderGaussianSpot(traj.get(0));
+						nPlotted_ ++;
+						break;
+					case TAIL:
+						renderGaussianSpot(traj.get(traj.size()-1));
+						nPlotted_ ++;
+						break;
+					case AVERAGE:
+						renderAverage(traj);
+						break;
+					case ALLPOINTS:
+						renderAllPoints(traj);
+						break;
+					case TIMELAPSE:
+						renderMovie(traj);
+						break;
+					}
+
+					firePropertyChange("Progress", (double)i / selected.length, (double)(i + 1)/selected.length);
 				}
-			}
-			
-			ImageStack getResult() {
-				return stack_;
+				
+				if (bRenderInColor_) {
+					processColor();
+				} else {
+					for (int i = 0 ; i < ips_.length; i++) {
+						stack_.addSlice(ips_[i]);
+					}
+				}
+				
+				if (stack_.getSize() > 1) {
+					imp = new ImagePlus("PALM-" + imp_.getTitle(), stack_);
+				} else {
+					imp = new ImagePlus("PALM-" + imp_.getTitle(), stack_.getProcessor(1));
+				}
+				
+				imp.show();
+				
+				return null;
 			}
 		}
 		
 		MySwingWorker task = new MySwingWorker();
+
 		task.addPropertyChangeListener(new PropertyChangeListener() {
 			public void propertyChange(PropertyChangeEvent evt) {
 				if (evt.getPropertyName() == "Progress") {
-					IJ.showProgress((Integer) evt.getNewValue(), imp.getStack().getSize());
+					IJ.showProgress((Double)evt.getNewValue());
 				}
 			}
 		});
 		
 		task.execute();
-		
-		return task.getResult();
+
 	}
-	
-	ImageProcessor constructPalmTypeHeadOrTail(Rectangle rect, int [] selected, boolean isHead) {
-		double xs, ys;
-		double psdWidth = palmPSFWidth_ * palmScaleFactor_;
-
-		ImageProcessor ip = null;
-		FloatProcessor ips[] = null;
-		
-		int w = (int) (rect.width * palmScaleFactor_);
-		int h = (int) (rect.height * palmScaleFactor_);
-		
-		switch (zRenderMode_) {
-		case NONE:
-			ip = new FloatProcessor(w, h);
-			break;
-		case COLOR:
-			//ip = new ColorProcessor(w,h);
-			ips = new FloatProcessor[3];
-			for (int i = 0; i < 3; i++) {
-				ips[i] = new FloatProcessor(w,h);
-			}
-			break;
-		case STACK:
-			break;			
-		}
-
-		for ( int i = 0; i < selected.length; i ++) {
-			Trajectory traj = dataset_.getTrajectoryByIndex(selected[i]);
-//			if (correctDrift_ && traj.marked){
-//				continue;
-//			}
-				SmNode node;
-				if (isHead) {
-					node = traj.get(0);
-				} else {
-					node = traj.get(traj.size()-1);
-				}
-				node = getCorrectedNode(node);
-				xs = (node.x - rect.x)* palmScaleFactor_;
-				ys = (node.y - rect.y)* palmScaleFactor_;
-				
-				switch (zRenderMode_) {
-				case NONE:
-					gaussianImage(ip, xs, ys, psdWidth);
-					break;
-				case COLOR:
-					double zs = node.z;
-					gaussianImage(ips, xs, ys, psdWidth, zs);
-					break;
-				case STACK:
-					break;
-				}
-				nPlotted_ ++;
-		}
-		
-		if (zRenderMode_ == ZRenderMode.COLOR) {
-			ip = renderRGB(ips);
-		}
-
-		return ip;
-	}	
-	
-	ImageProcessor constructPalmTypeAverage(Rectangle rect, int [] selected) {
-		double xx, yy, zz, xx2, yy2, zz2, xs, ys, zs;
-
-		//double psdWidth = palmPSFWidth_ * palmScaleFactor_;
-		double psdWidth = palmPSFWidth_ * palmScaleFactor_;
-		
-		ImageProcessor ip = null;
-		FloatProcessor ips[] = null;
-		
-		int w = (int) (rect.width * palmScaleFactor_);
-		int h = (int) (rect.height * palmScaleFactor_);
-		
-		switch (zRenderMode_) {
-		case NONE:
-			ip = new FloatProcessor(w, h);
-			break;
-		case COLOR:
-			//ip = new ColorProcessor(w,h);
-			ips = new FloatProcessor[3];
-			for (int i = 0; i < 3; i++) {
-				ips[i] = new FloatProcessor(w,h);
-			}
-			break;
-		case STACK:
-			break;			
-		}
-
-		for ( int i = 0; i < selected.length; i ++) {
-			Trajectory traj = dataset_.getTrajectoryByIndex(selected[i]);
-			//				if (correctDrift_ && traj.marked){
-			//					continue;
-			//				}
-			SmNode node;
-			node = traj.get(0);
-			node = getCorrectedNode(node);
-			xx= node.x;
-			yy= node.y;
-			zz = node.z;
-			xx2 = xx*xx;
-			yy2 = yy*yy;
-			zz2 = zz*zz;
-
-			for (int j = 1; j < traj.size(); j++ ) {
-				node = traj.get(j);
-				node = getCorrectedNode(node);
-				xx += node.x;
-				yy += node.y;
-				zz += node.z;
-				xx2 += node.x * node.x;
-				yy2 += node.y * node.y;
-				zz2 += node.z * node.z;
-			}
-
-			xx /= traj.size();
-			yy /= traj.size();
-			zz /= traj.size();
-			xx2 /= traj.size();
-			yy2 /= traj.size();
-			zz2 /= traj.size();
-
-			if (xx2 - xx * xx < palmThreshold_ && yy2 - yy * yy < palmThreshold_) {
-				xs = (xx - rect.x)* palmScaleFactor_;
-				ys = (yy - rect.y)* palmScaleFactor_;
-				
-				switch (zRenderMode_) {
-				case NONE:
-					gaussianImage(ip, xs, ys, psdWidth);
-					break;
-				case COLOR:
-					zs = zz;
-					gaussianImage(ips, xs, ys, psdWidth, zs);
-					break;
-				case STACK:
-					break;
-				}
-				nPlotted_ ++;
-			} else {
-				nSkipped_ ++;
-			}
-		}
-
-		if (zRenderMode_ == ZRenderMode.COLOR) {
-			ip = renderRGB(ips);
-		}
-
-		return ip;
-	}
-
-	ImageProcessor constructPalmTypeAllPoints(Rectangle rect, int [] selected) {
-		double xs, ys;
-
-		double psdWidth = palmPSFWidth_ * palmScaleFactor_;
-
-		ImageProcessor ip = null;
-		FloatProcessor ips[] = null;
-		
-		int w = (int) (rect.width * palmScaleFactor_);
-		int h = (int) (rect.height * palmScaleFactor_);
-		
-		switch (zRenderMode_) {
-		case NONE:
-			ip = new FloatProcessor(w, h);
-			break;
-		case COLOR:
-			//ip = new ColorProcessor(w,h);
-			ips = new FloatProcessor[3];
-			for (int i = 0; i < 3; i++) {
-				ips[i] = new FloatProcessor(w,h);
-			}
-			break;
-		case STACK:
-			break;			
-		}
-
-		for ( int i = 0; i < selected.length; i ++) {
-			Trajectory traj = dataset_.getTrajectoryByIndex(selected[i]);
-			//				if (correctDrift_ && traj.marked){
-			//					continue;
-			//				}
-			for (int j = 0; j < traj.size(); j++ ) {
-				SmNode node;
-				node = traj.get(j);
-				node = getCorrectedNode(node);
-				xs = (node.x - rect.x)* palmScaleFactor_;
-				ys = (node.y - rect.y)* palmScaleFactor_;
-				
-				switch (zRenderMode_) {
-				case NONE:
-					gaussianImage(ip, xs, ys, psdWidth);
-					break;
-				case COLOR:
-					double zs = node.z;
-					gaussianImage(ips, xs, ys, psdWidth, zs);
-					break;
-				case STACK:
-					break;
-				}
-				nPlotted_ ++;
-			}
-		}
-
-		if (zRenderMode_ == ZRenderMode.COLOR) {
-			ip = renderRGB(ips);
-		}
-
-		return ip;
-	}
-	
-	void rendeTrajectory(Trajectory traj, Rectangle rect, ImageStack stack) {
-		if (traj == null ) {
-			return;
-		}
-		for (int i = 0; i < traj.size(); i++ ) {
-			SmNode node = traj.get(i);
-			node = getCorrectedNode(node);
-			ImageProcessor ip = stack.getProcessor(traj.get(i).frame);
-			double xs = (traj.get(i).x - rect.x) * palmScaleFactor_;
-			double ys = (traj.get(i).y - rect.y) * palmScaleFactor_;
-			gaussianImage(ip, xs, ys, palmPSFWidth_ * palmScaleFactor_);
-		}
-	}
-	
-//	void drawIFSLineOverlay(Trajectory traj, Rectangle rect, ImageStack stack) {
-//		if (traj == null || traj.size() < 2) 
-//			return;
-//
-//		int [] xs = new int[traj.size()];
-//		int [] ys = new int[traj.size()];
-//		for (int i = 0; i < traj.size(); i ++) {
-//			xs[i] = (int)((traj.get(i).x - rect.x) * IFSScaleFactor_);
-//			ys[i] = (int)((traj.get(i).y - rect.y) * IFSScaleFactor_);			
-//		}
-//		
-//		PolygonRoi roi = null;
-//		int frame = traj.get(0).frame;
-//		ImageProcessor ip;
-//		for (int i = 0; i < traj.size(); i++) {
-//			while (frame < traj.get(i).frame) {
-//				ip = stack.getProcessor(frame ++);
-//				ip.setColor(Toolbar.getForegroundColor());
-//				roi.drawPixels(ip);
-//			}
-//			roi = new PolygonRoi(xs, ys, i + 1, Roi.POLYLINE);
-//			ip = stack.getProcessor(frame ++);
-//			ip.setColor(Toolbar.getForegroundColor());
-//			roi.drawPixels(ip);
-//		}
-//	}
-//
-//	void drawIFSSquareOverlay(Trajectory traj, Rectangle rect, ImageStack stack) {
-//		if (traj == null || traj.size() < 2) 
-//			return;
-//	
-//		int frame = traj.get(0).frame;
-//		Roi roi = null;
-//		ImageProcessor ip;
-//
-//		for ( int i = 0; i < traj.size(); i ++ ) {
-//			if (frame < traj.get(i).frame) {
-//				ip = stack.getProcessor(frame ++);
-//				ip.setColor(Toolbar.getForegroundColor());
-//				roi.drawPixels(ip);
-//			}
-//			int nx = (int)((traj.get(i).x - rect.x - 4) * IFSScaleFactor_);
-//			int ny = (int)((traj.get(i).y - rect.y - 4) * IFSScaleFactor_);
-//			roi = new Roi(nx,ny, 9 * IFSScaleFactor_, 9 * IFSScaleFactor_);
-//			ip = stack.getProcessor(frame ++);
-//			ip.setColor(Toolbar.getForegroundColor());
-//			roi.drawPixels(ip);
-//		}
-//	}	
 }

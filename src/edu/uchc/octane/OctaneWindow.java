@@ -291,11 +291,19 @@ public class OctaneWindow extends JFrame {
 		JMenuItem mntmPalm = new JMenuItem("PALM");
 		mntmPalm.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				ctr_.constructPalm();
+				ctr_.constructPalm(false);
 			}
 		});
 		mnImage.add(mntmPalm);
-		
+
+		JMenuItem mntmPalmStack = new JMenuItem("PALM Stack");
+		mntmPalmStack.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				ctr_.constructPalm(true);
+			}
+		});
+		mnImage.add(mntmPalmStack);
+
 //		JMenuItem mntmIfs = new JMenuItem("IFS");
 //		mntmIfs.addActionListener(new ActionListener() {
 //			public void actionPerformed(ActionEvent e){

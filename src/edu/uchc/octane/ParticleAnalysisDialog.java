@@ -205,7 +205,7 @@ public abstract class ParticleAnalysisDialog extends NonBlockingGenericDialog {
 		}
 		
 		synchronized(this) {
-			if (prevProcess_ != null) {
+			if (prevProcess_ != null && prevProcess_.isAlive()) {
 				prevProcess_.interrupt();
 			}
 
