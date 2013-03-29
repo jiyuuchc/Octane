@@ -32,6 +32,11 @@ import ij.process.ImageProcessor;
 import java.awt.AWTEvent;
 import java.awt.Rectangle;
 
+/**
+ * Base class for particle analysis dialogs that specify analysis parameters
+ * @author Ji-Yu
+ *
+ */
 public abstract class ParticleAnalysisDialog extends NonBlockingGenericDialog {
 	ImagePlus imp_;
 	Rectangle rect_;
@@ -46,6 +51,15 @@ public abstract class ParticleAnalysisDialog extends NonBlockingGenericDialog {
 	
 	private volatile Thread prevProcess_ = null;
 	
+	/**
+	 * Constructor that creates the dialog.
+	 * The dialog is non-modal. The analysis result of the current frame will be displayed in the form
+	 * of a PointRoi 
+	 * Parameter changes will trigger update of the analysis of current frame.
+	 * Changes in the image window (e.g., change frame) will trigger update of the analysis. 
+	 * @param imp The image data to be analyzed 
+	 * @param title The title of the dialog
+	 */
 	public ParticleAnalysisDialog(ImagePlus imp, String title) {
 		super(title);
 
@@ -94,6 +108,11 @@ public abstract class ParticleAnalysisDialog extends NonBlockingGenericDialog {
 		addDialogListener(dialogListener_);
 	}
 
+	/**
+	 * Usually called when the dialog is closed.
+	 * Analyze all frames to detect all particles.
+	 * @return An array of array of SmNode representing all particles. Each SmNode[] represents a frame. 
+	 */
 	public SmNode[][] processAllFrames() {
 		imp_.killRoi();
 		IJ.log("Particle Analysis -- Searching for particles:");
@@ -165,6 +184,11 @@ public abstract class ParticleAnalysisDialog extends NonBlockingGenericDialog {
 		return nodes_;
 	}
 
+	/**
+	 * Update the analysis of the current frame to display the PointRoi.
+	 * The method starts a new analysis thread and returns immediately. Any new calls to the method 
+	 * cancels previous analysis thread.  
+	 */
 	void updateResults() {
 		if (imp_ == null) {
 			return;
@@ -215,6 +239,9 @@ public abstract class ParticleAnalysisDialog extends NonBlockingGenericDialog {
 		prevProcess_.start();
 	}
 
+	/* (non-Javadoc)
+	 * @see java.awt.Window#dispose()
+	 */
 	@Override 
 	public void dispose() {
 		if (imageListener_ != null) {
@@ -224,10 +251,24 @@ public abstract class ParticleAnalysisDialog extends NonBlockingGenericDialog {
 		super.dispose();
 	}
 	
+	/**
+	 * Get the analysis result
+	 * @return All particles detected. This method must be called after processAllFrames()
+	 */
 	public SmNode[][] getSmNodes() {
 		return nodes_;
 	}	
 	
+	/**
+	 * Analyze current image frame
+	 * @param ip Current image frame
+	 * @return The analysis module used.
+	 * @throws InterruptedException
+	 */
 	abstract public ParticleAnalysis processCurrentFrame(ImageProcessor ip) throws InterruptedException;
+	/**
+	 * Update parameters to reflect changes in dialog input fields
+	 * @return True if the parameters are valid.
+	 */
 	abstract public boolean updateParameters();
 }

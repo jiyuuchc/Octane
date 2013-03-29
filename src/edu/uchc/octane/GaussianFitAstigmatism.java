@@ -33,6 +33,12 @@ import org.apache.commons.math3.optim.univariate.SearchInterval;
 import org.apache.commons.math3.optim.univariate.UnivariateObjectiveFunction;
 import org.apache.commons.math3.optim.univariate.UnivariatePointValuePair;
 
+/**
+ * This class implement 3D centroid localization based on the astigmatism method proposed by
+ * Xiaowei Zhuang lab.   
+ * @author Ji-Yu
+ *
+ */
 public class GaussianFitAstigmatism extends BaseGaussianFit {
 
 	//double [] parameters_;
@@ -44,6 +50,9 @@ public class GaussianFitAstigmatism extends BaseGaussianFit {
 
 	final static double errTol_ = 2.0;
 
+	/* (non-Javadoc)
+	 * @see edu.uchc.octane.BaseGaussianFit#fit()
+	 */
 	@Override
 	public double[] fit() {
 		double [] initParameters;
@@ -126,6 +135,9 @@ public class GaussianFitAstigmatism extends BaseGaussianFit {
 		return pvp.getPoint();
 	}
 
+	/**
+	 * calculate the Z coordinate based on astigmatism
+	 */
 	void calculateZ() {
 		
 		UnivariateFunction func = new UnivariateFunction() {
@@ -153,10 +165,20 @@ public class GaussianFitAstigmatism extends BaseGaussianFit {
 		z_ = upvp.getPoint();
 	}
 	
+	/**
+	 * Set initial value of the sigma
+	 * @param sigma The sigma value of the Gaussian function
+	 */
 	public void setPreferredSigmaValue(double sigma) {
 		sigma2_ = sigma * sigma * 2;
 	}
 
+	/**
+	 * Specify the Z calibration
+	 * The Xsigma(Z) and Ysigma(Z) are assumed to be 2nd order polynomial functions. Therefore 6 
+	 * real numbers are needed to specify the calibration    
+	 * @param p Six calibration parameters. First three for X and next three for Y. 
+	 */
 	public void setCalibration(double [] p) {
 		if (p == null) {
 			calibration_ = null;
@@ -187,6 +209,9 @@ public class GaussianFitAstigmatism extends BaseGaussianFit {
 		}
 	}
 	
+	/* (non-Javadoc)
+	 * @see edu.uchc.octane.BaseGaussianFit#getValueExcludingBackground(int, int, double[])
+	 */
 	@Override
 	public double getValueExcludingBackground(int xi, int yi, double [] p) {
 		double x = ( - p[0] + xi);
@@ -195,6 +220,9 @@ public class GaussianFitAstigmatism extends BaseGaussianFit {
 		return  FastMath.exp(- (x*x)/p[3]  -  (y*y)/p[4]) * p[2];
 	}
 
+	/* (non-Javadoc)
+	 * @see edu.uchc.octane.BaseGaussianFit#getZ()
+	 */
 	@Override
 	public double getZ() {
 		return z_;

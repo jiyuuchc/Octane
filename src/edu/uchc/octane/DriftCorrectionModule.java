@@ -17,6 +17,11 @@
 //
 package edu.uchc.octane;
 
+/**
+ * A module to store drift calibration data and carry out drift correction.
+ * @author Ji-Yu
+ *
+ */
 public class DriftCorrectionModule {
 	TrajDataset dataset_;
 
@@ -25,27 +30,54 @@ public class DriftCorrectionModule {
 	double [] drift_y_;
 	double [] drift_z_;
 
+	/**
+	 * constructor
+	 * @param dataset The dataset this module is associated with
+	 */
 	public DriftCorrectionModule(TrajDataset dataset) {
 		dataset_ = dataset;
 		hasDriftCorrectionData_ = false;
 	}
 
+	/**
+	 * Whether calibration data is available
+	 * @return Whether calibration data is available
+	 */
 	public boolean hasDrfitCorrectionData(){
 		return hasDrfitCorrectionData();
 	}
 	
+	/**
+	 * X drift calibration
+	 * @return X drift calibration
+	 */
 	public double [] getDriftX() {
 		return drift_x_;
 	}
 
+	/**
+	 * Y drift calibration
+	 * @return Y drift calibration
+	 */
 	public double [] getDriftY() {
 		return drift_y_;
 	}
 
+	/**
+	 * Z drift calibration
+	 * @return Z drift calibration
+	 */
 	public double [] getDriftZ() {
 		return drift_z_;
 	}
 	
+	/**
+	 * Store calibration data
+	 * @param driftx X drift calibration
+	 * @param drifty Y drift calibration
+	 * @param driftz Z drift calibration
+	 * @throws OctaneException
+	 */
 	public void setDriftData(double [] driftx, double [] drifty, double [] driftz) throws OctaneException {
 		int nFrames = dataset_.getMaximumFrameNumber();
 		if (driftx.length != nFrames || drifty.length != nFrames || driftz.length != nFrames) {
@@ -96,6 +128,9 @@ public class DriftCorrectionModule {
 //		return;		
 //	}
 
+	/**
+	 * Calculate drift based on all marked trajectories in the dataset assuming the marked trajectories are stationary
+	 */
 	public void calculateDrift() {
 		int [] marked = new int[dataset_.getSize()];
 		int cnt = 0;
@@ -114,6 +149,10 @@ public class DriftCorrectionModule {
 		return;
 	}
 
+	/**
+	 * Calculate drift based on a set of specified trajectories assuming these trajectories are stationary
+	 * @param selection Specify the index of a set of trajectories in the dataset
+	 */
 	public void calculateDrift(int [] selection) {
 		int nFrames = dataset_.getMaximumFrameNumber();
 		drift_x_ = new double[nFrames];
@@ -154,6 +193,12 @@ public class DriftCorrectionModule {
 		return;
 	}
 
+	/**
+	 * Correct drift
+	 * @param node The uncorrected node
+	 * @return A corrected node.
+	 * @throws OctaneException
+	 */
 	public SmNode correctDrift(SmNode node) throws OctaneException {
 		if (!hasDriftCorrectionData_) {
 			throw(new OctaneException("No drift compensation data available."));

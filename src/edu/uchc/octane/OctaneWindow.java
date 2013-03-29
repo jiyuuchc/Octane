@@ -264,7 +264,7 @@ public class OctaneWindow extends JFrame {
 		JMenuItem mntmComputeDrift = new JMenuItem("Compute Drift");
 		mntmComputeDrift.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e){
-				ctr_.computeDrift();
+				ctr_.displayDrift();
 			}
 		});
 		mnImage.add(mntmComputeDrift);
@@ -530,7 +530,7 @@ public class OctaneWindow extends JFrame {
 	/**
 	 * Select a trajectory and a node.
 	 *
-	 * @param index the index of the trajectory
+	 * @param trajIndex the index of the trajectory
 	 * @param nodeIndex the index of the node
 	 */
 	public void selectTrajectoryAndNodeByIndex(int trajIndex, int nodeIndex) {
@@ -557,6 +557,9 @@ public class OctaneWindow extends JFrame {
 		trajsTable_.addRowSelectionInterval(row,row);
 	}
 	
+	/**
+	 * Put nodes information of current trajectory into the NodesTable 
+	 */
 	private void populateNodesTable() {
 		if (trajsTable_.getSelectedRowCount() > 0) {
 			int index = trajsTable_.getSelectedTrajectoryIndex();

@@ -25,6 +25,12 @@ import java.util.Collections;
 
 import ij.process.ImageProcessor;
 
+/**
+ * A particle analysis module that uses watershed algrithm to detect particles and then use Gaussian
+ * fitting to determine centroids.
+ * @author Ji-Yu
+ *
+ */
 public class WatershedAnalysis extends ParticleAnalysis{
 	
 //	boolean bDoGaussianFit_ = false;
@@ -95,6 +101,10 @@ public class WatershedAnalysis extends ParticleAnalysis{
 		}
 	}
 	
+	/**
+	 * Specify the Gaussian fitting module
+	 * @param module The Gaussian fitting module
+	 */
 	public void setGaussianFitModule(GaussianFit module) {
 		if (module != null) {
 			//bDoGaussianFit_ = true;
@@ -105,10 +115,21 @@ public class WatershedAnalysis extends ParticleAnalysis{
 		}
 	}
 	
+	/**
+	 * Get the Gaussian fitting module
+	 * @return The Gaussian fitting module
+	 */
 	public BaseGaussianFit getGaussianFitModule() {
 		return g_;
 	}
 
+	/**
+	 * Specify Gaussian fitting parameters
+	 * @param kernelSize The fitting rectangle size is (2 * kernelSize + 1)
+	 * @param sigma The initial sigma value of the Gaussian function
+	 * @param bZeroBackground Whether to subtract background
+	 * @param bDeflation Whether to deflate image during analysis
+	 */
 	public void setGaussianFitParameters(int kernelSize, double sigma, boolean bZeroBackground, boolean bDeflation) {
 		kernelSize_ = kernelSize;
 		sigma_ = sigma;
@@ -118,6 +139,14 @@ public class WatershedAnalysis extends ParticleAnalysis{
 		//bDoGaussianFit_ = true;
 	}
 
+	/**
+	 * Analyze the image
+	 * @param ip The image to be analyzed
+	 * @param mask A rectangle of region of interest
+	 * @param threshold Lowest intensity to be analyzed
+	 * @param noise The noise threshold of the watershed algrithm
+	 * @throws InterruptedException
+	 */
 	public void process(ImageProcessor ip, Rectangle mask, int threshold, int noise) throws InterruptedException {
 		
 		int border = 1;

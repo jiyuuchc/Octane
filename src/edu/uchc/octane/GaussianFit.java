@@ -27,6 +27,11 @@ import org.apache.commons.math3.optim.nonlinear.scalar.GoalType;
 import org.apache.commons.math3.optim.nonlinear.scalar.ObjectiveFunction;
 import org.apache.commons.math3.optim.nonlinear.scalar.noderiv.PowellOptimizer;
 
+/**
+ * A simple 2D Gaussian fitting module
+ * @author Ji-Yu
+ *
+ */
 public class GaussianFit extends BaseGaussianFit {
 
 	//double [] parameters_;
@@ -38,14 +43,25 @@ public class GaussianFit extends BaseGaussianFit {
 //		bZeroBg_ = b;
 //	}
 
+	/**
+	 * Specify whether the image has zero background
+	 * @param b True if the image has zero background
+	 */
 	public void setFloatingSigma(boolean b) {
 		floatingSigma_ = b;
 	}
 	
+	/**
+	 * Set initial value for sigma value
+	 * @param sigma The sigma value of the Gaussian function
+	 */
 	public void setPreferredSigmaValue(double sigma) {
 		sigma2_ = sigma * sigma * 2;
 	}
 	
+	/* (non-Javadoc)
+	 * @see edu.uchc.octane.BaseGaussianFit#fit()
+	 */
 	@Override
 	public double [] fit() {
 		
@@ -102,6 +118,9 @@ public class GaussianFit extends BaseGaussianFit {
 		return pvp.getPoint();
 	}
 
+	/* (non-Javadoc)
+	 * @see edu.uchc.octane.BaseGaussianFit#getValueExcludingBackground(int, int, double[])
+	 */
 	@Override
 	public double getValueExcludingBackground(int xi, int yi, double [] p) {
 		double x = ( - p[0] + xi);

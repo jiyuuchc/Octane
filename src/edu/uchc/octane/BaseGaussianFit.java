@@ -23,13 +23,14 @@ import org.apache.commons.math3.util.FastMath;
 import org.apache.commons.math3.optim.PointValuePair;
 
 import ij.IJ;
-import ij.macro.Interpreter;
 import ij.plugin.filter.BackgroundSubtracter;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
 
 /**
- * Subpixel refiner by Gaussian fit.
+ * Base class for Gaussian fit modules.
+ * @author Ji-Yu
+ *
  */
 public abstract class BaseGaussianFit {
 
@@ -44,10 +45,22 @@ public abstract class BaseGaussianFit {
 	private int width_;
 	private int height_;
 	
+	/**
+	 * Carry out the Gaussian fit 
+	 * @return The fitting parameters
+	 */
 	public abstract double [] fit(); 
+	
+	/**
+	 * The value of the Gaussian fitting function at specified coordinate
+	 * @param xi The X coordinate offset from the initial value
+	 * @param yi The Y coordinate offset from the initial value
+	 * @param point The rest of the fitting parameters
+	 * @return The Gaussian function value 
+	 */
 	public abstract double getValueExcludingBackground(int xi, int yi, double [] point);	
 	
-	public final static int backgroundFilterSize_ = 4;
+	private final static int backgroundFilterSize_ = 4;
 	
 	/**
 	 * Default constructor
@@ -55,6 +68,12 @@ public abstract class BaseGaussianFit {
 	public BaseGaussianFit() {
 	}
 	
+	/**
+	 * Assign image data to the module. 
+	 * A copy of the image data is made and further operation will not alter the orginal image. 
+	 * @param ip The image processor that will be analyzed
+	 * @param bPreProcessBackground Whether the background should be pre-substracted using rolling ball method.
+	 */
 	public void setImageData(ImageProcessor ip, boolean bPreProcessBackground) {
 
 		Object pixels = ip.getPixels();
@@ -93,6 +112,10 @@ public abstract class BaseGaussianFit {
 		}
 	}
 	
+	/**
+	 * Substract background from internal data storage using rolling ball method. 
+	 * Currently the ball size is hard-coded to be 4 pixels.
+	 */
 	public void preProcessBackground() {
 
 		float[] backgroundData;
@@ -109,12 +132,21 @@ public abstract class BaseGaussianFit {
 		}
 	}
 
+	/**
+	 * Define region of next fitting
+	 * @param x0 The x coordinate
+	 * @param y0 The y coordinate
+	 * @param size The size of the fitting rectange is (2 * size + 1)   
+	 */
 	public void setFittingRegion(int x0, int y0, int size) {
 		windowSize_ = size;
 		x0_ = (int) x0;
 		y0_ = (int) y0;		
 	}
 
+	/**
+	 * Substract the value of the last fitting from the image   
+	 */
 	public void deflate() {
 		for (int xi = - windowSize_; xi <= windowSize_; xi++) {
 			for (int yi = - windowSize_; yi <= windowSize_; yi++) {
@@ -123,26 +155,52 @@ public abstract class BaseGaussianFit {
 		}
 	}
 
+	/**
+	 * Get the pixel value of the image
+	 * @param xi X coordinate
+	 * @param yi Y coordinate
+	 * @return The pixel value in double
+	 */
 	protected double pixelValue(int xi, int yi) {
 		return imageData_[xi + x0_ + (yi + y0_) * width_];
 	}
 	
+	/**
+	 * Get the fitting result 
+	 * @return X coordinate of the centroid
+	 */
 	public double getX() {
 		return pvp_.getPoint()[0] + x0_;
 	}
 
+	/**
+	 * Get the fitting result 
+	 * @return Y coordinate of the centroid
+	 */
 	public double getY() {
 		return pvp_.getPoint()[1] + y0_;
 	}
 
+	/**
+	 * Get the fitting result 
+	 * @return Z coordinate. Not all subclasses implement this
+	 */
 	public double getZ() {
 		return 0;
 	}
 
+	/**
+	 * Get the fitting result 
+	 * @return Intensity of the spot 
+	 */
 	public double getH() {
 		return pvp_.getPoint()[2];
 	}
 
+	/**
+	 * Get the fitting result 
+	 * @return Log Likelyhood of the fitting. Bigger value indicate higher confidence in fitting results.
+	 */
 	public double getE() {
 		double m = 0;
 		double m2 = 0;

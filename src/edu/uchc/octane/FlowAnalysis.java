@@ -27,6 +27,7 @@ import java.awt.Rectangle;
 
 
 /**
+ * Carry out particle flow analysis
  * @author Ji-Yu
  *
  */
@@ -36,12 +37,18 @@ public class FlowAnalysis {
 	
 	TrajDataset dataset_;
 	
+	/**
+	 * Constructor
+	 * @param dataset The associated trajectory data
+	 */
 	public FlowAnalysis(TrajDataset dataset) {
 		dataset_ = dataset;
 	}
 	
 	/**
-	 * Construct mobility map.
+	 * Calculate and display mobility map.
+	 * @param imp The image data
+	 * @param selected A set of trajectories to be used for analysis
 	 */
 	public void constructMobilityMap(ImagePlus imp, int [] selected) {
 		Rectangle rect;

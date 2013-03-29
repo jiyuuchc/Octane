@@ -19,6 +19,14 @@ package edu.uchc.octane;
 
 import org.apache.commons.math3.util.FastMath;
 
+/**
+ * A very simple 3D Gaussian fitting module.
+ * The module try to calculate the z coordinate based on how much defocusing the image has. It does
+ * not consider the degeneracy problem (defocusing can be caused by focusing shift up or down), and 
+ * assume focus always shift up. The sensitivity of the analysis near focus is poor.  
+ * @author Ji-Yu
+ *
+ */
 public class GaussianFit3DSimple extends GaussianFit {
 	
 	final static double errTol_ = 0.1; 
@@ -28,10 +36,19 @@ public class GaussianFit3DSimple extends GaussianFit {
 	double zMin_ = 0;
 	double sigmaMin_ = 0;
 	
+	/**
+	 * Constructor
+	 */
 	public GaussianFit3DSimple() {
 		setFloatingSigma(true); 
 	}
 	
+	/**
+	 * Specify the relationship between Z coordinates and sigma of the Gaussian function.
+	 * The relationship is expressed as a 2nd order polynomial function  
+	 * @param p The zeroth, 1st and 2nd order polynomial coefficient of the function 
+	 * @throws IllegalArgumentException
+	 */
 	public void setCalibrationValues(double[] p) throws IllegalArgumentException {
 		if (p.length != 3) {
 			throw new IllegalArgumentException("Length must be 3");
@@ -47,6 +64,9 @@ public class GaussianFit3DSimple extends GaussianFit {
 		calibration_ = p;
 	}
 	
+	/* (non-Javadoc)
+	 * @see edu.uchc.octane.GaussianFit#fit()
+	 */
 	@Override
 	public double[] fit() {
 		double [] ret = super.fit();
@@ -69,6 +89,9 @@ public class GaussianFit3DSimple extends GaussianFit {
 		return ret;
 	}
 	
+	/* (non-Javadoc)
+	 * @see edu.uchc.octane.BaseGaussianFit#getZ()
+	 */
 	@Override
 	public double getZ() {
 		if (calibration_ == null) {  

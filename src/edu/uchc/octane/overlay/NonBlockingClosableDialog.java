@@ -20,7 +20,6 @@ package edu.uchc.octane.overlay;
 
 import java.awt.event.WindowEvent;
 
-import ij.IJ;
 import ij.gui.NonBlockingGenericDialog;
 
 public class NonBlockingClosableDialog extends NonBlockingGenericDialog {

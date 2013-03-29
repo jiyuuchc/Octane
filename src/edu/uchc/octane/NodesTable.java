@@ -24,7 +24,7 @@ import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 
 /**
- * Class NodesTable dispalys the individual nodes (positon, frame etc) of a trajectory.
+ * Class NodesTable displays the individual nodes (positon, frame etc) of a trajectory.
  */
 public class NodesTable extends JTable{
 

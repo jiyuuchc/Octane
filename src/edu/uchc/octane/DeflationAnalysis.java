@@ -23,6 +23,12 @@ import java.util.Arrays;
 
 import ij.process.ImageProcessor;
 
+/**
+ * A simple particle analysis module that simply analyze all pixels sorted on intensity.
+ * 
+ * @author Ji-Yu
+ *
+ */
 public class DeflationAnalysis extends ParticleAnalysis {
 
 	class Pixel implements Comparable<Pixel> {
@@ -42,6 +48,15 @@ public class DeflationAnalysis extends ParticleAnalysis {
 		}
 	}
 
+	/**
+	 * Analyze the image
+	 * @param ip The image to be analyzed 
+	 * @param mask A region of the image. Pixels outside are ignored
+	 * @param kernelSize The size of a rectangle for Gaussian fitting 
+	 * @param sigma The sigma width of the point spread function 
+	 * @param threshold Lowest pixel intensity to be analyzed 
+	 * @param bZeroBackground Whether the background should be subtracted before fitting 
+	 */
 	public void process(ImageProcessor ip, Rectangle mask, int kernelSize, double sigma, int threshold, boolean bZeroBackground) {
 		Rectangle bbox = new Rectangle(kernelSize, kernelSize, ip.getWidth() - 2 * kernelSize, ip.getHeight() - 2 * kernelSize);
 		bbox = (Rectangle) mask.createIntersection(bbox);

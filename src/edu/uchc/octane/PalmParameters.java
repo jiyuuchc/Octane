@@ -21,6 +21,11 @@ import ij.gui.GenericDialog;
 
 import java.util.prefs.Preferences;
 
+/**
+ * Parameters for PALM plot
+ * @author Ji-Yu
+ *
+ */
 public class PalmParameters {
 
 	final private static String PALM_TYPE_KEY = "PalmType";
@@ -56,6 +61,11 @@ public class PalmParameters {
 			Palm.PalmType.TIMELAPSE
 	};
 	
+	/**
+	 * Opens a dialog to input parameters 
+	 * @param b Whether this is to generate a 3D PALM stack
+	 * @return True if user pressed OK
+	 */
 	static public boolean openDialog(boolean b) {
 		if (prefs_ == null) {
 			prefs_ = GlobalPrefs.getRoot().node(PalmParameters.class.getName());
@@ -127,14 +137,26 @@ public class PalmParameters {
 		
 	}
 	
+	/**
+	 * Get Palm type
+	 * @return Palm Type specified by user
+	 */
 	static Palm.PalmType getPalmType() {
 		return typeList_[palmType_];
 	}
 	
+	/**
+	 * Get whether to render in color
+	 * @return Whether to render in color
+	 */
 	static boolean isRenderInColor() {
 		return bRenderInColor_;
 	}
 
+	/**
+	 * Get whether to render 3d PALM stack
+	 * @return Whether to render 3d PALM stack
+	 */
 	static boolean isRenderStack() {
 		return bRenderStack_;
 	}

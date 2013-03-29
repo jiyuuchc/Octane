@@ -69,6 +69,10 @@ public class Palm {
 	private FloatProcessor [] ips_;
 	private ImageStack stack_;
 
+	/**
+	 * Constructor
+	 * @param dataset The dataset
+	 */
 	public Palm (TrajDataset dataset) {
 		dataset_ = dataset;
 		lut_ = new int[256];
@@ -77,7 +81,7 @@ public class Palm {
 		}
 	}
 
-	Rectangle getCurrentROI(ImagePlus imp) {
+	private Rectangle getCurrentROI(ImagePlus imp) {
 		Rectangle rect;
 		Roi roi = imp.getRoi();
 		if (roi!=null && roi.isArea()) {
@@ -90,10 +94,18 @@ public class Palm {
 		return rect;
 	}
 	
+	/**
+	 * Get number of particles plotted
+	 * @return Number of particles plotted
+	 */
 	public int getNPlotted() {
 		return nPlotted_;
 	}
 
+	/**
+	 * Get number of particle skipped
+	 * @return Number of particles skipped
+	 */
 	public int getNSkipped() {
 		return nSkipped_;
 	}
@@ -192,7 +204,7 @@ public class Palm {
 	}
 
 	
-	void renderGaussianSpot(SmNode node) {
+	private void renderGaussianSpot(SmNode node) {
 		node = getCorrectedNode(node);
 		
 		double xs = (node.x - rect_.x) * palmScaleFactor_;
@@ -201,7 +213,7 @@ public class Palm {
 		renderGaussianSpot(xs, ys, node.z);
 	}
 	
-	void renderGaussianSpotInMovie(SmNode node) {
+	private void renderGaussianSpotInMovie(SmNode node) {
 		int r = 0, g = 0, b = 0;
 		
 		node = getCorrectedNode(node);
@@ -235,7 +247,7 @@ public class Palm {
 		}
 	}
 
-	void renderAverage(Trajectory traj) {
+	private void renderAverage(Trajectory traj) {
 		if (traj == null) {
 			return;
 		}
@@ -285,7 +297,7 @@ public class Palm {
 		}
 	}
 	
-	void renderAllPoints(Trajectory traj) {
+	private void renderAllPoints(Trajectory traj) {
 		if (traj == null ) {
 			return;
 		}
@@ -297,7 +309,7 @@ public class Palm {
 
 	}
 
-	void renderMovie(Trajectory traj) {
+	private void renderMovie(Trajectory traj) {
 		if (traj == null ) {
 			return;
 		}
@@ -307,7 +319,7 @@ public class Palm {
 		}
 	}
 	
-	void processColor() {
+	private void processColor() {
 
 		if (! bRenderInColor_) {
 			return;
@@ -340,6 +352,11 @@ public class Palm {
 		}
 	}
 	
+	/**
+	 * Construct PALM image / image stack
+	 * @param imp The original image data
+	 * @param selected Trajectories to be included in the PALM plot
+	 */
 	public void constructPalm(final ImagePlus imp, final int [] selected) {
 		nPlotted_ = 0;
 		nSkipped_ = 0;
@@ -388,6 +405,11 @@ public class Palm {
 		
 	}
 	
+	/**
+	 * Does most of the plotting work
+	 * @param type The type of PALM image
+	 * @param selected Trajectories to be included in the PALM plot
+	 */
 	void doConstructPALM(final PalmType type, final int [] selected) {
 		
 		class MySwingWorker extends SwingWorker<Void, Void> {

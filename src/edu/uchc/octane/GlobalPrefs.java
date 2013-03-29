@@ -20,7 +20,7 @@ package edu.uchc.octane;
 import java.util.prefs.Preferences;
 
 /**
- * The Preferences.
+ * The global preferences.
  */
 public class GlobalPrefs {
 	private static Preferences prefs_ = Preferences.userNodeForPackage(GlobalPrefs.class); 

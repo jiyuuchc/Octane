@@ -36,9 +36,7 @@ import java.util.Scanner;
 import java.util.Vector;
 
 /**
- * The Trajectory Dataset.
- * It stores the information about all particle locations, and encapsulats a
- * tracking algorithm to generate trajectories.  
+ * The dataset object that stores the information about all trajectories and particle locations
  */
 public class TrajDataset{
 	Vector<Trajectory> trajectories_;

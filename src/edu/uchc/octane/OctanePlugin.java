@@ -59,6 +59,10 @@ public class OctanePlugin implements PlugIn{
 		}
 	}
 
+	/**
+	 * Opens the Octane window
+	 * @param dataset The dataset 
+	 */
 	void openWindow(TrajDataset dataset) {
 		ctl_ = new OctaneWindowControl(imp_);
 		
@@ -88,6 +92,10 @@ public class OctanePlugin implements PlugIn{
 		});
 	}
 
+	/**
+	 * Display particle analysis dialog and start particle analysis
+	 * @return True if user clicked OK 
+	 */
 	boolean startImageAnalysis() {
 		if (cmd_.endsWith("2D")) {
 			dlg_ = new AnalysisDialog2D(imp_);
@@ -123,6 +131,13 @@ public class OctanePlugin implements PlugIn{
 		return dlg_.wasOKed();
 	}
 
+	/**
+	 * Load dataset from disk
+	 * @param f File on disk
+	 * @return The dataset
+	 * @throws IOException
+	 * @throws ClassNotFoundException
+	 */
 	TrajDataset readDataset(File f) throws IOException, ClassNotFoundException {
 		TrajDataset dataset;
 		IJ.getInstance().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));

@@ -74,7 +74,7 @@ public class SmNode implements Serializable, Cloneable {
 	 * @param y the y
 	 * @param z the z
 	 * @param f the frame number
-	 * @param f the intensity
+	 * @param h the intensity
 	 * @param q the residue
 	 */
 	public SmNode(double x, double y, double z, int f, int h,  double q) {
@@ -102,6 +102,10 @@ public class SmNode implements Serializable, Cloneable {
 		}
 	}
 
+	/* (non-Javadoc)
+	 * @see java.lang.Object#clone()
+	 */
+	@Override
 	public SmNode clone() {
 		try {
 			return (SmNode) super.clone();

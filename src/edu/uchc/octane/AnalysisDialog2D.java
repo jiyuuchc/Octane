@@ -26,22 +26,31 @@ import java.util.prefs.Preferences;
 import ij.ImagePlus;
 import ij.process.ImageProcessor;
 
+/**
+ * Setting up parameters for 2D particle analysis using watershed/Gaussian fitting
+ * @author Ji-Yu
+ *
+ */
 public class AnalysisDialog2D extends ParticleAnalysisDialog {
 
 	static Preferences prefs_ = null;
 
 	int kernelSize_;
 	double sigma_;
-	boolean zeroBg_;
+	boolean preProcessBackground_;
 	int watershedThreshold_;
 	int watershedNoise_;
 
-	final static String KERNELSIZE_KEY = "kernelSize";
-	final static String SIGMA_KEY = "sigma";
-	final static String ZERO_BACKGROUND_KEY = "zeroBackground";
-	final static String WATERSHED_THRESHOLD_KEY = "threshold";
-	final static String WATERSHED_NOISE_KEY = "noise";
+	final private static String KERNELSIZE_KEY = "kernelSize";
+	final private static String SIGMA_KEY = "sigma";
+	final private static String ZERO_BACKGROUND_KEY = "zeroBackground";
+	final private static String WATERSHED_THRESHOLD_KEY = "threshold";
+	final private static String WATERSHED_NOISE_KEY = "noise";
 	
+	/**
+	 * Constructor
+	 * @param imp The image to be analyzed
+	 */
 	public AnalysisDialog2D(ImagePlus imp) {
 		super(imp, "Watershed parameters:" + imp.getTitle());
 
@@ -50,7 +59,7 @@ public class AnalysisDialog2D extends ParticleAnalysisDialog {
 		}
 		kernelSize_ = prefs_.getInt(KERNELSIZE_KEY, 2);
 		sigma_ = prefs_.getDouble(SIGMA_KEY, 0.8);
-		zeroBg_ = prefs_.getBoolean(ZERO_BACKGROUND_KEY, false);
+		preProcessBackground_ = prefs_.getBoolean(ZERO_BACKGROUND_KEY, false);
 		watershedThreshold_ = prefs_.getInt(WATERSHED_THRESHOLD_KEY, 100);
 		watershedNoise_ = prefs_.getInt(WATERSHED_NOISE_KEY, 100);
 		
@@ -58,11 +67,14 @@ public class AnalysisDialog2D extends ParticleAnalysisDialog {
 
 	}
 
+	/**
+	 * Set up input fields of the dialog 
+	 */
 	void setupDialog() {
 		
 		addNumericField("Kernel Size (pixels)", kernelSize_, 0);
 		addNumericField("PSF sigma (pixels)", sigma_, 2);
-		addCheckbox("Preprocess background", zeroBg_);
+		addCheckbox("Preprocess background", preProcessBackground_);
 		
 		addSlider("Intensity Threshold", 20, 40000.0, watershedThreshold_);
 		addSlider("Noise Threshold", 1, 5000.0, watershedNoise_);
@@ -72,6 +84,9 @@ public class AnalysisDialog2D extends ParticleAnalysisDialog {
 		sliders.get(1).setUnitIncrement(20); // default was 1
 	}
 
+	/**
+	 * Save parameters to persistent store
+	 */
 	public void savePrefs() {
 
 		if (prefs_ == null) {
@@ -80,11 +95,14 @@ public class AnalysisDialog2D extends ParticleAnalysisDialog {
 		
 		prefs_.putInt(KERNELSIZE_KEY, kernelSize_);
 		prefs_.putDouble(SIGMA_KEY, sigma_);
-		prefs_.putBoolean(ZERO_BACKGROUND_KEY, zeroBg_);
+		prefs_.putBoolean(ZERO_BACKGROUND_KEY, preProcessBackground_);
 		prefs_.putInt(WATERSHED_THRESHOLD_KEY, watershedThreshold_);
 		prefs_.putInt(WATERSHED_NOISE_KEY, watershedNoise_);
 	}
 
+	/* (non-Javadoc)
+	 * @see ij.gui.NonBlockingGenericDialog#actionPerformed(java.awt.event.ActionEvent)
+	 */
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		super.actionPerformed(e);
@@ -94,16 +112,22 @@ public class AnalysisDialog2D extends ParticleAnalysisDialog {
 		}
 	}
 	
+	/* (non-Javadoc)
+	 * @see edu.uchc.octane.ParticleAnalysisDialog#processCurrentFrame(ij.process.ImageProcessor)
+	 */
 	@Override
 	public WatershedAnalysis processCurrentFrame(ImageProcessor ip) throws InterruptedException {
 		
 		WatershedAnalysis module = new WatershedAnalysis();
 		module.setGaussianFitModule(new GaussianFit());
-		module.setGaussianFitParameters(kernelSize_, sigma_, zeroBg_, true);
+		module.setGaussianFitParameters(kernelSize_, sigma_, preProcessBackground_, true);
 		module.process(ip, rect_, watershedThreshold_, watershedNoise_);
 		return module;
 	}
 	
+	/* (non-Javadoc)
+	 * @see edu.uchc.octane.ParticleAnalysisDialog#updateParameters()
+	 */
 	@Override
 	public boolean updateParameters() {
 		kernelSize_ = (int) getNextNumber();
@@ -118,7 +142,7 @@ public class AnalysisDialog2D extends ParticleAnalysisDialog {
 			return false;
 		}
 		
-		zeroBg_ = (boolean) getNextBoolean();
+		preProcessBackground_ = (boolean) getNextBoolean();
 		
 		watershedThreshold_ = (int) getNextNumber();
 		watershedNoise_ = (int) getNextNumber();

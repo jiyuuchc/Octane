@@ -124,6 +124,9 @@ public class OctaneWindowControl implements ClipboardOwner{
 		createWindow();
 	}
 
+	/**
+	 * Create and display a new Octane window
+	 */
 	protected void createWindow() {
 		frame_ = new OctaneWindow();
 		frame_.setController(this);
@@ -148,6 +151,9 @@ public class OctaneWindowControl implements ClipboardOwner{
 		return dataset_;
 	}
 
+	/**
+	 * Select trajectories that are located within the current ROI of the image window
+	 */
 	protected void selectTrajectoriesWithinRoi() {
 		Roi roi = imp_.getRoi();
 		if (roi == null) {
@@ -179,6 +185,9 @@ public class OctaneWindowControl implements ClipboardOwner{
 		}
 	}
 	
+	/**
+	 * Copy selected trajectories to system clipboard
+	 */
 	protected void copySelectedTrajectories() {
 		StringBuilder buf = new StringBuilder();
 		int [] selected = frame_.getTrajsTable().getSelectedTrajectories();
@@ -194,6 +203,12 @@ public class OctaneWindowControl implements ClipboardOwner{
 		clipboard.setContents(contents, this);		
 	}
 
+	/**
+	 * Find the trajectory that contains the specified particle  
+	 * @param x The x coordinate of the particle
+	 * @param y The y coordinate of the particle
+	 * @param f The frame number of the particle
+	 */
 	protected void findMolecule(int x, int y, int f) {
 		int index = 0;
 		int fi = 0;
@@ -222,6 +237,9 @@ public class OctaneWindowControl implements ClipboardOwner{
 		}		
 	}
 	
+	/**
+	 * Find the trajectory that contains the particle specified by the cursor  
+	 */
 	protected void findMolecule() {
 		ImageCanvas canvas = imp_.getCanvas();
 		Point p = canvas.getCursorLoc();
@@ -230,6 +248,9 @@ public class OctaneWindowControl implements ClipboardOwner{
 		findMolecule(p.x, p.y, frame);
 	}
 
+	/**
+	 * Draw trajectory overlay on images 
+	 */
 	protected void drawOverlay() {
 		if (!GlobalPrefs.showOverlay_) {
 			imp_.setOverlay(null);
@@ -250,6 +271,9 @@ public class OctaneWindowControl implements ClipboardOwner{
 		imp_.setOverlay(path, Color.yellow, new BasicStroke(1f));			
 	}
 
+	/**
+	 * Draw a small box around the current particle 
+	 */
 	protected void drawBox() {
 		SmNode node = frame_.getNodesTable().getCurrentNode();
 		int x,y;
@@ -650,7 +674,10 @@ public class OctaneWindowControl implements ClipboardOwner{
 		
 	}
 
-	public void computeDrift() {
+	/**
+	 * Plot the drift calibration  
+	 */
+	public void displayDrift() {
 		int [] selected = frame_.getTrajsTable().getSelectedTrajectories();
 		dataset_.estimateDrift(selected);
 		double [] dx = dataset_.getDriftX();
@@ -670,6 +697,9 @@ public class OctaneWindowControl implements ClipboardOwner{
 		plotWinZ.show();		
 	}
 	
+	/**
+	 * Ask user to choose a file and import drift calibration data from the file 
+	 */
 	public void importDriftData() {
 		JFileChooser fc = new JFileChooser();
 		if (fc.showOpenDialog(IJ.getApplet()) == JFileChooser.APPROVE_OPTION) {

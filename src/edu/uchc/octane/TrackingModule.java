@@ -27,6 +27,11 @@ import java.util.ListIterator;
 import java.util.Stack;
 import java.util.Vector;
 
+/**
+ * Tracking module to generate trajectories
+ * @author Ji-Yu
+ *
+ */
 public class TrackingModule {
 	TrajDataset dataset_;
 	protected Vector<Trajectory> trajectories_;
@@ -51,6 +56,10 @@ public class TrackingModule {
 		}
 	}
 
+	/**
+	 * Constructor
+	 * @param dataset The dataset
+	 */
 	public TrackingModule(TrajDataset dataset) {
 		dataset_ = dataset;
 	}

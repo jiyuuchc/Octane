@@ -22,7 +22,7 @@ import java.util.prefs.Preferences;
 import ij.gui.GenericDialog;
 
 /**
- * The Preferences dialog .
+ * The tracking parameters dialog .
  */
 public class TrackingParameters {
 

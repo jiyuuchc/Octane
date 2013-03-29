@@ -30,7 +30,6 @@ import ij.ImageListener;
 import ij.ImagePlus;
 import ij.gui.DialogListener;
 import ij.gui.GenericDialog;
-import ij.gui.NonBlockingGenericDialog;
 import ij.process.Blitter;
 import ij.process.ColorProcessor;
 //import ij.process.ImageProcessor;

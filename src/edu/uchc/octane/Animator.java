@@ -145,6 +145,9 @@ public class Animator extends MouseAdapter {
 		}
 	}
 	
+	/* (non-Javadoc)
+	 * @see java.awt.event.MouseAdapter#mouseClicked(java.awt.event.MouseEvent)
+	 */
 	@Override
 	public void mouseClicked(MouseEvent e) {
 		stopAnimation();
