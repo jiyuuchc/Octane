@@ -29,6 +29,7 @@ import java.awt.Color;
 import java.awt.Rectangle;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.concurrent.ExecutionException;
 
 import javax.swing.SwingWorker;
 
@@ -40,23 +41,23 @@ import org.apache.commons.math3.util.FastMath;
 public class Palm {
 	int nPlotted_;
 	int nSkipped_;
-	
+
 	public enum PalmType {AVERAGE, HEAD, TAIL, ALLPOINTS, TIMELAPSE};
 	//public enum ZRenderMode {NONE, COLOR, STACK}; 
-	
+
 	private boolean correctDrift_;
-	
+
 	private TrajDataset dataset_;
 	private ImagePlus imp_;
 
 	private Rectangle rect_;
-	
+
 	private double palmScaleFactor_;
-	
+
 	private final double palmThreshold_ = 1e6;
 
 	int lut_[] = null;
-	
+
 	boolean bRenderStack_;
 	boolean bRenderInColor_;
 	int nSlices_;
@@ -93,7 +94,7 @@ public class Palm {
 		}
 		return rect;
 	}
-	
+
 	/**
 	 * Get number of particles plotted
 	 * @return Number of particles plotted
@@ -123,7 +124,7 @@ public class Palm {
 		}
 		return node;
 	}
-	
+
 	private int getColor(double z) {
 		int zIndex;
 		if (z < zMin_) {
@@ -133,17 +134,17 @@ public class Palm {
 		} else {
 			zIndex = (int)((z - zMin_) / (zMax_ - zMin_) * lut_.length);
 		}
-		
+
 		int rgb = lut_[zIndex];
-		
+
 		return rgb;
 	}
-	
+
 	private void increasePixelValue(int idx, int x, int y, double v) {
 		ImageProcessor ip = ips_[idx];
 		ip.setf(x, y, ip.getf(x,y) + (float)v);
 	}
-	
+
 	private void increaseColorPixelValue(int idx, int x, int y, double v, int r, int g, int b) {
 		increasePixelValue(idx * 3, x, y, v * r);
 		increasePixelValue(idx * 3 + 1, x, y, v * g);
@@ -153,26 +154,26 @@ public class Palm {
 	private void renderGaussianSpot(double xs, double ys, double z) {
 		int r = 0, g = 0, b = 0;
 		double zs = 0;
-		
+
 		if (bRenderInColor_) {
 			int rgb = getColor(z);
 			r = (rgb&0xff0000)>>16;
-			g = (rgb&0xff00)>>8;
-			b = rgb&0xff;
+		g = (rgb&0xff00)>>8;
+		b = rgb&0xff;
 		}
-		
+
 		if (bRenderStack_) {
 			zs = (z - zBottom_) * palmScaleFactor_;
 		}
-		
+
 		double sigma2 = 2 * sigma_ * sigma_;
 		double sigmaz2 = 2 * sigmaZ_ * sigmaZ_;
 
 		for (int x = FastMath.max(0, (int)(xs - 3 * sigma_)); x < FastMath.min(width_, (int)(xs + 3 * sigma_)); x ++) {
 			for (int y = FastMath.max(0, (int)(ys - 3 * sigma_)); y < FastMath.min(height_, (int)(ys + 3 * sigma_)); y++) {
-						
+
 				double v = FastMath.exp( - ((x-xs) * (x-xs) + (y-ys)*(y-ys)) / sigma2 );
-				
+
 				if (bRenderStack_) {
 
 					for (int zi = FastMath.max(0, (int)(zs - 3 * sigmaZ_)); zi < FastMath.min(nSlices_, zs + 3 * sigmaZ_); zi++) {
@@ -180,18 +181,18 @@ public class Palm {
 						double intensity = FastMath.exp(-(zi - zs) * (zi-zs) / sigmaz2);
 
 						if (bRenderInColor_) {
-							
+
 							increaseColorPixelValue(zi, x, y, intensity * v, r, g, b);
 
 						} else {
-							
+
 							increasePixelValue(zi, x, y, intensity * v * 255);
 						}
 					}
 				} else { // not render to stack
-					
+
 					if (bRenderInColor_) {
-						
+
 						increaseColorPixelValue(0, x, y, v , r, g, b);
 
 					} else {
@@ -203,28 +204,28 @@ public class Palm {
 		}
 	}
 
-	
+
 	private void renderGaussianSpot(SmNode node) {
 		node = getCorrectedNode(node);
-		
+
 		double xs = (node.x - rect_.x) * palmScaleFactor_;
 		double ys = (node.y - rect_.y) * palmScaleFactor_;
 
 		renderGaussianSpot(xs, ys, node.z);
 	}
-	
+
 	private void renderGaussianSpotInMovie(SmNode node) {
 		int r = 0, g = 0, b = 0;
-		
+
 		node = getCorrectedNode(node);
-		
+
 		if (bRenderInColor_) {
 			int rgb = getColor(node.z);
 			r = (rgb&0xff0000)>>16;
-			g = (rgb&0xff00)>>8;
-			b = rgb&0xff;
+					g = (rgb&0xff00)>>8;
+		b = rgb&0xff;
 		}
-		
+
 		double xs = (node.x - rect_.x) * palmScaleFactor_;
 		double ys = (node.y - rect_.y) * palmScaleFactor_;
 		double sigma2 = 2 * sigma_ * sigma_;
@@ -232,9 +233,9 @@ public class Palm {
 
 		for (int x = FastMath.max(0, (int)(xs - 3 * sigma_)); x < FastMath.min(width_, (int)(xs + 3 * sigma_)); x ++) {
 			for (int y = FastMath.max(0, (int)(ys - 3 * sigma_)); y < FastMath.min(height_, (int)(ys + 3 * sigma_)); y++) {
-						
+
 				double v = FastMath.exp( - ((x-xs) * (x-xs) + (y-ys)*(y-ys)) / sigma2 );
-				
+
 				if (bRenderInColor_) {
 
 					increaseColorPixelValue(node.frame - 1, x, y, v , r, g, b);
@@ -251,12 +252,12 @@ public class Palm {
 		if (traj == null) {
 			return;
 		}
-		
+
 		SmNode node;
-		
+
 		node = traj.get(0);
 		node = getCorrectedNode(node);
-		
+
 		double xx= node.x;
 		double yy= node.y;
 		double zz = node.z;
@@ -286,17 +287,17 @@ public class Palm {
 			double xs = (xx - rect_.x)* palmScaleFactor_;
 			double ys = (yy - rect_.y)* palmScaleFactor_;
 			double zs = zz;
-			
+
 			renderGaussianSpot(xs, ys, zs);
-			
+
 			nPlotted_ ++;
-			
+
 		} else {
-		
+
 			nSkipped_ ++;
 		}
 	}
-	
+
 	private void renderAllPoints(Trajectory traj) {
 		if (traj == null ) {
 			return;
@@ -318,13 +319,13 @@ public class Palm {
 			renderGaussianSpotInMovie(traj.get(i));
 		}
 	}
-	
+
 	private void processColor() {
 
 		if (! bRenderInColor_) {
 			return;
 		}
-		
+
 		double max = 0 ;
 		for (int i = 0; i < ips_.length; i++) {
 			FloatProcessor ip = ips_[i];
@@ -334,24 +335,22 @@ public class Palm {
 				max = FastMath.max(max, pixels[j]);
 			}
 		}
-		
-		stack_ = new ImageStack(width_, height_);
-		
+
 		for (int i = 0; i < ips_.length; i += 3) {
 			ColorProcessor cp = new ColorProcessor(width_, height_);
-			
-			for (int j = 0; j < width_ * height_; i++) {
+
+			for (int j = 0; j < width_ * height_; j++) {
 				int r = (int)(ips_[i].getf(j) * 255 / max);
 				int g = (int)(ips_[i + 1].getf(j) * 255 / max);
 				int b = (int)(ips_[i + 2].getf(j) * 255 / max);
 				int rgb = r << 16 | g << 8 | b ;
 				cp.set(j, rgb);
 			}
-			
+
 			stack_.addSlice(cp);
 		}
 	}
-	
+
 	/**
 	 * Construct PALM image / image stack
 	 * @param imp The original image data
@@ -360,9 +359,9 @@ public class Palm {
 	public void constructPalm(final ImagePlus imp, final int [] selected) {
 		nPlotted_ = 0;
 		nSkipped_ = 0;
-		
+
 		final PalmType palmType = PalmParameters.getPalmType();
-		
+
 		correctDrift_ = GlobalPrefs.compensateDrift_;
 		imp_ = imp;
 		palmScaleFactor_ = PalmParameters.palmScaleFactor_;
@@ -377,50 +376,52 @@ public class Palm {
 
 		zMin_ = PalmParameters.lutMin_;
 		zMax_ = PalmParameters.lutMax_;
-		
+
 		if (bRenderStack_) {
 			zBottom_ = PalmParameters.zBottom_;
 			zTop_ = PalmParameters.zTop_;
 			nSlices_ = (int) ((zTop_ - zBottom_) * PalmParameters.palmScaleFactor_);
 
 		} else if (palmType == PalmType.TIMELAPSE) {
-			
+
 			nSlices_ = imp.getStackSize();
-		
+
 		} else {
-			
+
 			nSlices_ = 1;
 		}
 
+		stack_ = new ImageStack(width_, height_);
+		
 		int nImages = nSlices_ * (bRenderInColor_ ? 3 : 1);
 		ips_ = new FloatProcessor[nImages];
-		
+
 		for (int i = 0; i < nImages; i ++ ) {
-			
+
 			ips_[i]= new FloatProcessor(width_, height_);
-	
+
 		}
-		
+
 		doConstructPALM(palmType, selected);
-		
+
 	}
-	
+
 	/**
 	 * Does most of the plotting work
 	 * @param type The type of PALM image
 	 * @param selected Trajectories to be included in the PALM plot
 	 */
 	void doConstructPALM(final PalmType type, final int [] selected) {
-		
-		class MySwingWorker extends SwingWorker<Void, Void> {
+
+		class MySwingWorker extends SwingWorker<ImagePlus, Void> {
 
 			@Override
-			public Void doInBackground() {
+			public ImagePlus doInBackground() {
 				ImagePlus imp = null;
-				
+
 				for ( int i = 0; i < selected.length; i ++) {					
 					Trajectory traj = dataset_.getTrajectoryByIndex(selected[i]);
-					
+
 					switch (type) {
 					case HEAD:
 						renderGaussianSpot(traj.get(0));
@@ -443,7 +444,7 @@ public class Palm {
 
 					firePropertyChange("Progress", (double)i / selected.length, (double)(i + 1)/selected.length);
 				}
-				
+
 				if (bRenderInColor_) {
 					processColor();
 				} else {
@@ -451,19 +452,35 @@ public class Palm {
 						stack_.addSlice(ips_[i]);
 					}
 				}
-				
+
 				if (stack_.getSize() > 1) {
 					imp = new ImagePlus("PALM-" + imp_.getTitle(), stack_);
 				} else {
 					imp = new ImagePlus("PALM-" + imp_.getTitle(), stack_.getProcessor(1));
 				}
 				
-				imp.show();
+				return imp;
+
+			}
+			
+			@Override
+			public void done() {
+				ImagePlus imp = null;
+				try {
+					imp = get();
+				} catch (InterruptedException e) {
+					System.err.println("PALM thread interrupted");
+				} catch (ExecutionException e) {
+					IJ.log("PALM rendering error:" + e.getCause().getMessage());
+					e.printStackTrace();
+				}
+				if (imp != null) {
+					imp.show();
+				}
 				
-				return null;
 			}
 		}
-		
+
 		MySwingWorker task = new MySwingWorker();
 
 		task.addPropertyChangeListener(new PropertyChangeListener() {
@@ -473,7 +490,7 @@ public class Palm {
 				}
 			}
 		});
-		
+
 		task.execute();
 
 	}
