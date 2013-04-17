@@ -39,7 +39,7 @@ public class Trajectory extends Vector<SmNode> {
 	/** A text note. */
 	public String note = null;
 
-	private int timeDelay_ = 4;
+	//private int timeDelay_ = 4;
 
 
 	/**
@@ -56,25 +56,27 @@ public class Trajectory extends Vector<SmNode> {
 	 * 
 	 * @return Average stepsize^2
 	 */
-	public double getAvgSquareStepSize() {
-		if (size() < timeDelay_ )
+	public double getAvgSquareStepSize(int delay) {
+		if (size() < delay )
 			return -1;
 		if (stepSize2_ >= 0)
 			return stepSize2_;
 		stepSize2_ = 0;
 		int cnt = 0;
-		for (int i = 0; i < size()-timeDelay_; i++) {
-			int j = i + timeDelay_;
-			while (get(j).frame - get(i).frame > timeDelay_) {
+		for (int i = 0; i < size() - delay; i++) {
+			int j = i + delay;
+			while (get(j).frame - get(i).frame > delay) {
 				j--;
 			}
-			if (get(j).frame - get(i).frame == timeDelay_) {
+			if (get(j).frame - get(i).frame == delay) {
 				stepSize2_ += get(j).distance2(get(i));
 				cnt ++;
 			}
 		}
 		if (cnt > 0) 
 			stepSize2_ /= cnt;
+		else 
+			return -1;
 		return stepSize2_;
 	}
 
@@ -85,7 +87,7 @@ public class Trajectory extends Vector<SmNode> {
 	 */
 	public double getMaxDisplament() {
 		if (size() < 2)
-			return 0;
+			return -1;
 		if (maxDisplacement_ >= 0)
 			return maxDisplacement_;
 

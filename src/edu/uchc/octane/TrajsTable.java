@@ -67,7 +67,7 @@ public class TrajsTable extends JTable {
 			case 1:
 				return traj.getLength();
 			case 2:
-				return traj.getAvgSquareStepSize();
+				return traj.getAvgSquareStepSize(GlobalPrefs.msdDelay_);
 			case 3:
 				return traj.marked;
 			case 4:
