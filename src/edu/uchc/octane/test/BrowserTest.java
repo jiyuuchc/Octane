@@ -9,6 +9,9 @@ import edu.uchc.octane.DeflationAnalysisDialog;
 import edu.uchc.octane.OctaneWindowControl;
 import edu.uchc.octane.ParticleAnalysisDialog;
 import edu.uchc.octane.AnalysisDialog2D;
+import edu.uchc.octane.SmNode;
+import edu.uchc.octane.TrackingParameters;
+import edu.uchc.octane.TrajDataset;
 
 public class BrowserTest {
 	public static void main(String[] args) throws IOException, ClassNotFoundException {
@@ -20,11 +23,17 @@ public class BrowserTest {
 			OctaneWindowControl b = new OctaneWindowControl(imp);
 			b.setup();
 		} else {
-			ParticleAnalysisDialog dlg = new AnalysisDialog3DSimple(imp);
+			ParticleAnalysisDialog dlg = new AnalysisDialog2D(imp);
 			dlg.showDialog();
 			if (dlg.wasOKed()) {
-				OctaneWindowControl ctlr = new OctaneWindowControl(imp);
-				ctlr.setup(dlg.processAllFrames());
+				SmNode [][] nodes = dlg.processAllFrames();
+				
+				if ( TrackingParameters.openDialog() ) { //wasOKed ?
+
+					TrajDataset data = TrajDataset.createDatasetFromNodes(nodes);
+					OctaneWindowControl ctlr = new OctaneWindowControl(imp);
+					ctlr.setup(data);
+				}
 			}
 		}
 	}

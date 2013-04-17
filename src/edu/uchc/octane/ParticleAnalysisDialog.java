@@ -154,6 +154,10 @@ public abstract class ParticleAnalysisDialog extends NonBlockingGenericDialog {
 					}
 					
 					nodes_[curFrame - 1] = module.createSmNodes(curFrame);
+					
+					if (nodes_[curFrame -1] == null) {
+						nodes_[curFrame - 1] = new SmNode[0];
+					}
 
 					int nParticles = module.reportNumParticles();
 					
