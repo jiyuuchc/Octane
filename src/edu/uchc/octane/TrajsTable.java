@@ -100,7 +100,6 @@ public class TrajsTable extends JTable {
 				this.fireTableCellUpdated(row, 3);
 			}
 		}
-
 	}
 
 	/**

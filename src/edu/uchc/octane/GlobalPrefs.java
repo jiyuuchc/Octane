@@ -31,13 +31,16 @@ public class GlobalPrefs {
 	final static String HISTOGRAM_BINS_KEY = "histogramBins";
 	final static String COMPENSATE_DRIFT_KEY = "compensateDrift";
 	final static String NUM_THREAD_KEY = "numThread";
-	final static String MSD_DELAY = "MsdDelay";
+	final static String MSD_DELAY_KEY = "MsdDelay";
+	final static String NOTES_SCRIPT_KEY = "NotesScript";
 
+	
 	public static boolean showOverlay_ = prefs_.getBoolean(SHOW_OVERLAY_KEY, false);
 	public static boolean compensateDrift_ = prefs_.getBoolean(COMPENSATE_DRIFT_KEY, false); 
 	public static int histogramBins_ = prefs_.getInt(HISTOGRAM_BINS_KEY , 20);
 	public static int nThread_ = prefs_.getInt(NUM_THREAD_KEY , 4);
-	public static int msdDelay_ = prefs_.getInt(MSD_DELAY, 4);
+	public static int msdDelay_ = prefs_.getInt(MSD_DELAY_KEY, 4);
+	public static String notesScript_ = prefs_.get(NOTES_SCRIPT_KEY, "");
 	
 	public static Preferences getRoot() {
 		return prefs_;
@@ -51,6 +54,7 @@ public class GlobalPrefs {
 		prefs_.putBoolean(COMPENSATE_DRIFT_KEY, compensateDrift_);
 		prefs_.putInt(HISTOGRAM_BINS_KEY, histogramBins_);
 		prefs_.putInt(NUM_THREAD_KEY, nThread_);
-		prefs_.putInt(MSD_DELAY, msdDelay_);
+		prefs_.putInt(MSD_DELAY_KEY, msdDelay_);
+		prefs_.put(NOTES_SCRIPT_KEY, notesScript_);
 	}
 }

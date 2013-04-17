@@ -31,13 +31,13 @@ public class Trajectory extends Vector<SmNode> {
 	private double maxDisplacement_ = -1;
 
 	/** Whether it is marked. */
-	public boolean marked = false;
+	protected boolean marked = false;
 
 	/** Whether it is already deleted. */
-	public boolean deleted = false;
+	protected boolean deleted = false;
 
 	/** A text note. */
-	public String note = null;
+	protected String note = null;
 
 	//private int timeDelay_ = 4;
 
@@ -112,4 +112,28 @@ public class Trajectory extends Vector<SmNode> {
 		maxDisplacement_ = -1;
 	}
 	
+	/**
+	 * @return note of current trajectory
+	 */
+	public String getNote() {
+		return note;
+	}
+	
+//	/**
+//	 * @param s New note
+//	 */
+//	public void setNote(String s) {
+//		note = s;
+//	}
+	
+	/**
+	 * @return true if current note is empty
+	 */
+	public boolean isNoteEmpty() {
+		if (note == null || note.trim().isEmpty()) {
+			return true;
+		} else {
+			return false;
+		}		
+	}
 }

@@ -353,6 +353,63 @@ public class OctaneWindow extends JFrame {
 		});
 		mnTools.add(mntmRunScript);
 
+		JMenuItem mntmPopulateNotes = new JMenuItem("Populate Notes with Script...");
+		mntmPopulateNotes.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				GenericDialog dlg = new GenericDialog("Input Script");
+				dlg.addTextAreas(GlobalPrefs.notesScript_, null, 10, 40);
+				dlg.showDialog();
+				if (dlg.wasOKed()) {
+					String script = dlg.getNextText();
+					GlobalPrefs.notesScript_ = script;
+
+					Interpreter bsh = new Interpreter();
+					TrajDataset dataset = ctr_.getData();
+					
+					for (int i = 0; i < dataset.getSize(); i ++) {
+						Trajectory traj = dataset.getTrajectoryByIndex(i);
+						if ( ! traj.deleted ) {
+							try {
+								bsh.set("t", traj);
+								if (traj.note == null) {
+									bsh.set("note", "");
+ 								} else {
+ 									bsh.set("note", traj.note);
+ 								}
+								bsh.eval(script);
+								String s = (String) bsh.get("note");
+								if (s  != null ) {
+									traj.note = s; 
+								}
+							} catch (Exception e1) {
+								traj.note = e1.getMessage();
+							}
+						}
+					}
+					trajsTable_.tableDataChanged();
+				}
+			}
+		});
+		mnTools.add(mntmPopulateNotes);
+
+		JMenuItem mntmClearNotes = new JMenuItem("Clear All Notes");
+		mntmClearNotes.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				TrajDataset dataset = ctr_.getData();
+
+				for (int i = 0; i < dataset.getSize(); i ++) {
+					Trajectory traj = dataset.getTrajectoryByIndex(i);
+					if ( ! traj.deleted ) {
+						traj.note = null;
+					}
+					trajsTable_.tableDataChanged();
+				}
+			}
+		});
+		mnTools.add(mntmClearNotes);
+		
 		contentPane_ = new JSplitPane();
 		contentPane_.setResizeWeight(0.5);
 		setContentPane(contentPane_);
