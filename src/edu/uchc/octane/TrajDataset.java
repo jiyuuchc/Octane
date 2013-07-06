@@ -22,6 +22,7 @@ import ij.IJ;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -40,7 +41,8 @@ import java.util.Vector;
  */
 public class TrajDataset{
 	Vector<Trajectory> trajectories_;
-	protected SmNode [][] nodes_; //nodes_[frame][offset]
+	SmNode [][] nodes_; //nodes_[frame][offset]
+	double pixelSize_;
 
 	TrackingModule tm_;
 	DriftCorrectionModule dcm_;
@@ -61,6 +63,26 @@ public class TrajDataset{
 		trajectories_ = new Vector<Trajectory>();
 		tm_ = new TrackingModule(this);
 		dcm_ = new DriftCorrectionModule(this);
+		
+		pixelSize_ = GlobalPrefs.defaultPixelSize_;
+	}
+
+	/**
+	 * Returns pixel size in nm.
+	 *
+	 * @return pixel size
+	 */
+	public double getPixelSize() {
+		return pixelSize_;
+	}
+	
+	/**
+	 * Set pixel size in nm 
+	 *
+	 * @param p pixel size in nm
+	 */
+	public void setPixelSize(double p) {
+		pixelSize_ = p;
 	}
 
 	/**
@@ -159,9 +181,13 @@ public class TrajDataset{
 	public void saveDataset(File file) throws IOException {
 		ObjectOutputStream out;
 		BufferedOutputStream fs;
+		
 		fs = new BufferedOutputStream(new FileOutputStream(file));
 		out = new ObjectOutputStream(fs);
+		
 		out.writeObject(trajectories_);
+		out.writeDouble(pixelSize_);
+		
 		out.close();
 		fs.close();
 	}
@@ -177,11 +203,21 @@ public class TrajDataset{
 	static public TrajDataset loadDataset(File file) throws IOException, ClassNotFoundException {
 		ObjectInputStream in;
 		FileInputStream fs;
+		
 		TrajDataset dataset = new TrajDataset();
+		
 		fs = new FileInputStream(file);
 		in = new ObjectInputStream(fs);
+		
 		Vector<Trajectory> trajectories = (Vector<Trajectory>) in.readObject();
 		dataset.trajectories_ = trajectories;
+
+		try {
+			in.readDouble();
+		} catch (EOFException e) {
+			// do nothing
+		}
+
 		in.close();
 		fs.close();
 		return dataset;

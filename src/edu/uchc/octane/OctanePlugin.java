@@ -198,12 +198,13 @@ public class OctanePlugin implements PlugIn{
 				if ( TrackingParameters.openDialog() ) { //wasOKed ?
 
 					TrajDataset data = TrajDataset.createDatasetFromNodes(nodes);
+					data.setPixelSize(dlg_.pixelSize_);
 					openWindow(data);
 					
 					return;
 				} 
 			} 
-				
+
 			dict_.remove(imp_);				
 		}
 

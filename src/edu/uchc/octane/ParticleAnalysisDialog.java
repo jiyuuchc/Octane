@@ -27,6 +27,7 @@ import ij.gui.DialogListener;
 import ij.gui.GenericDialog;
 import ij.gui.NonBlockingGenericDialog;
 import ij.gui.PointRoi;
+import ij.measure.Calibration;
 import ij.process.ImageProcessor;
 
 import java.awt.AWTEvent;
@@ -40,6 +41,8 @@ import java.awt.Rectangle;
 public abstract class ParticleAnalysisDialog extends NonBlockingGenericDialog {
 	ImagePlus imp_;
 	Rectangle rect_;
+
+	double pixelSize_;
 	
 	ImageListener imageListener_;
 	DialogListener dialogListener_;
@@ -50,7 +53,7 @@ public abstract class ParticleAnalysisDialog extends NonBlockingGenericDialog {
 	Integer nFound_;
 	
 	private volatile Thread prevProcess_ = null;
-	
+
 	/**
 	 * Constructor that creates the dialog.
 	 * The dialog is non-modal. The analysis result of the current frame will be displayed in the form
@@ -65,6 +68,15 @@ public abstract class ParticleAnalysisDialog extends NonBlockingGenericDialog {
 
 		imp_ = imp;
 		rect_ = imp.getProcessor().getRoi();
+
+		
+		double p = retrievePixelSizeFromImage();
+		
+		if (p > 0) {
+			pixelSize_ = p;
+		} else {
+			pixelSize_ = GlobalPrefs.defaultPixelSize_;	
+		}
 
 		imageListener_ = new ImageListener() {
 
@@ -106,8 +118,28 @@ public abstract class ParticleAnalysisDialog extends NonBlockingGenericDialog {
 		};
 
 		addDialogListener(dialogListener_);
+		
+		setupDialog();
+
 	}
 
+	double retrievePixelSizeFromImage() {
+		Calibration c = imp_.getCalibration();
+		
+		if (c.pixelHeight != c.pixelWidth) {
+			return -1;
+		}
+
+		String unit = c.getUnit();
+		if (unit.equalsIgnoreCase("nm")) {
+			return c.pixelHeight;
+		} else if (unit.equalsIgnoreCase("micro")) {
+			return c.pixelHeight/1000.0;
+		}
+
+		return -1;
+	}
+	
 	/**
 	 * Usually called when the dialog is closed.
 	 * Analyze all frames to detect all particles.
@@ -197,6 +229,8 @@ public abstract class ParticleAnalysisDialog extends NonBlockingGenericDialog {
 		if (imp_ == null) {
 			return;
 		}
+		
+		imp_.killRoi();
 
 		class CurrentProcessThread extends Thread {
 			@Override
@@ -264,12 +298,18 @@ public abstract class ParticleAnalysisDialog extends NonBlockingGenericDialog {
 	}	
 	
 	/**
+	 * Set up input fields of the dialog 
+	 */
+	abstract void setupDialog();
+
+	/**
 	 * Analyze current image frame
 	 * @param ip Current image frame
 	 * @return The analysis module used.
 	 * @throws InterruptedException
 	 */
 	abstract public ParticleAnalysis processCurrentFrame(ImageProcessor ip) throws InterruptedException;
+
 	/**
 	 * Update parameters to reflect changes in dialog input fields
 	 * @return True if the parameters are valid.

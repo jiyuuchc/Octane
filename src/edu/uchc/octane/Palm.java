@@ -364,23 +364,23 @@ public class Palm {
 
 		correctDrift_ = GlobalPrefs.compensateDrift_;
 		imp_ = imp;
-		palmScaleFactor_ = PalmParameters.palmScaleFactor_;
+		palmScaleFactor_ = dataset_.pixelSize_ / PalmParameters.palmPixelSize_;
 		rect_ = getCurrentROI(imp);
 		width_ = (int) (rect_.width * palmScaleFactor_);
 		height_ = (int) (rect_.height * palmScaleFactor_);
-		sigma_ = PalmParameters.palmPSFWidth_ * palmScaleFactor_;
-		sigmaZ_ = PalmParameters.zSigma_; 
+		sigma_ = PalmParameters.palmResolution_ / PalmParameters.palmPixelSize_ / 2.355;
+		sigmaZ_ = PalmParameters.zResolution_ / PalmParameters.palmPixelSize_ / 2.355; 
 
 		bRenderInColor_ = PalmParameters.isRenderInColor(); 
 		bRenderStack_ = PalmParameters.isRenderStack();
 
-		zMin_ = PalmParameters.lutMin_;
-		zMax_ = PalmParameters.lutMax_;
+		zMin_ = PalmParameters.lutMin_ / dataset_.pixelSize_;
+		zMax_ = PalmParameters.lutMax_ / dataset_.pixelSize_;
 
 		if (bRenderStack_) {
-			zBottom_ = PalmParameters.zBottom_;
-			zTop_ = PalmParameters.zTop_;
-			nSlices_ = (int) ((zTop_ - zBottom_) * PalmParameters.palmScaleFactor_);
+			zBottom_ = PalmParameters.palmZMin_ / dataset_.pixelSize_ ;
+			zTop_ = PalmParameters.palZMax_/ dataset_.pixelSize_  ;
+			nSlices_ = (int) ((zTop_ - zBottom_) * palmScaleFactor_);
 
 		} else if (palmType == PalmType.TIMELAPSE) {
 

@@ -18,7 +18,6 @@
 package edu.uchc.octane;
 
 import ij.gui.GenericDialog;
-
 import java.util.prefs.Preferences;
 
 /**
@@ -29,14 +28,14 @@ import java.util.prefs.Preferences;
 public class PalmParameters {
 
 	final private static String PALM_TYPE_KEY = "PalmType";
-	final private static String PALM_SCALE_FACTOR_KEY = "PalmRatio";
-	final private static String PALM_PSF_WIDTH_KEY = "PalmPSFWidth";
+	final private static String PALM_PIXEL_SIZE_KEY = "PalmPixelSize";
+	final private static String PALM_RESOLUTION_KEY = "PalmResolution";
 	final private static String RENDER_IN_COLOR_KEY = "RenderInColor";
 	final private static String LUT_MAX_KEY = "LutMax";
 	final private static String LUT_MIN_KEY = "LutMin";
 	final private static String Z_BOTTOM_KEY = "ZBottom";
 	final private static String Z_TOP_KEY = "ZTop";
-	final private static String Z_SIGMA_KEY = "ZSigma";
+	final private static String Z_RESOLUTION_KEY = "ZResolution";
 	
 	private static boolean bRenderStack_;
 	
@@ -45,13 +44,13 @@ public class PalmParameters {
 	private static int palmType_ = prefs_.getInt(PALM_TYPE_KEY, 0);
 	private static boolean bRenderInColor_ = prefs_.getBoolean(RENDER_IN_COLOR_KEY, false);
 	
-	static double palmScaleFactor_ = prefs_.getDouble(PALM_SCALE_FACTOR_KEY, 10.0);
-	static double palmPSFWidth_ = prefs_.getDouble(PALM_PSF_WIDTH_KEY, 0.1875);
+	static double palmPixelSize_ = prefs_.getDouble(PALM_PIXEL_SIZE_KEY, 16);
+	static double palmResolution_ = prefs_.getDouble(PALM_RESOLUTION_KEY, 30);
 	static double lutMax_ = prefs_.getDouble(LUT_MAX_KEY, 3.0);
 	static double lutMin_ = prefs_.getDouble(LUT_MIN_KEY, 0);
-	static double zBottom_ = prefs_.getDouble(Z_BOTTOM_KEY, 0);
-	static double zTop_ = prefs_.getDouble(Z_TOP_KEY, 3);
-	static double zSigma_ = prefs_.getDouble(Z_SIGMA_KEY, 1.6);
+	static double palmZMin_ = prefs_.getDouble(Z_BOTTOM_KEY, 0);
+	static double palZMax_ = prefs_.getDouble(Z_TOP_KEY, 3);
+	static double zResolution_ = prefs_.getDouble(Z_RESOLUTION_KEY, 100);
 	
 	private static Palm.PalmType [] typeList_ = {
 			Palm.PalmType.AVERAGE,
@@ -87,19 +86,19 @@ public class PalmParameters {
 			dlg.addChoice("PALM Type", strPalmTypes, strPalmTypes[palmType_]);
 		}
 		
-		dlg.addNumericField("Scale Factor", palmScaleFactor_, 0);
-		dlg.addNumericField("PSF width", palmPSFWidth_, 3);
+		dlg.addNumericField("PALM Pixel Size (nm)", palmPixelSize_, 0);
+		dlg.addNumericField("PALM Resolution (nm)", palmResolution_, 1);
 		
 		dlg.addMessage("- Color Parameters -");
 		dlg.addCheckbox("Render Z coordinates in pseudo-color", bRenderInColor_);
-		dlg.addNumericField("Min Z value (pixel)", lutMin_, 3);
-		dlg.addNumericField("Max Z value (pixel)", lutMax_, 3);
+		dlg.addNumericField("Min Z value (nm)", lutMin_, 1);
+		dlg.addNumericField("Max Z value (nm)", lutMax_, 1);
 
 		if (b) {
 			dlg.addMessage("- Stack Parameters -");
-			dlg.addNumericField("Z of bottom slice (pixel)", zBottom_, 3);
-			dlg.addNumericField("Z of top Slice (pixel)", zTop_, 3);
-			dlg.addNumericField("PSF Sigma_Z (pixel)", zSigma_, 3);
+			dlg.addNumericField("Min Z coordinates (nm)", palmZMin_, 1);
+			dlg.addNumericField("Max Z coordinates (nm)", palZMax_, 1);
+			dlg.addNumericField("Z resolution (nm)", zResolution_, 1);
 		}
 		
 		dlg.showDialog();
@@ -107,8 +106,8 @@ public class PalmParameters {
 			return false;
 
 		palmType_ = dlg.getNextChoiceIndex();
-		palmScaleFactor_ = dlg.getNextNumber();
-		palmPSFWidth_ = dlg.getNextNumber();
+		palmPixelSize_ = dlg.getNextNumber();
+		palmResolution_ = dlg.getNextNumber();
 		bRenderInColor_ = dlg.getNextBoolean();
 		lutMin_ = dlg.getNextNumber();
 		lutMax_ = dlg.getNextNumber();
@@ -118,20 +117,20 @@ public class PalmParameters {
 		}
 		
 		if (b) {
-			zBottom_ = dlg.getNextNumber();
-			zTop_ = dlg.getNextNumber();
-			zSigma_ = dlg.getNextNumber();
+			palmZMin_ = dlg.getNextNumber();
+			palZMax_ = dlg.getNextNumber();
+			zResolution_ = dlg.getNextNumber();
 		}
 
 		prefs_.putInt(PALM_TYPE_KEY, palmType_);
 		prefs_.putBoolean(RENDER_IN_COLOR_KEY, bRenderInColor_);
-		prefs_.putDouble(PALM_SCALE_FACTOR_KEY, palmScaleFactor_);
-		prefs_.putDouble(PALM_PSF_WIDTH_KEY, palmPSFWidth_);
+		prefs_.putDouble(PALM_PIXEL_SIZE_KEY, palmPixelSize_);
+		prefs_.putDouble(PALM_RESOLUTION_KEY, palmResolution_);
 		prefs_.putDouble(LUT_MIN_KEY, lutMin_);
 		prefs_.putDouble(LUT_MAX_KEY, lutMax_);
-		prefs_.putDouble(Z_BOTTOM_KEY, zBottom_);
-		prefs_.putDouble(Z_TOP_KEY, zTop_);
-		prefs_.putDouble(Z_SIGMA_KEY, zSigma_);
+		prefs_.putDouble(Z_BOTTOM_KEY, palmZMin_);
+		prefs_.putDouble(Z_TOP_KEY, palZMax_);
+		prefs_.putDouble(Z_RESOLUTION_KEY, zResolution_);
 		
 		return true;
 		

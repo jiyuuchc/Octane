@@ -40,9 +40,9 @@ public class AnalysisDialog2D extends ParticleAnalysisDialog {
 	boolean preProcessBackground_;
 	int watershedThreshold_;
 	int watershedNoise_;
+	double resolution_;
 
-	final private static String KERNELSIZE_KEY = "kernelSize";
-	final private static String SIGMA_KEY = "sigma";
+	final private static String IMAGE_RESOLUTION = "imageResolution";
 	final private static String ZERO_BACKGROUND_KEY = "zeroBackground";
 	final private static String WATERSHED_THRESHOLD_KEY = "threshold";
 	final private static String WATERSHED_NOISE_KEY = "noise";
@@ -53,27 +53,25 @@ public class AnalysisDialog2D extends ParticleAnalysisDialog {
 	 */
 	public AnalysisDialog2D(ImagePlus imp) {
 		super(imp, "Watershed parameters:" + imp.getTitle());
-
-		if (prefs_ == null) {
-			prefs_ = GlobalPrefs.getRoot().node(this.getClass().getName());
-		}
-		kernelSize_ = prefs_.getInt(KERNELSIZE_KEY, 2);
-		sigma_ = prefs_.getDouble(SIGMA_KEY, 0.8);
-		preProcessBackground_ = prefs_.getBoolean(ZERO_BACKGROUND_KEY, false);
-		watershedThreshold_ = prefs_.getInt(WATERSHED_THRESHOLD_KEY, 100);
-		watershedNoise_ = prefs_.getInt(WATERSHED_NOISE_KEY, 100);
-		
-		setupDialog();
-
 	}
 
 	/**
 	 * Set up input fields of the dialog 
 	 */
-	void setupDialog() {
-		
-		addNumericField("Kernel Size (pixels)", kernelSize_, 0);
-		addNumericField("PSF sigma (pixels)", sigma_, 2);
+	@Override
+	void setupDialog() { 
+
+		if (prefs_ == null) {
+			prefs_ = GlobalPrefs.getRoot().node(this.getClass().getName());
+		}
+
+		resolution_ =  prefs_.getDouble(IMAGE_RESOLUTION, 300);
+		preProcessBackground_ = prefs_.getBoolean(ZERO_BACKGROUND_KEY, false);
+		watershedThreshold_ = prefs_.getInt(WATERSHED_THRESHOLD_KEY, 100);
+		watershedNoise_ = prefs_.getInt(WATERSHED_NOISE_KEY, 100);
+
+		addNumericField("Pixel Size (nm)", pixelSize_, 0);
+		addNumericField("Image Resolution (FWHM) (nm)", resolution_, 1);
 		addCheckbox("Preprocess background", preProcessBackground_);
 		
 		addSlider("Intensity Threshold", 20, 40000.0, watershedThreshold_);
@@ -93,8 +91,7 @@ public class AnalysisDialog2D extends ParticleAnalysisDialog {
 			return;
 		}
 		
-		prefs_.putInt(KERNELSIZE_KEY, kernelSize_);
-		prefs_.putDouble(SIGMA_KEY, sigma_);
+		prefs_.putDouble(IMAGE_RESOLUTION, resolution_);
 		prefs_.putBoolean(ZERO_BACKGROUND_KEY, preProcessBackground_);
 		prefs_.putInt(WATERSHED_THRESHOLD_KEY, watershedThreshold_);
 		prefs_.putInt(WATERSHED_NOISE_KEY, watershedNoise_);
@@ -130,18 +127,22 @@ public class AnalysisDialog2D extends ParticleAnalysisDialog {
 	 */
 	@Override
 	public boolean updateParameters() {
-		kernelSize_ = (int) getNextNumber();
 		
-		if (kernelSize_ <= 0 || kernelSize_ > 10) {
-			return false;
-		}
-			
-		sigma_ = getNextNumber();
+		pixelSize_ = getNextNumber();
+		resolution_ = getNextNumber();
+		
+		sigma_ = resolution_ / 2.355 / pixelSize_;		
 		
 		if (sigma_ <=0 ) {
 			return false;
 		}
 		
+		kernelSize_ = (int) Math.round(sigma_ * 2.5);
+		
+//		if (kernelSize_ > 10) {
+//			return false;
+//		}
+
 		preProcessBackground_ = (boolean) getNextBoolean();
 		
 		watershedThreshold_ = (int) getNextNumber();

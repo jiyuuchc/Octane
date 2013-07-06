@@ -17,6 +17,8 @@
 //
 package edu.uchc.octane;
 
+import ij.Prefs;
+
 import java.util.prefs.Preferences;
 
 /**
@@ -27,13 +29,13 @@ public class GlobalPrefs {
 
 	final static String PACKAGE_NAME = "Octane";
 	
-	final static String SHOW_OVERLAY_KEY = "ShowOverlay";
-	final static String HISTOGRAM_BINS_KEY = "histogramBins";
-	final static String COMPENSATE_DRIFT_KEY = "compensateDrift";
-	final static String NUM_THREAD_KEY = "numThread";
-	final static String MSD_DELAY_KEY = "MsdDelay";
-	final static String NOTES_SCRIPT_KEY = "NotesScript";
-
+	final private static String SHOW_OVERLAY_KEY = "ShowOverlay";
+	final private static String HISTOGRAM_BINS_KEY = "histogramBins";
+	final private static String COMPENSATE_DRIFT_KEY = "compensateDrift";
+	final private static String NUM_THREAD_KEY = "numThread";
+	final private static String MSD_DELAY_KEY = "MsdDelay";
+	final private static String NOTES_SCRIPT_KEY = "NotesScript";
+	final private static String DEFAULT_PIXEL_SIZE_KEY = "deaultPixelSize";
 	
 	public static boolean showOverlay_ = prefs_.getBoolean(SHOW_OVERLAY_KEY, false);
 	public static boolean compensateDrift_ = prefs_.getBoolean(COMPENSATE_DRIFT_KEY, false); 
@@ -41,6 +43,7 @@ public class GlobalPrefs {
 	public static int nThread_ = prefs_.getInt(NUM_THREAD_KEY , 4);
 	public static int msdDelay_ = prefs_.getInt(MSD_DELAY_KEY, 4);
 	public static String notesScript_ = prefs_.get(NOTES_SCRIPT_KEY, "");
+	public static double defaultPixelSize_ = Prefs.getDouble(DEFAULT_PIXEL_SIZE_KEY, 160);
 	
 	public static Preferences getRoot() {
 		return prefs_;
@@ -56,5 +59,6 @@ public class GlobalPrefs {
 		prefs_.putInt(NUM_THREAD_KEY, nThread_);
 		prefs_.putInt(MSD_DELAY_KEY, msdDelay_);
 		prefs_.put(NOTES_SCRIPT_KEY, notesScript_);
+		prefs_.putDouble(DEFAULT_PIXEL_SIZE_KEY, defaultPixelSize_);
 	}
 }
