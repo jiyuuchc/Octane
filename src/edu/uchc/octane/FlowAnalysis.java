@@ -33,8 +33,8 @@ import java.awt.Rectangle;
  */
 public class FlowAnalysis {
 	
-	static double scaleFactor_ = 1;
-	
+	static double renderingResolution_ = 1; // # of pixels
+
 	TrajDataset dataset_;
 	
 	/**
@@ -58,54 +58,37 @@ public class FlowAnalysis {
 		}
 		rect = imp.getProcessor().getRoi();
  
-		int w = (int)(rect.width * scaleFactor_);
-		int h = (int)(rect.height * scaleFactor_);
+		int w = (int)(rect.width / renderingResolution_) + 1;
+		int h = (int)(rect.height / renderingResolution_) + 1;
 		
-		int smoothArea = (int) (scaleFactor_ / 2);
-		int[] dx = new int[4 * (smoothArea * smoothArea + 1) + 1];
-		int[] dy = new int[4 * (smoothArea * smoothArea + 1) + 1];
-		int cnt = 0;
-		for (int i = - smoothArea; i <= smoothArea; i++) {
-			for (int j = - smoothArea; j <= smoothArea; j++) {
-				if (Math.sqrt(i*i + j*j) <= smoothArea) {
-					dx[cnt] = i; dy[cnt] = j; cnt++;
-				}
-			}
-		}
-		
+	
 		float [][] m = new float[w][h];
 		float [][] n = new float[w][h];
 		float [][] fx = new float[w][h];
 		float [][] fy = new float[w][h];
-//		int [] selected = frame_.getTrajsTable().getSelectedTrajectoriesOrAll();
+
 		int i,j;
 		for (i =0; i < selected.length; i++) {
 			Trajectory t = dataset_.getTrajectoryByIndex(selected[i]);
 			for (j = 1; j < t.size(); j++) {
-				if ( rect.contains(t.get(j-1).x, t.get(j-1).y)) {
-					int x = (int) ((t.get(j-1).x - rect.x) * scaleFactor_);
-					int y = (int) ((t.get(j-1).y - rect.y) * scaleFactor_) ;
-					for ( int k = 0; k < cnt; k++) {
-						int nx = x+dx[k];
-						int ny = y+dy[k];
-						if (nx>=0 && ny>=0 && nx < w && ny < h) {
-							int df = t.get(j).frame - t.get(j-1).frame;
-							n[nx][ny] += 1.0f;
-							m[nx][ny] += t.get(j).distance2(t.get(j-1)) / df;
-							fx[nx][ny] += (t.get(j).x - t.get(j-1).x) / df;
-							fy[nx][ny] += (t.get(j).y - t.get(j-1).y) / df;
-						}
-					}
+				int df = t.get(j).frame - t.get(j-1).frame;
+				if ( df == 1 && rect.contains(t.get(j-1).x, t.get(j-1).y)) {
+					int x = (int) ((t.get(j-1).x - rect.x) / renderingResolution_);
+					int y = (int) ((t.get(j-1).y - rect.y) / renderingResolution_) ;
+					n[x][y] += 1.0f;
+					m[x][y] += t.get(j).distance2(t.get(j-1));
+					fx[x][y] += (t.get(j).x - t.get(j-1).x);
+					fy[x][y] += (t.get(j).y - t.get(j-1).y);
 				}
 			}
 		}
-		
+
 		for (i = 0; i < rect.width; i ++) {
 			for (j = 0; j < rect.height; j++) {
 				if (n[i][j] > 0) {
 					m[i][j] = m[i][j] / n[i][j];
-					//fx[i][j] = fx[i][j] / n[i][j];
-					//fy[i][j] = fy[i][j] / n[i][j];
+					fx[i][j] = fx[i][j] / n[i][j];
+					fy[i][j] = fy[i][j] / n[i][j];
 				}
 			}
 		}
