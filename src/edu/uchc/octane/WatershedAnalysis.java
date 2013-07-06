@@ -144,7 +144,7 @@ public class WatershedAnalysis extends ParticleAnalysis{
 	 * @param ip The image to be analyzed
 	 * @param mask A rectangle of region of interest
 	 * @param threshold Lowest intensity to be analyzed
-	 * @param noise The noise threshold of the watershed algrithm
+	 * @param noise The noise threshold of the watershed algorithm
 	 * @throws InterruptedException
 	 */
 	public void process(ImageProcessor ip, Rectangle mask, int threshold, int noise) throws InterruptedException {

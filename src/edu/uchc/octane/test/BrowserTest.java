@@ -4,8 +4,7 @@ import java.io.File;
 import java.io.IOException;
 
 import ij.ImagePlus;
-import edu.uchc.octane.AnalysisDialog3DSimple;
-import edu.uchc.octane.DeflationAnalysisDialog;
+
 import edu.uchc.octane.OctaneWindowControl;
 import edu.uchc.octane.ParticleAnalysisDialog;
 import edu.uchc.octane.AnalysisDialog2D;

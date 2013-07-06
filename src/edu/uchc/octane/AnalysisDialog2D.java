@@ -139,10 +139,6 @@ public class AnalysisDialog2D extends ParticleAnalysisDialog {
 		
 		kernelSize_ = (int) Math.round(sigma_ * 2.5);
 		
-//		if (kernelSize_ > 10) {
-//			return false;
-//		}
-
 		preProcessBackground_ = (boolean) getNextBoolean();
 		
 		watershedThreshold_ = (int) getNextNumber();
