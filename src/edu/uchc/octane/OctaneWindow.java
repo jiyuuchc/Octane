@@ -410,9 +410,24 @@ public class OctaneWindow extends JFrame {
 		});
 		mnTools.add(mntmClearNotes);
 		
+		JMenu mnHelp = new JMenu("Help    ");
+		mnHelp.setMnemonic(KeyEvent.VK_H);
+		menuBar.add(mnHelp);
+
+		JMenuItem mntmAbout = new JMenuItem("About");
+		mntmAbout.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				AboutDialog.showDialog();
+			}			
+		});
+		
+		mnHelp.add(mntmAbout);
+
 		contentPane_ = new JSplitPane();
 		contentPane_.setResizeWeight(0.5);
 		setContentPane(contentPane_);
+		
 		
 		////////////////////////////
 		// Setup Trajectory Table
