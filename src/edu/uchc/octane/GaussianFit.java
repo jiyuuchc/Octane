@@ -44,8 +44,8 @@ public class GaussianFit extends BaseGaussianFit {
 //	}
 
 	/**
-	 * Specify whether the image has zero background
-	 * @param b True if the image has zero background
+	 * Specify whether to fix the width of the PSF
+	 * @param b False if PSF width is fixed
 	 */
 	public void setFloatingSigma(boolean b) {
 		floatingSigma_ = b;
