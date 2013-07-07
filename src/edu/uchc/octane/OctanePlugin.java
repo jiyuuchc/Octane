@@ -44,8 +44,6 @@ public class OctanePlugin implements PlugIn{
 	OctaneWindowControl ctl_;
 	ParticleAnalysisDialogBase dlg_;
 
-	String cmd_;
-	
 	protected static HashMap<ImagePlus, OctanePlugin> dict_ = new HashMap<ImagePlus,OctanePlugin>();
 
 	/**
@@ -177,12 +175,21 @@ public class OctanePlugin implements PlugIn{
 	 */
 	@Override
 	public void run(String cmd) {
-		cmd_ = cmd;
 		
-		String path;
-
 		if (!IJ.isJava16()) {
+		
 			IJ.error("Octane requires Java version 1.6 or higher. Please upgrade the JVM.");
+			return;
+		
+		}
+		
+		try {
+			
+			Class.forName("org.apache.commons.math3.util.FastMath");
+
+		} catch (ClassNotFoundException e) {
+			
+			IJ.error("This version of Octane requires Apache Commons Math v3.0 or later. Please install.");
 			return;
 		}
 
@@ -196,6 +203,7 @@ public class OctanePlugin implements PlugIn{
 		}
 
 		FileInfo fi = imp_.getOriginalFileInfo();
+		String path;
 
 		if (fi != null) {
 
