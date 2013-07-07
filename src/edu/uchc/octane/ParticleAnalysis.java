@@ -106,7 +106,7 @@ public class ParticleAnalysis{
 	 * Specify the Gaussian fitting module
 	 * @param module The Gaussian fitting module
 	 */
-	public void setGaussianFitModule(GaussianFit2D module) {
+	public void setGaussianFitModule(GaussianFitBase module) {
 		if (module != null) {
 			//bDoGaussianFit_ = true;
 			g_ = module;

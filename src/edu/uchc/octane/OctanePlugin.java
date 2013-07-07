@@ -100,7 +100,7 @@ public class OctanePlugin implements PlugIn{
 		if (cmd_.endsWith("2D")) {
 			dlg_ = new ParticleAnalysisDialog2D(imp_);
 		} else {
-			dlg_ = new AnalysisDialog3DSimple(imp_);
+			dlg_ = new ParticleAnalysisDialogAstigmatism(imp_);
 		}
 		
 		imp_.getWindow().addWindowListener(new WindowAdapter() {

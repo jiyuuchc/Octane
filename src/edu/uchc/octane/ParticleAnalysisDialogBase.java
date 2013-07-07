@@ -53,6 +53,8 @@ public abstract class ParticleAnalysisDialogBase extends NonBlockingGenericDialo
 	Integer nFound_;
 	
 	private volatile Thread prevProcess_ = null;
+	
+	boolean bProcessingAll_ = false;
 
 	/**
 	 * Constructor that creates the dialog.
@@ -147,6 +149,9 @@ public abstract class ParticleAnalysisDialogBase extends NonBlockingGenericDialo
 	 */
 	public SmNode[][] processAllFrames() {
 		imp_.killRoi();
+		
+		bProcessingAll_ = true;
+		
 		IJ.log("Particle Analysis -- Searching for particles:");
 
 		final ImageStack stack = imp_.getImageStack();
@@ -216,6 +221,8 @@ public abstract class ParticleAnalysisDialogBase extends NonBlockingGenericDialo
 		}
 		
 		IJ.log(imp_.getTitle() + "- Found " + nFound_ + " particles.");
+		
+		bProcessingAll_ = false;
 		
 		return nodes_;
 	}
