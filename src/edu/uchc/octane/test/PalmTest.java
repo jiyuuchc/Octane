@@ -11,19 +11,26 @@ import ij.ImagePlus;
 
 public class PalmTest {
 	public static void main(String[] args) throws ClassNotFoundException, IOException {
+		
 		ImagePlus imp = ij.IJ.openImage(args[0]);
 		imp.show();
+		
 		File file = new File(args[0]+".dataset");
 		TrajDataset dataset = TrajDataset.loadDataset(file);
+		
 		Palm palmModule = new Palm(dataset);
 		
 		int[] selected = new int[dataset.getSize()];
+		
 		for (int i = 0; i < selected.length; i++) {
+		
 			selected[i] = i;
 		}
 			
-		if (PalmParameters.openDialog(true)) {
+		if (PalmParameters.openDialog(dataset, true)) {
+			
 			palmModule.constructPalm(imp, selected);
+		
 		}		
 	}
 	

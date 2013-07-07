@@ -324,7 +324,9 @@ public class OctaneWindowControl implements ClipboardOwner{
 	 * @param useStack whether to render a 3D PALM using image stack
 	 */
 	protected void constructPalm(boolean useStack) {
-		if (PalmParameters.openDialog(useStack)) {	
+		
+		if (PalmParameters.openDialog(dataset_, useStack)) {	
+		
 			Palm palm = new Palm(dataset_);
 			int [] selected = frame_.getTrajsTable().getSelectedTrajectoriesOrAll();
 			

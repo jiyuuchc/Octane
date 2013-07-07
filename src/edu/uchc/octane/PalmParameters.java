@@ -53,21 +53,27 @@ public class PalmParameters {
 	static double zResolution_ = prefs_.getDouble(Z_RESOLUTION_KEY, 100);
 	
 	private static Palm.PalmType [] typeList_ = {
-			Palm.PalmType.AVERAGE,
-			Palm.PalmType.HEAD,
-			Palm.PalmType.TAIL,
-			Palm.PalmType.ALLPOINTS,
-			Palm.PalmType.TIMELAPSE
+			
+		Palm.PalmType.AVERAGE,
+		Palm.PalmType.HEAD,
+		Palm.PalmType.TAIL,
+		Palm.PalmType.ALLPOINTS,
+		Palm.PalmType.TIMELAPSE
+	
 	};
 	
 	/**
 	 * Opens a dialog to input parameters 
+	 * @param data Trajectory dataset
 	 * @param b Whether this is to generate a 3D PALM stack
 	 * @return True if user pressed OK
 	 */
-	static public boolean openDialog(boolean b) {
+	static public boolean openDialog(TrajDataset data, boolean b) {
+	
 		if (prefs_ == null) {
+		
 			prefs_ = GlobalPrefs.getRoot().node(PalmParameters.class.getName());
+		
 		}
 
 		bRenderStack_ = b;
@@ -78,32 +84,44 @@ public class PalmParameters {
 		String[] strPalmTypes2 = { "Average", "Head", "Tail", "All Points"};
 		
 		if (b) {
+
 			if (palmType_ >= strPalmTypes2.length) {
 				palmType_ = 0;
 			}
+			
 			dlg.addChoice("PALM Type", strPalmTypes2, strPalmTypes[palmType_]);
+		
 		} else {
+		
 			dlg.addChoice("PALM Type", strPalmTypes, strPalmTypes[palmType_]);
 		}
 		
-		dlg.addNumericField("PALM Pixel Size (nm)", palmPixelSize_, 0);
+		dlg.addMessage("- Size Parameters -");
+		
+		dlg.addNumericField("Image Pixel Size (nm)", data.getPixelSize(), 1);
+		dlg.addNumericField("PALM Pixel Size (nm)", palmPixelSize_, 1);
 		dlg.addNumericField("PALM Resolution (nm)", palmResolution_, 1);
 		
 		dlg.addMessage("- Color Parameters -");
+		
 		dlg.addCheckbox("Render Z coordinates in pseudo-color", bRenderInColor_);
 		dlg.addNumericField("Min Z value (nm)", lutMin_, 1);
 		dlg.addNumericField("Max Z value (nm)", lutMax_, 1);
 
 		if (b) {
+		
 			dlg.addMessage("- Stack Parameters -");
 			dlg.addNumericField("Min Z coordinates (nm)", palmZMin_, 1);
 			dlg.addNumericField("Max Z coordinates (nm)", palZMax_, 1);
 			dlg.addNumericField("Z resolution (nm)", zResolution_, 1);
+		
 		}
 		
 		dlg.showDialog();
-		if (dlg.wasCanceled())
+		if (dlg.wasCanceled()) {
+
 			return false;
+		}
 
 		palmType_ = dlg.getNextChoiceIndex();
 		palmPixelSize_ = dlg.getNextNumber();
@@ -113,16 +131,21 @@ public class PalmParameters {
 		lutMax_ = dlg.getNextNumber();
 		
 		if (lutMin_ >= lutMax_) {
+		
 			bRenderInColor_ = false;
+		
 		}
 		
 		if (b) {
+		
 			palmZMin_ = dlg.getNextNumber();
 			palZMax_ = dlg.getNextNumber();
 			zResolution_ = dlg.getNextNumber();
+		
 		}
 
 		prefs_.putInt(PALM_TYPE_KEY, palmType_);
+
 		prefs_.putBoolean(RENDER_IN_COLOR_KEY, bRenderInColor_);
 		prefs_.putDouble(PALM_PIXEL_SIZE_KEY, palmPixelSize_);
 		prefs_.putDouble(PALM_RESOLUTION_KEY, palmResolution_);
