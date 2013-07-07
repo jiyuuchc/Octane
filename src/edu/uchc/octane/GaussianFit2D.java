@@ -98,20 +98,13 @@ public class GaussianFit2D extends GaussianFitBase {
 			}
 		};
 
-		PointValuePair pvp;
-		try {
-			pvp = optimizer.optimize(
-					new ObjectiveFunction(func),
-					new InitialGuess(initParameters),
-					new MaxEval(10000),
-					GoalType.MINIMIZE);
-		} catch (TooManyEvaluationsException e) {
-			return null;
-		}
-		
-		pvp_ = pvp;
+		pvp_ = optimizer.optimize(
+				new ObjectiveFunction(func),
+				new InitialGuess(initParameters),
+				new MaxEval(10000),
+				GoalType.MINIMIZE);
 
-		return pvp.getPoint();
+		return pvp_.getPoint();
 	}
 
 	/* (non-Javadoc)

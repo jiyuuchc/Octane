@@ -270,14 +270,14 @@ public class AstigmaticFittingTest {
 		
 		m.setCalibration(null);
 		
-//		System.out.println("Test 1: Single point, random position, Fixed width, no noise");
-//		aft.repeatTest(100, "test1");
-//		
-//		System.out.println("Test 2: Single point, random position, Fixed width, with shot noise");
-//		aft.repeatTest(100, "test2");
+		System.out.println("Test 1: Single point, random position, Fixed width, no noise");
+		aft.repeatTest(100, "test1");
 		
-//		System.out.println("Test 3: Single point, random position, variable width, with shot noise");
-//		aft.repeatTest(100, "test3");
+		System.out.println("Test 2: Single point, random position, Fixed width, with shot noise");
+		aft.repeatTest(100, "test2");
+		
+		System.out.println("Test 3: Single point, random position, variable width, with shot noise");
+		aft.repeatTest(100, "test3");
 
 		System.out.println("Test 4: Single point, random position, variable Z, with shot noise");
 		aft.test4(100);

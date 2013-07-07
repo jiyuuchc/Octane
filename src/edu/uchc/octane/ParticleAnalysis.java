@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
+import org.apache.commons.math3.exception.MathIllegalStateException;
+
 import ij.gui.PointRoi;
 import ij.process.ImageProcessor;
 
@@ -230,16 +232,21 @@ public class ParticleAnalysis{
 
 					g_.setInitialCoordinates(p.x, p.y);
 					
-					double [] result = g_.fit();
-					
-					if (result != null && g_.getH() > noise ) {
-						x_[nParticles_] = g_.getX();
-						y_[nParticles_] = g_.getY();
-						z_[nParticles_] = g_.getZ();
-						h_[nParticles_] = g_.getH();
-						e_[nParticles_] = g_.getE();
-						nParticles_++;
-					
+					try {
+						
+						double [] result = g_.fit();
+						
+						if (result != null && g_.getH() > noise ) {
+							x_[nParticles_] = g_.getX();
+							y_[nParticles_] = g_.getY();
+							z_[nParticles_] = g_.getZ();
+							h_[nParticles_] = g_.getH();
+							e_[nParticles_] = g_.getE();
+							nParticles_++;
+						}
+					} catch (MathIllegalStateException e) {
+						//failed fitting
+						continue;
 					}
 				} else {
 

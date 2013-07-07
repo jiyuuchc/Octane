@@ -3,7 +3,6 @@ package edu.uchc.octane.test;
 import java.util.Arrays;
 
 import ij.ImagePlus;
-import ij.process.ImageProcessor;
 import ij.process.ShortProcessor;
 
 public class TestDataGenerator {

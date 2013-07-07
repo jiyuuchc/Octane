@@ -161,11 +161,18 @@ public class ParticleAnalysisDialogAstigmatism extends ParticleAnalysisDialogBas
 		
 		calibrationStrX_ = getNextString();
 		String [] substrs = calibrationStrX_.split(",");
+		
 		if (substrs.length != 3) {
 			return false;
 		}
 		for (int i = 0; i < 3; i++) {
-			calibration_[i] = Double.parseDouble(substrs[i]); 
+			try {
+				
+				calibration_[i] = Double.parseDouble(substrs[i]);				
+			
+			} catch (NumberFormatException e) {
+				return false;
+			} 
 		}
 		
 		if (calibration_[0] <= 0 || calibration_[2] <= 0) {
@@ -174,15 +181,25 @@ public class ParticleAnalysisDialogAstigmatism extends ParticleAnalysisDialogBas
 
 		calibrationStrY_ = getNextString();
 		substrs = calibrationStrY_.split(",");
+		
 		if (substrs.length != 3) {
 			return false;
 		}
+		
 		for (int i = 0; i < 3; i++) {
-			calibration_[i + 3] = Double.parseDouble(substrs[i]); 
+			try {
+				
+				calibration_[i + 3] = Double.parseDouble(substrs[i]); 
+
+			} catch (NumberFormatException e) {
+				return false;
+			} 
 		}
 
 		if (calibration_[3] <= 0 || calibration_[5] <= 0) {
+			
 			return false;
+		
 		}
 
 		return true;

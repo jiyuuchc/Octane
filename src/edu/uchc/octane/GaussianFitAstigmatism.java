@@ -1,4 +1,4 @@
-//FILE:          GaussianFitAstigmatism.java
+//FILE:          GaussianFAstigmatism.java
 //PROJECT:       Octane
 //-----------------------------------------------------------------------------
 //
@@ -17,14 +17,14 @@
 //
 package edu.uchc.octane;
 
+import ij.IJ;
+
 import org.apache.commons.math3.util.FastMath;
 import org.apache.commons.math3.analysis.MultivariateFunction;
 import org.apache.commons.math3.analysis.UnivariateFunction;
 import org.apache.commons.math3.exception.ConvergenceException;
-import org.apache.commons.math3.exception.TooManyEvaluationsException;
 import org.apache.commons.math3.optim.InitialGuess;
 import org.apache.commons.math3.optim.MaxEval;
-import org.apache.commons.math3.optim.PointValuePair;
 import org.apache.commons.math3.optim.nonlinear.scalar.GoalType;
 import org.apache.commons.math3.optim.nonlinear.scalar.ObjectiveFunction;
 import org.apache.commons.math3.optim.nonlinear.scalar.noderiv.PowellOptimizer;
@@ -48,7 +48,7 @@ public class GaussianFitAstigmatism extends GaussianFitBase {
 	double p1_, p2_, p3_; 
 	double z_, z0min_, z0max_;
 
-	final static double errTol_ = 2.0;
+ 	final static double errTol_ = 2.0;
 
 	/* (non-Javadoc)
 	 * @see edu.uchc.octane.GaussianFitBase#doFit()
@@ -83,18 +83,11 @@ public class GaussianFitAstigmatism extends GaussianFitBase {
 			}
 		};
 
-		PointValuePair pvp;
-		try {
-			pvp = optimizer.optimize(
-					new ObjectiveFunction(func),
-					new InitialGuess(initParameters),
-					new MaxEval(10000),
-					GoalType.MINIMIZE);
-		} catch (TooManyEvaluationsException e) {
-			return null;
-		}
-
-		pvp_ = pvp;
+		pvp_ = optimizer.optimize(
+				new ObjectiveFunction(func),
+				new InitialGuess(initParameters),
+				new MaxEval(10000),
+				GoalType.MINIMIZE);
 		
 //		double sigmax = pvp.getPoint()[3];
 //		double sigmay = pvp.getPoint()[4];
@@ -134,7 +127,7 @@ public class GaussianFitAstigmatism extends GaussianFitBase {
 			calculateZ();
 		}
 		
-		return pvp.getPoint();
+		return pvp_.getPoint();
 	}
 
 	/**

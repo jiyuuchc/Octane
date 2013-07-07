@@ -163,14 +163,15 @@ public class CalibrationDialogAstigmatism extends ParticleAnalysisDialogBase {
 
 				fittingModule.setInitialCoordinates((int)x[i], (int)y[i]);
 				
-				if (fittingModule.fit() == null) {
+				try {
+					fittingModule.fit(); 
 
-					nFailed ++;
-
-				} else {
-				
 					sx += fittingModule.getSigmaX();
 					sy += fittingModule.getSigmaY();
+				
+				} catch (MathIllegalStateException e) {
+					//failed fitting
+					nFailed ++;
 				}
 			}
 			
