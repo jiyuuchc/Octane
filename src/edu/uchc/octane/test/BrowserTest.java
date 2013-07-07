@@ -13,18 +13,28 @@ import edu.uchc.octane.TrackingParameters;
 import edu.uchc.octane.TrajDataset;
 
 public class BrowserTest {
+	
 	public static void main(String[] args) throws IOException, ClassNotFoundException {
+		
 		ImagePlus imp = ij.IJ.openImage(args[0]);
 		imp.show();
+		
 		//TrajDataset data = new TrajDataset(p);
+		
 		File file = new File(args[0]+".dataset");
+		
 		if (file.exists()) {
+		
 			OctaneWindowControl b = new OctaneWindowControl(imp);
 			b.setup();
+		
 		} else {
+		
 			ParticleAnalysisDialogBase dlg = new ParticleAnalysisDialog2D(imp);
+			
 			dlg.showDialog();
 			if (dlg.wasOKed()) {
+			
 				SmNode [][] nodes = dlg.processAllFrames();
 				
 				if ( TrackingParameters.openDialog() ) { //wasOKed ?

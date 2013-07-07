@@ -145,8 +145,8 @@ public class GaussianFitAstigmatism extends GaussianFitBase {
 		UnivariateFunction func = new UnivariateFunction() {
 			@Override
 			public double value(double z) { 
-				double sigmax = pvp_.getPoint()[3];
-				double sigmay = pvp_.getPoint()[4];
+				double sigmax = FastMath.sqrt(pvp_.getPoint()[3] / 2);
+				double sigmay = FastMath.sqrt(pvp_.getPoint()[4] / 2);
 				double vx = calibration_[0] + (z - calibration_[1]) * (z - calibration_[1]) * calibration_[2] - sigmax;
 				double vy = calibration_[3] + (z - calibration_[4]) * (z - calibration_[4]) * calibration_[5] - sigmay;
 				return  vx * vx + vy * vy;				
@@ -201,14 +201,14 @@ public class GaussianFitAstigmatism extends GaussianFitBase {
 //		p2_ = 3 * p[1] * p[2] + 3 * p[4] * p[5]; 
 //		p3_ = p[1] * p[1] + p[4] * p[4];
 //		
-//		z0min_ = p[1]/p[2]/2;
-//		z0max_ = p[4]/p[5]/2;
-//		if (z0min_ > z0max_) {
-//			double z0;
-//			z0 = z0min_;
-//			z0min_ = z0max_;
-//			z0max_ = z0;			
-//		}
+		z0min_ = c[1];
+		z0max_ = c[4];
+		if (z0min_ > z0max_) {
+			double z0;
+			z0 = z0min_;
+			z0min_ = z0max_;
+			z0max_ = z0;			
+		}
 	}
 
 	/* (non-Javadoc)

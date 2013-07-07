@@ -53,6 +53,11 @@ public abstract class GaussianFitBase {
 	public abstract double [] doFit(); 
 	
 	public double[] fit() {
+		
+		if (bZeroBg_) {
+			preProcessBackground();
+		}
+		
 		double [] ret = doFit();
 
 		if (bDeflation_) {
@@ -124,9 +129,11 @@ public abstract class GaussianFitBase {
 	 */
 	public void setPreprocessBackground(boolean bPreProcessBackground) {
 		bZeroBg_ = bPreProcessBackground;
+		
 		if (bPreProcessBackground) {
+		
 			bg_ = 0;
-			preProcessBackground();
+			//preProcessBackground();
 		}
 	}
 

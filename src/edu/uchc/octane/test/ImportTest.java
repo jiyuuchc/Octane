@@ -11,10 +11,14 @@ import edu.uchc.octane.TrajDataset;
 
 public class ImportTest {
 	public static void main(String[] args) throws IOException {
+		
 		JFileChooser fc = new JFileChooser();
+		
 		if (fc.showOpenDialog(IJ.getApplet()) == JFileChooser.APPROVE_OPTION) {
+		
 			TrajDataset dataset = TrajDataset.importDatasetFromText(fc.getSelectedFile());
 			dataset.writeTrajectoriesToText(new OutputStreamWriter(System.out));
+		
 		}
 	}
 }
