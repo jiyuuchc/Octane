@@ -53,9 +53,13 @@ public class OctanePlugin implements PlugIn{
 	 */
 	public OctanePlugin() {
 		try {
+			
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+
 		} catch (Exception e) {
+		
 			System.err.println(e.getMessage());
+
 		}
 	}
 
@@ -96,11 +100,26 @@ public class OctanePlugin implements PlugIn{
 	 * Display particle analysis dialog and start particle analysis
 	 * @return True if user clicked OK 
 	 */
-	boolean startImageAnalysis() {
-		if (cmd_.endsWith("2D")) {
+	boolean startImageAnalysis(String cmd) {
+
+		dict_.put(imp_, null);
+		
+		if (cmd.equals("analyze2D")) {
+
 			dlg_ = new ParticleAnalysisDialog2D(imp_);
-		} else {
+
+		} else if (cmd.equals("analyze3D")){
+		
 			dlg_ = new ParticleAnalysisDialogAstigmatism(imp_);
+
+		} else if (cmd.equals("calibration")) {
+			
+			dlg_ = new CalibrationDialogAstigmatism(imp_);
+
+		} else {	
+			
+			return false;
+			
 		}
 		
 		imp_.getWindow().addWindowListener(new WindowAdapter() {
@@ -139,12 +158,17 @@ public class OctanePlugin implements PlugIn{
 	 * @throws ClassNotFoundException
 	 */
 	TrajDataset readDataset(File f) throws IOException, ClassNotFoundException {
+
 		TrajDataset dataset;
+
 		IJ.getInstance().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 		IJ.showStatus("Loading data ...");
+
 		dataset = TrajDataset.loadDataset(f);
+
 		IJ.showStatus("");
 		IJ.getInstance().setCursor(Cursor.getDefaultCursor());
+
 		return dataset;
 	}
 
@@ -165,33 +189,44 @@ public class OctanePlugin implements PlugIn{
 		imp_ = WindowManager.getCurrentImage();		
 
 		if (imp_ == null || imp_.getStack().getSize() < 2) {
+
 			IJ.error("This only works on an opened image stack.");
 			return;
+
 		}
 
 		FileInfo fi = imp_.getOriginalFileInfo();
+
 		if (fi != null) {
+
 			path = fi.directory; 
+
 		} else {
+		
 			IJ.error("Can't find image's disk location. You must save the data on disk first.");
 			return;
+
 		}
 
 		if (dict_.containsKey(imp_)) { // window already open
+			
 			OctanePlugin plugin = dict_.get(imp_);
+			
 			if (plugin != null && cmd.equals("load")) {
+			
 				plugin.ctl_.getWindow().setVisible(true);
 				return;
+			
 			} else {
+
 				// do nothing
+
 			}
 		}
 
 		if (cmd.startsWith("analyze")) {
 			
-			dict_.put(imp_, null);
-			
-			if (startImageAnalysis()) { // wasOked?
+			if (startImageAnalysis(cmd)) { // wasOked?
 
 				SmNode [][] nodes = dlg_.processAllFrames();
 				
@@ -209,35 +244,63 @@ public class OctanePlugin implements PlugIn{
 		}
 
 
+		if (cmd.startsWith("Calibration")) {
+
+			startImageAnalysis(cmd);
+			dict_.remove(imp_);
+
+		}
+		
 		if (cmd.equals("load")){					
+
 			assert(path != null); 
+
 			File file = new File(path + File.separator + imp_.getTitle() + ".dataset");
+
 			if (file.exists()) { 
+
 				try { 
+					
 					openWindow(readDataset(file));
+
 				} catch (IOException e) {
+
 					IJ.error("An IO error occured reading file: " + file.getName() + "\n " 
 							+ e.getLocalizedMessage());
+
 				} catch (ClassNotFoundException e) {
+
 					IJ.error("Can't recognize the file format: " + file.getName() + "\n" 
 							+ e.getLocalizedMessage());
+
 				}
 			} else {
+
 				IJ.error("Can't find previous analysis results." 
 						+ " It needs to be saved in the same folder as your image data.");
+
 			}
+			
 			return;
+
 		}
 
 		if (cmd.equals("import")) { 
+			
 			JFileChooser fc = new JFileChooser();
+			
 			if (fc.showOpenDialog(IJ.getApplet()) == JFileChooser.APPROVE_OPTION) {
 				try {
+			
 					openWindow(TrajDataset.importDatasetFromText(fc.getSelectedFile()));
+				
 				} catch (IOException e) {
+				
 					IJ.error("An IO error occured reading file: " + fc.getSelectedFile().getName());
+					return;
 				}
 			}
+			
 			return;
 		}
 	}

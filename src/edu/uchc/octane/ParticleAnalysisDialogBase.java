@@ -183,7 +183,7 @@ public abstract class ParticleAnalysisDialogBase extends NonBlockingGenericDialo
 					ImageProcessor ip = stack.getProcessor(curFrame);
 					
 					ParticleAnalysis module = new ParticleAnalysis();;
-					
+
 					try {
 						processCurrentFrame(ip, module);
 					} catch (InterruptedException e) {

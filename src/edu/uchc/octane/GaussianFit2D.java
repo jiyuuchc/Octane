@@ -56,7 +56,7 @@ public class GaussianFit2D extends GaussianFitBase {
 	}
 	
 	/* (non-Javadoc)
-	 * @see edu.uchc.octane.BaseGaussianFit#fit()
+	 * @see edu.uchc.octane.GaussianFitBase#doFit()
 	 */
 	@Override
 	public double [] doFit() {
@@ -115,7 +115,7 @@ public class GaussianFit2D extends GaussianFitBase {
 	}
 
 	/* (non-Javadoc)
-	 * @see edu.uchc.octane.BaseGaussianFit#getValueExcludingBackground(int, int, double[])
+	 * @see edu.uchc.octane.GaussianFitBase#getValueExcludingBackground(int, int, double[])
 	 */
 	@Override
 	public double getValueExcludingBackground(int xi, int yi, double [] p) {

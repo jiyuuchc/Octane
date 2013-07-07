@@ -51,7 +51,7 @@ public class GaussianFitAstigmatism extends GaussianFitBase {
 	final static double errTol_ = 2.0;
 
 	/* (non-Javadoc)
-	 * @see edu.uchc.octane.BaseGaussianFit#fit()
+	 * @see edu.uchc.octane.GaussianFitBase#doFit()
 	 */
 	@Override
 	public double[] doFit() {
@@ -130,7 +130,9 @@ public class GaussianFitAstigmatism extends GaussianFitBase {
 //			z_ = roots[minIndex].getReal();
 //		}
 
-		calculateZ();
+		if (calibration_ != null ) {
+			calculateZ();
+		}
 		
 		return pvp.getPoint();
 	}
@@ -145,8 +147,8 @@ public class GaussianFitAstigmatism extends GaussianFitBase {
 			public double value(double z) { 
 				double sigmax = pvp_.getPoint()[3];
 				double sigmay = pvp_.getPoint()[4];
-				double vx = calibration_[0] + calibration_[1] * z + calibration_[2] * z * z - sigmax;
-				double vy = calibration_[3] + calibration_[4] * z + calibration_[5] * z * z - sigmay;
+				double vx = calibration_[0] + (z - calibration_[1]) * (z - calibration_[1]) * calibration_[2] - sigmax;
+				double vy = calibration_[3] + (z - calibration_[4]) * (z - calibration_[4]) * calibration_[5] - sigmay;
 				return  vx * vx + vy * vy;				
 			}
 		};
@@ -177,40 +179,40 @@ public class GaussianFitAstigmatism extends GaussianFitBase {
 	 * Specify the Z calibration
 	 * The Xsigma(Z) and Ysigma(Z) are assumed to be 2nd order polynomial functions. Therefore 6 
 	 * real numbers are needed to specify the calibration    
-	 * @param p Six calibration parameters. First three for X and next three for Y. 
+	 * @param c Six calibration parameters. First three for X and next three for Y. 
 	 */
-	public void setCalibration(double [] p) {
-		if (p == null) {
+	public void setCalibration(double [] c) {
+		if (c == null) {
 			calibration_ = null;
 			return;
 		}
 
-		if (p.length != 6) {
+		if (c.length != 6) {
 			throw (new IllegalArgumentException("Array unacceptable length"));
 		}
 		
-		if (p[2] < 0 || p[5] < 0) {
+		if (c[2] < 0 || c[5] < 0) {
 			throw new IllegalArgumentException("2nd order coeff not positive");
 		}
 		
-		calibration_ = p;
+		calibration_ = c;
 		
-		p1_ = 2 * p[2] * p[2] + 2 * p[5] * p[5];
-		p2_ = 3 * p[1] * p[2] + 3 * p[4] * p[5]; 
-		p3_ = p[1] * p[1] + p[4] * p[4];
-		
-		z0min_ = p[1]/p[2]/2;
-		z0max_ = p[4]/p[5]/2;
-		if (z0min_ > z0max_) {
-			double z0;
-			z0 = z0min_;
-			z0min_ = z0max_;
-			z0max_ = z0;			
-		}
+//		p1_ = 2 * p[2] * p[2] + 2 * p[5] * p[5];
+//		p2_ = 3 * p[1] * p[2] + 3 * p[4] * p[5]; 
+//		p3_ = p[1] * p[1] + p[4] * p[4];
+//		
+//		z0min_ = p[1]/p[2]/2;
+//		z0max_ = p[4]/p[5]/2;
+//		if (z0min_ > z0max_) {
+//			double z0;
+//			z0 = z0min_;
+//			z0min_ = z0max_;
+//			z0max_ = z0;			
+//		}
 	}
 
 	/* (non-Javadoc)
-	 * @see edu.uchc.octane.BaseGaussianFit#getValueExcludingBackground(int, int, double[])
+	 * @see edu.uchc.octane.GaussianFitBase#getValueExcludingBackground(int, int, double[])
 	 */
 	@Override
 	public double getValueExcludingBackground(int xi, int yi, double [] p) {
@@ -221,10 +223,18 @@ public class GaussianFitAstigmatism extends GaussianFitBase {
 	}
 
 	/* (non-Javadoc)
-	 * @see edu.uchc.octane.BaseGaussianFit#getZ()
+	 * @see edu.uchc.octane.GaussianFitBase#getZ()
 	 */
 	@Override
 	public double getZ() {
 		return z_;
+	}
+	
+	public double getSigmaX() {
+		return pvp_.getPoint()[3];
+	}
+	
+	public double getSigmaY() {
+		return pvp_.getPoint()[4];
 	}
 }

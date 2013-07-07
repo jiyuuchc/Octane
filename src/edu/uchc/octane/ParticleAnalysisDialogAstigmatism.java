@@ -40,14 +40,14 @@ public class ParticleAnalysisDialogAstigmatism extends ParticleAnalysisDialogBas
 	boolean preProcessBackground_;
 	int watershedThreshold_;
 	int watershedNoise_;
+	String calibrationStrX_;
+	String calibrationStrY_;
 
 	double [] calibration_;
 
 	final private static String ZERO_BACKGROUND_KEY = "zeroBackground";
 	final private static String WATERSHED_THRESHOLD_KEY = "threshold";
 	final private static String WATERSHED_NOISE_KEY = "noise";
-	final private static String ASTIGMATISM_CALIBRATION_X_KEY = "astigmatismCalibrationX";
-	final private static String ASTIGMATISM_CALIBRATION_Y_KEY = "astigmatismCalibrationY";
 
 	/**
 	 * Constructor
@@ -56,24 +56,8 @@ public class ParticleAnalysisDialogAstigmatism extends ParticleAnalysisDialogBas
 	public ParticleAnalysisDialogAstigmatism(ImagePlus imp) {
 
 		super(imp, "Astigmatism analysis parameters:" + imp.getTitle());
+		
 		calibration_ = new double[6];
-
-		String calibrationStr;
-		calibrationStr = prefs_.get(ASTIGMATISM_CALIBRATION_X_KEY, "0.8, 0, 0.18");
-		String [] substrs = calibrationStr.split(",");
-		for (int i = 0; i < 3; i++) {
-			calibration_[i] = Double.parseDouble(substrs[i]); 
-		}
-
-		calibrationStr = prefs_.get(ASTIGMATISM_CALIBRATION_Y_KEY, "0.8, 0, 0.18");
-		substrs = calibrationStr.split(",");
-		for (int i = 0; i < 3; i++) {
-			calibration_[i + 3] = Double.parseDouble(substrs[i]); 
-		}
-
-		sigma_ = calibration_[0] - calibration_[1] * calibration_[1] / 4 / calibration_[2];		
-
-		kernelSize_ = (int) Math.round(sigma_ * 2.5);
 	}
 
 	/**
@@ -89,6 +73,8 @@ public class ParticleAnalysisDialogAstigmatism extends ParticleAnalysisDialogBas
 		preProcessBackground_ = prefs_.getBoolean(ZERO_BACKGROUND_KEY, false);
 		watershedThreshold_ = prefs_.getInt(WATERSHED_THRESHOLD_KEY, 100);
 		watershedNoise_ = prefs_.getInt(WATERSHED_NOISE_KEY, 100);
+		calibrationStrX_ = GlobalPrefs.calibrationStrX_;
+		calibrationStrY_ = GlobalPrefs.calibrationStrY_;
 		
 		addNumericField("Pixel Size (nm)", pixelSize_, 0);
 		addCheckbox("Preprocess background", preProcessBackground_);
@@ -99,6 +85,11 @@ public class ParticleAnalysisDialogAstigmatism extends ParticleAnalysisDialogBas
 		Vector<Scrollbar> sliders = (Vector<Scrollbar>)getSliders();
 		sliders.get(0).setUnitIncrement(20); // default was 1
 		sliders.get(1).setUnitIncrement(20); // default was 1
+		
+		addMessage("--Calibrations--");
+		addStringField("X calibration", calibrationStrX_);
+		addStringField("Y calibration", calibrationStrY_);
+		
 	}
 
 	/**
@@ -133,20 +124,26 @@ public class ParticleAnalysisDialogAstigmatism extends ParticleAnalysisDialogBas
 	@Override
 	public void processCurrentFrame(ImageProcessor ip, ParticleAnalysis analysisModule) throws InterruptedException {
 
-		if (bProcessingAll_) {
+		if (bProcessingAll_ || GlobalPrefs.particleAnalysisMode_.equals("Accurate")) {
+
 			GaussianFitAstigmatism fittingModule = new GaussianFitAstigmatism();
+
+			sigma_ = (calibration_[0] + calibration_[3])/2;		
+			kernelSize_ = (int) Math.round(sigma_ * 2.5);
+			
 			fittingModule.setWindowSize(kernelSize_);
 			fittingModule.setPreprocessBackground(preProcessBackground_);
 			fittingModule.setDeflation(true);
 			fittingModule.setPreferredSigmaValue(sigma_);
 			fittingModule.setCalibration(calibration_);
+			fittingModule.setImageData(ip);
 
 			analysisModule.setGaussianFitModule(fittingModule);
 		} else {
 			analysisModule.setGaussianFitModule(null);
 		}
-		analysisModule.process(ip, rect_, watershedThreshold_, watershedNoise_);
 
+		analysisModule.process(ip, rect_, watershedThreshold_, watershedNoise_);
 	}
 
 	/* (non-Javadoc)
@@ -162,6 +159,32 @@ public class ParticleAnalysisDialogAstigmatism extends ParticleAnalysisDialogBas
 		watershedThreshold_ = (int) getNextNumber();
 		watershedNoise_ = (int) getNextNumber();
 		
+		calibrationStrX_ = getNextString();
+		String [] substrs = calibrationStrX_.split(",");
+		if (substrs.length != 3) {
+			return false;
+		}
+		for (int i = 0; i < 3; i++) {
+			calibration_[i] = Double.parseDouble(substrs[i]); 
+		}
+		
+		if (calibration_[0] <= 0 || calibration_[2] <= 0) {
+			return false;
+		}
+
+		calibrationStrY_ = getNextString();
+		substrs = calibrationStrY_.split(",");
+		if (substrs.length != 3) {
+			return false;
+		}
+		for (int i = 0; i < 3; i++) {
+			calibration_[i + 3] = Double.parseDouble(substrs[i]); 
+		}
+
+		if (calibration_[3] <= 0 || calibration_[5] <= 0) {
+			return false;
+		}
+
 		return true;
 	}
 }

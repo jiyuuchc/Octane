@@ -115,12 +115,13 @@ public class ParticleAnalysisDialog2D extends ParticleAnalysisDialogBase {
 	@Override
 	public void processCurrentFrame(ImageProcessor ip, ParticleAnalysis module) throws InterruptedException {
 
-		if (bProcessingAll_) {
+		if (bProcessingAll_ || GlobalPrefs.particleAnalysisMode_.equals("Accurate")) {
 			GaussianFit2D fittingModule = new GaussianFit2D();
 			fittingModule.setWindowSize(kernelSize_);
 			fittingModule.setPreprocessBackground(preProcessBackground_);
 			fittingModule.setDeflation(true);
 			fittingModule.setPreferredSigmaValue(sigma_);
+			fittingModule.setImageData(ip);
 
 			module.setGaussianFitModule(fittingModule);
 		} else {
