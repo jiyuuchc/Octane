@@ -1,4 +1,4 @@
-//FILE:          AnalysisDialog2D.java
+//FILE:          ParticleAnalysisDialog2D.java
 //PROJECT:       Octane
 //-----------------------------------------------------------------------------
 //
@@ -31,7 +31,7 @@ import ij.process.ImageProcessor;
  * @author Ji-Yu
  *
  */
-public class AnalysisDialog2D extends ParticleAnalysisDialog {
+public class ParticleAnalysisDialog2D extends ParticleAnalysisDialogBase {
 
 	static Preferences prefs_ = null;
 
@@ -51,7 +51,7 @@ public class AnalysisDialog2D extends ParticleAnalysisDialog {
 	 * Constructor
 	 * @param imp The image to be analyzed
 	 */
-	public AnalysisDialog2D(ImagePlus imp) {
+	public ParticleAnalysisDialog2D(ImagePlus imp) {
 		super(imp, "Watershed parameters:" + imp.getTitle());
 	}
 
@@ -113,15 +113,20 @@ public class AnalysisDialog2D extends ParticleAnalysisDialog {
 	 * @see edu.uchc.octane.ParticleAnalysisDialog#processCurrentFrame(ij.process.ImageProcessor)
 	 */
 	@Override
-	public WatershedAnalysis processCurrentFrame(ImageProcessor ip) throws InterruptedException {
+	public void processCurrentFrame(ImageProcessor ip, ParticleAnalysis module) throws InterruptedException {
+
+		GaussianFit2D fittingModule = new GaussianFit2D();
+		fittingModule.setWindowSize(kernelSize_);
+		fittingModule.setPreprocessBackground(preProcessBackground_);
+		fittingModule.setDeflation(true);
+		fittingModule.setPreferredSigmaValue(sigma_);
 		
-		WatershedAnalysis module = new WatershedAnalysis();
-		module.setGaussianFitModule(new GaussianFit());
-		module.setGaussianFitParameters(kernelSize_, sigma_, preProcessBackground_, true);
+		module.setGaussianFitModule(fittingModule);
+
 		module.process(ip, rect_, watershedThreshold_, watershedNoise_);
-		return module;
+
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see edu.uchc.octane.ParticleAnalysisDialog#updateParameters()
 	 */

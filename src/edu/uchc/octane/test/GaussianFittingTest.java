@@ -7,8 +7,8 @@ import java.lang.reflect.Method;
 import org.apache.commons.math3.stat.StatUtils;
 import org.apache.commons.math3.util.FastMath;
 
-import edu.uchc.octane.BaseGaussianFit;
-import edu.uchc.octane.GaussianFit;
+import edu.uchc.octane.GaussianFitBase;
+import edu.uchc.octane.GaussianFit2D;
 import edu.uchc.octane.GaussianFit3DSimple;
 
 import ij.process.ShortProcessor;
@@ -43,7 +43,7 @@ public class GaussianFittingTest {
 		}
 	}
 
-	BaseGaussianFit module_;
+	GaussianFitBase module_;
 	
 	ErrorCalculation dX;
 	ErrorCalculation dY;
@@ -52,7 +52,8 @@ public class GaussianFittingTest {
 	Long test0(double xOffset, double yOffset){
 		long start = System.nanoTime();
 
-		module_.setFittingRegion(size, size , (int) (size));
+		module_.setWindowSize(size);
+		module_.setInitialCoordinates(size, size);
 		double [] p = module_.fit();
 		
 		if (p == null) {
@@ -82,7 +83,8 @@ public class GaussianFittingTest {
 				intensity, 
 				background); // background
 		
-		module_.setImageData(ip, preProcessBackground);
+		module_.setImageData(ip);
+		module_.setPreprocessBackground(preProcessBackground);
 		
 		return test0(xOffset, yOffset);
 
@@ -101,7 +103,8 @@ public class GaussianFittingTest {
 
 		TestDataGenerator.addShotNoise(ip, 1);
 		
-		module_.setImageData(ip, preProcessBackground);
+		module_.setImageData(ip);
+		module_.setPreprocessBackground(preProcessBackground);
 		
 		return test0(xOffset, yOffset);
 	}
@@ -174,7 +177,7 @@ public class GaussianFittingTest {
 		System.out.println("Z error: " + dZ.getVariance());
 	}
 
-	public void setModule(BaseGaussianFit m) {
+	public void setModule(GaussianFitBase m) {
 		module_ = m;
 	}
 	
@@ -193,12 +196,14 @@ public class GaussianFittingTest {
 		dY = new ErrorCalculation(N);
 		dZ = new ErrorCalculation(N);
 		
-		module_.setImageData(ip, preProcessBackground);
+		module_.setImageData(ip);
+		module_.setPreprocessBackground(preProcessBackground);
 
 		for (int i = 0; i < N; i++) {
 			long start = System.nanoTime();
 
-			module_.setFittingRegion((int)(pos[0][i] +.5), (int)(pos[1][i]+.5), (int) (size));
+			module_.setInitialCoordinates((int)(pos[0][i] +.5), (int)(pos[1][i]+.5));
+			module_.setWindowSize(size);
 			double [] p = module_.fit();
 			long duration = System.nanoTime() - start;
 			

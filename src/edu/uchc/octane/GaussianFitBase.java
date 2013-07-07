@@ -1,4 +1,4 @@
-//FILE:          BaseGaussianFitting.java
+//FILE:          GaussianFitBase.java
 //PROJECT:       Octane
 //-----------------------------------------------------------------------------
 //
@@ -32,12 +32,13 @@ import ij.process.ImageProcessor;
  * @author Ji-Yu
  *
  */
-public abstract class BaseGaussianFit {
+public abstract class GaussianFitBase {
 
 	protected int x0_,y0_; 
 	protected int windowSize_;
 	protected double bg_ = 0;
 	protected boolean bZeroBg_ = false;
+	protected boolean bDeflation_ = false;
 	
 	PointValuePair pvp_;
 	
@@ -49,8 +50,18 @@ public abstract class BaseGaussianFit {
 	 * Carry out the Gaussian fit 
 	 * @return The fitting parameters
 	 */
-	public abstract double [] fit(); 
+	public abstract double [] doFit(); 
 	
+	public double[] fit() {
+		double [] ret = doFit();
+
+		if (bDeflation_) {
+			deflate();
+		}
+		
+		return ret;
+	}
+
 	/**
 	 * The value of the Gaussian fitting function at specified coordinate
 	 * @param xi The X coordinate offset from the initial value
@@ -65,16 +76,15 @@ public abstract class BaseGaussianFit {
 	/**
 	 * Default constructor
 	 */
-	public BaseGaussianFit() {
+	public GaussianFitBase() {
 	}
 	
 	/**
 	 * Assign image data to the module. 
 	 * A copy of the image data is made and further operation will not alter the orginal image. 
 	 * @param ip The image processor that will be analyzed
-	 * @param bPreProcessBackground Whether the background should be pre-substracted using rolling ball method.
 	 */
-	public void setImageData(ImageProcessor ip, boolean bPreProcessBackground) {
+	public void setImageData(ImageProcessor ip) {
 
 		Object pixels = ip.getPixels();
 		width_ = ip.getWidth();
@@ -103,15 +113,23 @@ public abstract class BaseGaussianFit {
 			}
 		}
 		
+		bg_ = ip.getAutoThreshold();
+	}
+	
+	
+	/**
+	 * Set whether to do background substraction first. 
+	 * If yes, the imagedata is processed to remove background and bZeroBg_ is set to True;
+	 * @param bPreProcessBackground Whether the background should be pre-substracted using rolling ball method.
+	 */
+	public void setPreprocessBackground(boolean bPreProcessBackground) {
 		bZeroBg_ = bPreProcessBackground;
 		if (bPreProcessBackground) {
 			bg_ = 0;
 			preProcessBackground();
-		} else {
-			bg_ = ip.getAutoThreshold();
 		}
 	}
-	
+
 	/**
 	 * Substract background from internal data storage using rolling ball method. 
 	 * Currently the ball size is hard-coded to be 4 pixels.
@@ -133,15 +151,46 @@ public abstract class BaseGaussianFit {
 	}
 
 	/**
-	 * Define region of next fitting
+	 * Define initial coordinates 
 	 * @param x0 The x coordinate
 	 * @param y0 The y coordinate
-	 * @param size The size of the fitting rectange is (2 * size + 1)   
 	 */
-	public void setFittingRegion(int x0, int y0, int size) {
-		windowSize_ = size;
+	public void setInitialCoordinates(int x0, int y0) {
 		x0_ = (int) x0;
 		y0_ = (int) y0;		
+	}
+	
+	
+	/**
+	 * Set fitting window size
+	 * @param size The size of the fitting rectangle is (2 * size + 1)   
+	 */
+	public void setWindowSize(int size) {
+		windowSize_ = size;
+	}
+
+	/**
+	 * Get fitting window size
+	 * @return halfsize of the fitting rectangle   
+	 */
+	public int getWindowSize() {
+		return windowSize_;
+	}
+
+	/**
+	 * Set whether to deflate image after fitting
+	 * @param b    
+	 */
+	public void setDeflation(boolean b) {
+		bDeflation_ = b;
+	}
+
+	/**
+	 * Get whether to deflate image after fitting 
+	 * @return boolean
+	 */
+	public boolean getDeflation() {
+		return bDeflation_;
 	}
 
 	/**

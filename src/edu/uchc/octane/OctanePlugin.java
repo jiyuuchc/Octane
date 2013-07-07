@@ -42,7 +42,7 @@ public class OctanePlugin implements PlugIn{
 
 	ImagePlus imp_;
 	OctaneWindowControl ctl_;
-	ParticleAnalysisDialog dlg_;
+	ParticleAnalysisDialogBase dlg_;
 
 	String cmd_;
 	
@@ -98,7 +98,7 @@ public class OctanePlugin implements PlugIn{
 	 */
 	boolean startImageAnalysis() {
 		if (cmd_.endsWith("2D")) {
-			dlg_ = new AnalysisDialog2D(imp_);
+			dlg_ = new ParticleAnalysisDialog2D(imp_);
 		} else {
 			dlg_ = new AnalysisDialog3DSimple(imp_);
 		}

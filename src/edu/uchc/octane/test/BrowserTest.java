@@ -6,8 +6,8 @@ import java.io.IOException;
 import ij.ImagePlus;
 
 import edu.uchc.octane.OctaneWindowControl;
-import edu.uchc.octane.ParticleAnalysisDialog;
-import edu.uchc.octane.AnalysisDialog2D;
+import edu.uchc.octane.ParticleAnalysisDialogBase;
+import edu.uchc.octane.ParticleAnalysisDialog2D;
 import edu.uchc.octane.SmNode;
 import edu.uchc.octane.TrackingParameters;
 import edu.uchc.octane.TrajDataset;
@@ -22,7 +22,7 @@ public class BrowserTest {
 			OctaneWindowControl b = new OctaneWindowControl(imp);
 			b.setup();
 		} else {
-			ParticleAnalysisDialog dlg = new AnalysisDialog2D(imp);
+			ParticleAnalysisDialogBase dlg = new ParticleAnalysisDialog2D(imp);
 			dlg.showDialog();
 			if (dlg.wasOKed()) {
 				SmNode [][] nodes = dlg.processAllFrames();

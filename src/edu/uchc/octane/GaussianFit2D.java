@@ -1,4 +1,4 @@
-//FILE:          GaussianFit.java
+//FILE:          GaussianFit2D.java
 //PROJECT:       Octane
 //-----------------------------------------------------------------------------
 //
@@ -32,16 +32,12 @@ import org.apache.commons.math3.optim.nonlinear.scalar.noderiv.PowellOptimizer;
  * @author Ji-Yu
  *
  */
-public class GaussianFit extends BaseGaussianFit {
+public class GaussianFit2D extends GaussianFitBase {
 
 	//double [] parameters_;
 	boolean floatingSigma_ = false;
 	
 	double sigma2_;
-
-//	public void setZeroBackground(boolean b) {
-//		bZeroBg_ = b;
-//	}
 
 	/**
 	 * Specify whether to fix the width of the PSF
@@ -63,7 +59,7 @@ public class GaussianFit extends BaseGaussianFit {
 	 * @see edu.uchc.octane.BaseGaussianFit#fit()
 	 */
 	@Override
-	public double [] fit() {
+	public double [] doFit() {
 		
 		double [] initParameters;
 		

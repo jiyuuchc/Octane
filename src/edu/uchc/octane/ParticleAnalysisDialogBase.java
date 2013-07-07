@@ -1,4 +1,4 @@
-//FILE:          ParticleAnalysisDialog.java
+//FILE:          ParticleAnalysisDialogBase.java
 //PROJECT:       Octane
 //-----------------------------------------------------------------------------
 //
@@ -38,7 +38,7 @@ import java.awt.Rectangle;
  * @author Ji-Yu
  *
  */
-public abstract class ParticleAnalysisDialog extends NonBlockingGenericDialog {
+public abstract class ParticleAnalysisDialogBase extends NonBlockingGenericDialog {
 	ImagePlus imp_;
 	Rectangle rect_;
 
@@ -63,7 +63,7 @@ public abstract class ParticleAnalysisDialog extends NonBlockingGenericDialog {
 	 * @param imp The image data to be analyzed 
 	 * @param title The title of the dialog
 	 */
-	public ParticleAnalysisDialog(ImagePlus imp, String title) {
+	public ParticleAnalysisDialogBase(ImagePlus imp, String title) {
 		super(title);
 
 		imp_ = imp;
@@ -177,10 +177,10 @@ public abstract class ParticleAnalysisDialog extends NonBlockingGenericDialog {
 					
 					ImageProcessor ip = stack.getProcessor(curFrame);
 					
-					ParticleAnalysis module;
+					ParticleAnalysis module = new ParticleAnalysis();;
 					
 					try {
-						module = processCurrentFrame(ip);
+						processCurrentFrame(ip, module);
 					} catch (InterruptedException e) {
 						return;
 					}
@@ -235,9 +235,9 @@ public abstract class ParticleAnalysisDialog extends NonBlockingGenericDialog {
 		class CurrentProcessThread extends Thread {
 			@Override
 			public void run() {
-				ParticleAnalysis module;
+				ParticleAnalysis module = new ParticleAnalysis();
 				try {
-					module = processCurrentFrame(imp_.getProcessor());
+					processCurrentFrame(imp_.getProcessor(), module);
 				} catch (InterruptedException e) {
 					return;
 				}
@@ -305,10 +305,11 @@ public abstract class ParticleAnalysisDialog extends NonBlockingGenericDialog {
 	/**
 	 * Analyze current image frame
 	 * @param ip Current image frame
+	 * @param module A ParticleAnalysis module for processing 
 	 * @return The analysis module used.
 	 * @throws InterruptedException
 	 */
-	abstract public ParticleAnalysis processCurrentFrame(ImageProcessor ip) throws InterruptedException;
+	abstract public void processCurrentFrame(ImageProcessor ip, ParticleAnalysis module) throws InterruptedException;
 
 	/**
 	 * Update parameters to reflect changes in dialog input fields

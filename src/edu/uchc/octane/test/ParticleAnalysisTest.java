@@ -8,9 +8,9 @@ import org.apache.commons.math3.util.FastMath;
 import ij.ImagePlus;
 import ij.process.ImageProcessor;
 import ij.process.ShortProcessor;
-import edu.uchc.octane.GaussianFit;
+import edu.uchc.octane.GaussianFit2D;
 import edu.uchc.octane.GaussianFit3DSimple;
-import edu.uchc.octane.WatershedAnalysis;
+import edu.uchc.octane.ParticleAnalysis;
 
 public class ParticleAnalysisTest {
 	
@@ -35,7 +35,7 @@ public class ParticleAnalysisTest {
 		return imp;
 	}
 	
-	public static void watershedTest1(WatershedAnalysis module) throws InterruptedException {
+	public static void watershedTest1(ParticleAnalysis module) throws InterruptedException {
 		ShortProcessor ip = new ShortProcessor(imgSize, imgSize);
 		TestDataGenerator.randomMultipleSpots(ip, nParticles, sigma2, peakIntensity, bgIntensity);
 		TestDataGenerator.addShotNoise(ip, 1);
@@ -43,8 +43,14 @@ public class ParticleAnalysisTest {
 		ImagePlus imp = showImg("Test Image", ip);
 		showImg("Test Image", ip);
 
-		module.setGaussianFitModule(new GaussianFit());
-		module.setGaussianFitParameters(kernelSize, sigma, false, true);
+		GaussianFit2D fittingModule = new GaussianFit2D();
+		fittingModule.setWindowSize(kernelSize);
+		fittingModule.setPreprocessBackground(false);
+		fittingModule.setDeflation(true);
+		fittingModule.setPreferredSigmaValue(sigma);
+		
+		module.setGaussianFitModule(fittingModule);
+
 		Rectangle mask = new Rectangle(0, 0, imgSize, imgSize);
 		
 		long start = System.currentTimeMillis();
@@ -57,7 +63,7 @@ public class ParticleAnalysisTest {
 
 	}
 	
-	public static void watershedTest2(WatershedAnalysis module) throws InterruptedException {
+	public static void watershedTest2(ParticleAnalysis module) throws InterruptedException {
 		ShortProcessor ip = new ShortProcessor(imgSize, imgSize);
 		long totalTime = 0;
 		int n = 0;
@@ -66,8 +72,14 @@ public class ParticleAnalysisTest {
 			TestDataGenerator.randomMultipleSpots(ip, nParticles, sigma2, peakIntensity, bgIntensity);
 			TestDataGenerator.addShotNoise(ip, 1);
 
-			module.setGaussianFitModule(new GaussianFit());
-			module.setGaussianFitParameters(kernelSize, sigma, false, true);
+			GaussianFit2D fittingModule = new GaussianFit2D();
+			fittingModule.setWindowSize(kernelSize);
+			fittingModule.setPreprocessBackground(false);
+			fittingModule.setDeflation(true);
+			fittingModule.setPreferredSigmaValue(sigma);
+			
+			module.setGaussianFitModule(fittingModule);
+			
 			Rectangle mask = new Rectangle(0, 0, imgSize, imgSize);
 
 			long start = System.currentTimeMillis();
@@ -84,7 +96,7 @@ public class ParticleAnalysisTest {
 		
 	}
 
-	public static void watershedTest3(WatershedAnalysis module) throws InterruptedException {
+	public static void watershedTest3(ParticleAnalysis module) throws InterruptedException {
 		ShortProcessor ip = new ShortProcessor(imgSize, imgSize);
 		TestDataGenerator.randomMultipleSpots(ip, nParticles, sigma2, peakIntensity, bgIntensity);
 		TestDataGenerator.addShotNoise(ip, 1);
@@ -92,12 +104,16 @@ public class ParticleAnalysisTest {
 		ImagePlus imp = showImg("Test Image", ip);
 		showImg("Test Image", ip);
 
-		GaussianFit3DSimple fitModule = new GaussianFit3DSimple();
-		fitModule.setCalibrationValues(new double[] {1, 0, 0.3});
+		GaussianFit3DSimple fittingModule = new GaussianFit3DSimple();
+		fittingModule.setCalibrationValues(new double[] {1, 0, 0.3});
 
-		module.setGaussianFitModule(fitModule);
+		fittingModule.setWindowSize(kernelSize);
+		fittingModule.setPreprocessBackground(true);
+		fittingModule.setDeflation(true);
+		fittingModule.setPreferredSigmaValue(sigma);
 		
-		module.setGaussianFitParameters(kernelSize, sigma, true, true);
+		module.setGaussianFitModule(fittingModule);
+		
 		Rectangle mask = new Rectangle(0, 0, imgSize, imgSize);
 		
 		long start = System.currentTimeMillis();
@@ -124,7 +140,7 @@ public class ParticleAnalysisTest {
 	public static void main(String[] args){
 		
 		// WaterShed test
-		WatershedAnalysis module = new WatershedAnalysis();
+		ParticleAnalysis module = new ParticleAnalysis();
 		
 		try {
 			watershedTest3(module);

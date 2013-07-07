@@ -27,7 +27,7 @@ import org.apache.commons.math3.util.FastMath;
  * @author Ji-Yu
  *
  */
-public class GaussianFit3DSimple extends GaussianFit {
+public class GaussianFit3DSimple extends GaussianFit2D {
 	
 	final static double errTol_ = 0.1; 
 

@@ -39,7 +39,7 @@ import org.apache.commons.math3.optim.univariate.UnivariatePointValuePair;
  * @author Ji-Yu
  *
  */
-public class GaussianFitAstigmatism extends BaseGaussianFit {
+public class GaussianFitAstigmatism extends GaussianFitBase {
 
 	//double [] parameters_;
 	double sigma2_;
@@ -54,7 +54,7 @@ public class GaussianFitAstigmatism extends BaseGaussianFit {
 	 * @see edu.uchc.octane.BaseGaussianFit#fit()
 	 */
 	@Override
-	public double[] fit() {
+	public double[] doFit() {
 		double [] initParameters;
 
 		if (bZeroBg_) {
@@ -189,7 +189,7 @@ public class GaussianFitAstigmatism extends BaseGaussianFit {
 			throw (new IllegalArgumentException("Array unacceptable length"));
 		}
 		
-		if (p[2] < 0 || p[5] < 5) {
+		if (p[2] < 0 || p[5] < 0) {
 			throw new IllegalArgumentException("2nd order coeff not positive");
 		}
 		
@@ -208,7 +208,7 @@ public class GaussianFitAstigmatism extends BaseGaussianFit {
 			z0max_ = z0;			
 		}
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see edu.uchc.octane.BaseGaussianFit#getValueExcludingBackground(int, int, double[])
 	 */

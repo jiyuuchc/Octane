@@ -27,7 +27,7 @@ import ij.process.ImageProcessor;
  * @author Ji-Yu
  *
  */
-public class AnalysisDialog3DSimple extends AnalysisDialog2D {
+public class AnalysisDialog3DSimple extends ParticleAnalysisDialog2D {
 
 	private String calibrationStr_ = null; 
 	private double [] c_ = new double[3];
@@ -73,9 +73,7 @@ public class AnalysisDialog3DSimple extends AnalysisDialog2D {
 	 * @see edu.uchc.octane.AnalysisDialog2D#processCurrentFrame(ij.process.ImageProcessor)
 	 */
 	@Override
-	public WatershedAnalysis processCurrentFrame(ImageProcessor ip) throws InterruptedException {
-		
-		WatershedAnalysis module = new WatershedAnalysis();
+	public void processCurrentFrame(ImageProcessor ip, ParticleAnalysis module) throws InterruptedException {
 		
 		GaussianFit3DSimple fittingModule = new GaussianFit3DSimple();
 		
@@ -83,10 +81,9 @@ public class AnalysisDialog3DSimple extends AnalysisDialog2D {
 		
 		module.setGaussianFitModule(fittingModule);
 		
-		module.setGaussianFitParameters(kernelSize_, sigma_, preProcessBackground_, true);
+		//module.setGaussianFitParameters(kernelSize_, sigma_, preProcessBackground_, true);
 		module.process(ip, rect_, watershedThreshold_, watershedNoise_);
 
-		return module;
 	}
 
 	/* (non-Javadoc)
