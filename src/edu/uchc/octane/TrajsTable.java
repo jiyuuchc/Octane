@@ -62,14 +62,19 @@ public class TrajsTable extends JTable {
 			}
 			Trajectory traj = data_.getTrajectoryByIndex(rowIndex);
 			switch (colIndex) {
+
 			case 0:
 				return traj.get(0).frame;
+			
 			case 1:
 				return traj.getLength();
+			
 			case 2:
-				return traj.getAvgSquareStepSize(GlobalPrefs.msdDelay_);
+				return traj.getAvgSquareStepSize(OctaneWindowControl.msdDelay_);
+			
 			case 3:
 				return traj.marked;
+			
 			case 4:
 				return traj.note;
 			}

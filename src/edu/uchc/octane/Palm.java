@@ -206,7 +206,12 @@ public class Palm {
 
 
 	private void renderGaussianSpot(SmNode node) {
-		node = getCorrectedNode(node);
+		
+		if (OctaneWindowControl.compensateDrift_) {
+		
+			node = getCorrectedNode(node);
+		
+		}
 
 		double xs = (node.x - rect_.x) * palmScaleFactor_;
 		double ys = (node.y - rect_.y) * palmScaleFactor_;
@@ -215,15 +220,23 @@ public class Palm {
 	}
 
 	private void renderGaussianSpotInMovie(SmNode node) {
+		
 		int r = 0, g = 0, b = 0;
 
-		node = getCorrectedNode(node);
+		if (OctaneWindowControl.compensateDrift_) {
+		
+			node = getCorrectedNode(node);
+			
+		}
 
 		if (bRenderInColor_) {
+			
 			int rgb = getColor(node.z);
+			
 			r = (rgb&0xff0000)>>16;
-					g = (rgb&0xff00)>>8;
-		b = rgb&0xff;
+			g = (rgb&0xff00)>>8;
+			b = rgb&0xff;
+		
 		}
 
 		double xs = (node.x - rect_.x) * palmScaleFactor_;
@@ -256,7 +269,12 @@ public class Palm {
 		SmNode node;
 
 		node = traj.get(0);
-		node = getCorrectedNode(node);
+		
+		if (OctaneWindowControl.compensateDrift_) {
+
+			node = getCorrectedNode(node);
+		
+		}
 
 		double xx= node.x;
 		double yy= node.y;
@@ -266,6 +284,7 @@ public class Palm {
 		double zz2 = zz*zz;
 
 		for (int j = 1; j < traj.size(); j++ ) {
+
 			node = traj.get(j);
 			node = getCorrectedNode(node);
 			xx += node.x;
@@ -274,6 +293,7 @@ public class Palm {
 			xx2 += node.x * node.x;
 			yy2 += node.y * node.y;
 			zz2 += node.z * node.z;
+
 		}
 
 		xx /= traj.size();
@@ -284,6 +304,7 @@ public class Palm {
 		zz2 /= traj.size();
 
 		if (xx2 - xx * xx < palmThreshold_ && yy2 - yy * yy < palmThreshold_) {
+			
 			double xs = (xx - rect_.x)* palmScaleFactor_;
 			double ys = (yy - rect_.y)* palmScaleFactor_;
 			double zs = zz;
@@ -299,44 +320,56 @@ public class Palm {
 	}
 
 	private void renderAllPoints(Trajectory traj) {
+
 		if (traj == null ) {
 			return;
 		}
 
 		for (int j = 0; j < traj.size(); j++ ) {
+		
 			renderGaussianSpot(traj.get(j));
 			nPlotted_ ++;
+		
 		}
-
 	}
 
 	private void renderMovie(Trajectory traj) {
+		
 		if (traj == null ) {
+		
 			return;
+		
 		}
 
 		for (int i = 0; i < traj.size(); i++ ) {
+		
 			renderGaussianSpotInMovie(traj.get(i));
+		
 		}
 	}
 
 	private void processColor() {
 
 		if (! bRenderInColor_) {
+		
 			return;
+		
 		}
 
 		double max = 0 ;
 		for (int i = 0; i < ips_.length; i++) {
+		
 			FloatProcessor ip = ips_[i];
 			float [] pixels = (float [])ip.getPixels();
 
 			for (int j = 0; j < pixels.length; j++) {
 				max = FastMath.max(max, pixels[j]);
+			
 			}
 		}
 
 		for (int i = 0; i < ips_.length; i += 3) {
+			
 			ColorProcessor cp = new ColorProcessor(width_, height_);
 
 			for (int j = 0; j < width_ * height_; j++) {
@@ -357,13 +390,16 @@ public class Palm {
 	 * @param selected Trajectories to be included in the PALM plot
 	 */
 	public void constructPalm(final ImagePlus imp, final int [] selected) {
+		
 		nPlotted_ = 0;
 		nSkipped_ = 0;
 
 		final PalmType palmType = PalmParameters.getPalmType();
 
-		correctDrift_ = GlobalPrefs.compensateDrift_;
+		correctDrift_ = OctaneWindowControl.compensateDrift_;
+
 		imp_ = imp;
+		
 		palmScaleFactor_ = dataset_.pixelSize_ / PalmParameters.palmPixelSize_;
 		rect_ = getCurrentROI(imp);
 		width_ = (int) (rect_.width * palmScaleFactor_);

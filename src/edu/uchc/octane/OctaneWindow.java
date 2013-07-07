@@ -161,7 +161,9 @@ public class OctaneWindow extends JFrame {
 		
 		JMenuItem mntmToggleMarked = new JMenuItem("Toggle Marked");
 		mntmToggleMarked.addActionListener(new ActionListener() {
+
 			public void actionPerformed(ActionEvent e) {
+
 				trajsTable_.reverseMarkOfSelected();
 			}
 		});
@@ -171,10 +173,13 @@ public class OctaneWindow extends JFrame {
 		
 		JMenuItem mntmSelectRoi = new JMenuItem("Select ROI");
 		mntmSelectRoi.addActionListener(new ActionListener() {
+
 			public void actionPerformed(ActionEvent e) {
+				
 				trajsTable_.getSelectionModel().setValueIsAdjusting(true);
 				ctr_.selectTrajectoriesWithinRoi();
 				trajsTable_.getSelectionModel().setValueIsAdjusting(false);
+
 			}
 		});
 		mnEdit.add(mntmSelectRoi);
@@ -187,11 +192,17 @@ public class OctaneWindow extends JFrame {
 		
 		JCheckBoxMenuItem chckbxmntmHideUnmarked = new JCheckBoxMenuItem("Hide Unmarked");
 		chckbxmntmHideUnmarked.addActionListener(new ActionListener() {
+
 			public void actionPerformed(ActionEvent e) {
+
 				JCheckBoxMenuItem cb = (JCheckBoxMenuItem) e.getSource();
+				
 				if (cb.getState() == true) {
+				
 					trajsTable_.hideUnmarked();
+				
 				} else {
+				
 					trajsTable_.showAll();
 				}
 			}
@@ -200,9 +211,13 @@ public class OctaneWindow extends JFrame {
 		
 		JCheckBoxMenuItem chckbxmntmShowOverlay = new JCheckBoxMenuItem("Show Overlay");
 		chckbxmntmShowOverlay.addActionListener(new ActionListener() {
+			
 			public void actionPerformed(ActionEvent e) {
+
 				JCheckBoxMenuItem cb = (JCheckBoxMenuItem) e.getSource();
-				GlobalPrefs.showOverlay_ = cb.getState();
+
+				OctaneWindowControl.showOverlay_ = cb.getState();
+
 				ctr_.drawOverlay();
 			}
 		});
@@ -216,41 +231,59 @@ public class OctaneWindow extends JFrame {
 		
 		JMenuItem mntmTraceLengthDistribution = new JMenuItem("Trajectory Length Histogram");
 		mntmTraceLengthDistribution.addActionListener(new ActionListener() {
+
 			public void actionPerformed(ActionEvent e) {
+			
 				ctr_.showLengthHistogram();
+			
 			}
 		});
 		mnAnalysis.add(mntmTraceLengthDistribution);
 		
 		JMenuItem mntmDisplacementDistribution = new JMenuItem("Displacement Histogram");
 		mntmDisplacementDistribution.addActionListener(new ActionListener() {
+
 			public void actionPerformed(ActionEvent e){
+			
 				if (DspHistogramParameters.showDialog()) {
-					ctr_.showDisplacementHistogram(DspHistogramParameters.stepSize_);					
-				}
 				
+					ctr_.showDisplacementHistogram(DspHistogramParameters.stepSize_);					
+				
+				}
 			}
 		});
 		mnAnalysis.add(mntmDisplacementDistribution);
 		
 		JMenuItem mntmMsd = new JMenuItem("MSD");
 		mntmMsd.addActionListener(new ActionListener() {
+
 			public void actionPerformed(ActionEvent e) {
+				
 				GenericDialog gd = new GenericDialog("MSD parameters");
+				
 				gd.addNumericField("Maximum time steps", 20, 0);
 				gd.showDialog();
-				if (gd.wasCanceled())
+				
+				if (gd.wasCanceled()) {
+				
 					return;
+				
+				}
+				
 				int maxSteps = (int) gd.getNextNumber();
 				ctr_.showMSD(maxSteps);
+
 			}
 		});
 		mnAnalysis.add(mntmMsd);
 		
 		JMenuItem mntmResidueHistogram = new JMenuItem("Residue Histogram");
 		mntmResidueHistogram.addActionListener(new ActionListener() {
+
 			public void actionPerformed(ActionEvent e) {
+			
 				ctr_.showResidueHistogram();
+			
 			}
 		});
 		mnAnalysis.add(mntmResidueHistogram);
@@ -263,25 +296,35 @@ public class OctaneWindow extends JFrame {
 		
 		JMenuItem mntmComputeDrift = new JMenuItem("Compute Drift");
 		mntmComputeDrift.addActionListener(new ActionListener() {
+
 			public void actionPerformed(ActionEvent e){
+			
 				ctr_.displayDrift();
+			
 			}
 		});
 		mnImage.add(mntmComputeDrift);
 		
 		JMenuItem mntmImportDriftData = new JMenuItem("Import Drift Data ...");
 		mntmImportDriftData.addActionListener(new ActionListener() {
+			
 			public void actionPerformed(ActionEvent e){
+			
 				ctr_.importDriftData();
+			
 			}
 		});
 		mnImage.add(mntmImportDriftData);
 		
 		JCheckBoxMenuItem mntmApplyDriftCompensation = new JCheckBoxMenuItem("Apply Drift Compensation");
 		mntmApplyDriftCompensation.addActionListener(new ActionListener() {
+			
 			public void actionPerformed(ActionEvent e){
+			
 				JCheckBoxMenuItem cb = (JCheckBoxMenuItem) e.getSource();
-				GlobalPrefs.compensateDrift_ = cb.getState();
+				
+				OctaneWindowControl.compensateDrift_ = cb.getState();
+				
 			}
 		});
 		mnImage.add(mntmApplyDriftCompensation);
@@ -290,16 +333,22 @@ public class OctaneWindow extends JFrame {
 		
 		JMenuItem mntmPalm = new JMenuItem("PALM");
 		mntmPalm.addActionListener(new ActionListener() {
+			
 			public void actionPerformed(ActionEvent e) {
+			
 				ctr_.constructPalm(false);
+			
 			}
 		});
 		mnImage.add(mntmPalm);
 
 		JMenuItem mntmPalmStack = new JMenuItem("PALM Stack");
 		mntmPalmStack.addActionListener(new ActionListener() {
+			
 			public void actionPerformed(ActionEvent e) {
+			
 				ctr_.constructPalm(true);
+			
 			}
 		});
 		mnImage.add(mntmPalmStack);
@@ -322,8 +371,11 @@ public class OctaneWindow extends JFrame {
 		
 		JMenuItem mntmMobilityMap = new JMenuItem("Mobility Map");
 		mntmMobilityMap.addActionListener(new ActionListener() {
+			
 			public void actionPerformed(ActionEvent e){
+			
 				ctr_.constructMobilityMap();
+			
 			}
 		});
 		mnImage.add(mntmMobilityMap);
@@ -336,17 +388,27 @@ public class OctaneWindow extends JFrame {
 		
 		JMenuItem mntmRunScript = new JMenuItem("Run Script...");
 		mntmRunScript.addActionListener(new ActionListener() {
+			
 			@Override
 			public void actionPerformed(ActionEvent e) {
+			
 				JFileChooser fc = new JFileChooser();
+				
 				if (fc.showOpenDialog(ctr_.getWindow()) == JFileChooser.APPROVE_OPTION) {
+				
 					Interpreter bsh = new Interpreter();
+					
 					try {
+					
 						bsh.set("octaneData", ctr_.getData());
 						bsh.source(fc.getSelectedFile().getPath());
+					
 					} catch (Exception e1) {
+					
 						IJ.log(e1.toString());
+					
 					}
+					
 					trajsTable_.tableDataChanged();
 				}
 			}
@@ -355,35 +417,53 @@ public class OctaneWindow extends JFrame {
 
 		JMenuItem mntmPopulateNotes = new JMenuItem("Populate Notes with Script...");
 		mntmPopulateNotes.addActionListener(new ActionListener() {
+			
 			@Override
 			public void actionPerformed(ActionEvent e) {
+			
 				GenericDialog dlg = new GenericDialog("Input Script");
-				dlg.addTextAreas(GlobalPrefs.notesScript_, null, 10, 40);
+				
+				dlg.addTextAreas(OctaneWindowControl.notesScript_, null, 10, 40);
 				dlg.showDialog();
+				
 				if (dlg.wasOKed()) {
+				
 					String script = dlg.getNextText();
-					GlobalPrefs.notesScript_ = script;
+					OctaneWindowControl.notesScript_ = script;
 
 					Interpreter bsh = new Interpreter();
 					TrajDataset dataset = ctr_.getData();
 					
 					for (int i = 0; i < dataset.getSize(); i ++) {
+					
 						Trajectory traj = dataset.getTrajectoryByIndex(i);
 						if ( ! traj.deleted ) {
 							try {
 								bsh.set("t", traj);
+								
 								if (traj.note == null) {
+							
 									bsh.set("note", "");
- 								} else {
- 									bsh.set("note", traj.note);
- 								}
+ 								
+								} else {
+ 								
+									bsh.set("note", traj.note);
+ 								
+								}
+								
 								bsh.eval(script);
+								
 								String s = (String) bsh.get("note");
+								
 								if (s  != null ) {
+								
 									traj.note = s; 
+								
 								}
 							} catch (Exception e1) {
+								
 								traj.note = e1.getMessage();
+							
 							}
 						}
 					}
@@ -582,11 +662,18 @@ public class OctaneWindow extends JFrame {
 	 * @see java.awt.Window#dispose()
 	 */
 	public void dispose() {
+		
 		this.setVisible(false);
+		
 		if (ctr_ != null ) {
+	
 			ctr_.saveDataset();
+	
 		}
+		
+		OctaneWindowControl.savePrefs();
 		GlobalPrefs.savePrefs();
+		
 		super.dispose();
 	}
 	

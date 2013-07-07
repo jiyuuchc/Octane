@@ -40,6 +40,7 @@ import java.util.Vector;
  * The dataset object that stores the information about all trajectories and particle locations
  */
 public class TrajDataset{
+	
 	Vector<Trajectory> trajectories_;
 	SmNode [][] nodes_; //nodes_[frame][offset]
 	double pixelSize_;
@@ -408,11 +409,9 @@ public class TrajDataset{
 	}
 
 	public SmNode correctDrift(SmNode node) throws OctaneException {
-		if (GlobalPrefs.compensateDrift_) {
+
 			return dcm_.correctDrift(node);
-		} else {
-			return node;
-		}
+		
 	}
 	
 }

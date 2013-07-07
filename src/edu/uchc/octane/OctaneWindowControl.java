@@ -38,6 +38,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.prefs.Preferences;
 
 import javax.swing.JFileChooser;
 
@@ -60,6 +61,20 @@ import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
  */
 public class OctaneWindowControl implements ClipboardOwner{
 
+	final private static String SHOW_OVERLAY_KEY = "ShowOverlay";
+	final private static String HISTOGRAM_BINS_KEY = "histogramBins";
+	final private static String MSD_DELAY_KEY = "MsdDelay";
+	final private static String NOTES_SCRIPT_KEY = "NotesScript";
+	final private static String COMPENSATE_DRIFT_KEY = "compensateDrift";
+	
+	public static Preferences prefs_ = GlobalPrefs.getRoot().node(OctaneWindowControl.class.getName());
+	
+	public static boolean compensateDrift_ = prefs_.getBoolean(COMPENSATE_DRIFT_KEY, false);
+	public static boolean showOverlay_ = prefs_.getBoolean(SHOW_OVERLAY_KEY, false);
+	public static int histogramBins_ = prefs_.getInt(HISTOGRAM_BINS_KEY , 20);
+	public static int msdDelay_ = prefs_.getInt(MSD_DELAY_KEY, 4);
+	public static String notesScript_ = prefs_.get(NOTES_SCRIPT_KEY, "");
+
 	ImagePlus imp_ = null;
 	TrajDataset dataset_ = null;
 	protected String path_;
@@ -72,6 +87,7 @@ public class OctaneWindowControl implements ClipboardOwner{
 	 * @param imp the image
 	 */
 	public OctaneWindowControl(ImagePlus imp) {
+
 		super();
 		
 		path_ = null;
@@ -89,6 +105,7 @@ public class OctaneWindowControl implements ClipboardOwner{
 				}
 			}
 		});
+
 	}
 	
 	/**
@@ -252,7 +269,7 @@ public class OctaneWindowControl implements ClipboardOwner{
 	 * Draw trajectory overlay on images 
 	 */
 	protected void drawOverlay() {
-		if (!GlobalPrefs.showOverlay_) {
+		if (!showOverlay_) {
 			imp_.setOverlay(null);
 			return;
 		}
@@ -403,9 +420,9 @@ public class OctaneWindowControl implements ClipboardOwner{
 		}
 		FloatProcessor ip = new FloatProcessor(1, d.length, d);
 		ImagePlus imp = new ImagePlus("", ip);
-		HistogramWindow hw = new HistogramWindow("Residue Histogram", imp, GlobalPrefs.histogramBins_);
+		HistogramWindow hw = new HistogramWindow("Residue Histogram", imp, histogramBins_);
 		hw.setVisible(true);
-		imp.close();		
+		imp.close();
 	}
 
 	/**
@@ -490,7 +507,7 @@ public class OctaneWindowControl implements ClipboardOwner{
 		}
 		FloatProcessor ip = new FloatProcessor(1, d.length, d);
 		ImagePlus imp = new ImagePlus("", ip);
-		HistogramWindow hw = new HistogramWindow("Directional Displacement Histogram", imp, GlobalPrefs.histogramBins_);
+		HistogramWindow hw = new HistogramWindow("Directional Displacement Histogram", imp, histogramBins_);
 		hw.setVisible(true);
 		imp.close();
 	}
@@ -711,4 +728,13 @@ public class OctaneWindowControl implements ClipboardOwner{
 		}
 	}
 
+	public static void savePrefs(){
+
+		prefs_.putBoolean(COMPENSATE_DRIFT_KEY, compensateDrift_);
+		prefs_.putBoolean(SHOW_OVERLAY_KEY, showOverlay_);
+		prefs_.putInt(HISTOGRAM_BINS_KEY, histogramBins_);
+		prefs_.putInt(MSD_DELAY_KEY, msdDelay_);
+		prefs_.put(NOTES_SCRIPT_KEY, notesScript_);
+
+	}
 }
