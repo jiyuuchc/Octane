@@ -256,6 +256,7 @@ public class TrajDataset{
 			n[i] = new SmNode[nodes.get(i).size()];
 			nodes.get(i).toArray(n[i]);
 		}
+
 		return createDatasetFromNodes(n);
 	}
 
@@ -315,10 +316,13 @@ public class TrajDataset{
 	 * @return a new dataset
 	 */
 	static public TrajDataset createDatasetFromNodes(SmNode[][] nodes) {
+
 		TrajDataset dataset;
+
 		dataset = new TrajDataset();
 		dataset.nodes_ = nodes;
 		dataset.doTracking();
+		
 		return dataset;		
 	}
 

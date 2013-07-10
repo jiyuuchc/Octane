@@ -14,6 +14,8 @@ import edu.uchc.octane.TrajDataset;
 
 public class BrowserTest {
 	
+	final static double pixelSize = 160;
+	
 	public static void main(String[] args) throws IOException, ClassNotFoundException {
 		
 		ImagePlus imp = ij.IJ.openImage(args[0]);
@@ -37,7 +39,7 @@ public class BrowserTest {
 			
 				SmNode [][] nodes = dlg.processAllFrames();
 				
-				if ( TrackingParameters.openDialog() ) { //wasOKed ?
+				if ( TrackingParameters.openDialog(pixelSize) ) { //wasOKed ?
 
 					TrajDataset data = TrajDataset.createDatasetFromNodes(nodes);
 					OctaneWindowControl ctlr = new OctaneWindowControl(imp);

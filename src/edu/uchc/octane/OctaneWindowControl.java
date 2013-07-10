@@ -136,9 +136,11 @@ public class OctaneWindowControl implements ClipboardOwner{
 	 * @param nodes positions of molecules
 	 */
 	public void setup(SmNode[][] nodes) {
+		
 		dataset_ = TrajDataset.createDatasetFromNodes(nodes);
 		saveDataset();
 		createWindow();
+
 	}
 
 	/**
@@ -370,7 +372,7 @@ public class OctaneWindowControl implements ClipboardOwner{
 	 * Rebuild trajectories.
 	 */
 	public void rebuildTrajectories(){
-		if (TrackingParameters.openDialog() == true) {
+		if (TrackingParameters.openDialog(dataset_.pixelSize_) == true) {
 			dataset_.reTrack();
 			frame_.getTrajsTable().setData(dataset_);
 		}

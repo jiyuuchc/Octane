@@ -238,7 +238,7 @@ public class OctanePlugin implements PlugIn{
 
 				SmNode [][] nodes = dlg_.processAllFrames();
 				
-				if ( TrackingParameters.openDialog() ) { //wasOKed ?
+				if ( TrackingParameters.openDialog(dlg_.pixelSize_) ) { //wasOKed ?
 
 					TrajDataset data = TrajDataset.createDatasetFromNodes(nodes);
 					data.setPixelSize(dlg_.pixelSize_);
