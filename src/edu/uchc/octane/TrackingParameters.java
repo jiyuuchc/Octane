@@ -29,7 +29,7 @@ public class TrackingParameters {
 	final static String MAX_BLINKING_KEY = "trackerMaxBlinking";
 	final static String MAX_DISPLACEMENT_KEY = "trackerMaxDsp";
 	final static String ERROR_THRESHOLD_KEY = "errorThreshold";
-	final static String LOWER_BOUND_KEY = "lowerBoundNM";
+	final static String LOWER_BOUND_KEY = "lowerBound";
 	
 	private static Preferences prefs_ = GlobalPrefs.getRoot().node(TrackingParameters.class.getName());
 
@@ -47,8 +47,8 @@ public class TrackingParameters {
 		dlg.addMessage("- Tracking -");
 		dlg.addNumericField("Max Displacement (nm)", trackerMaxDsp_ * pixelSize, 1);
 		dlg.addNumericField("Max Blinking", (double)trackerMaxBlinking_, 0);
-		dlg.addNumericField("Resolution (nm)", (double)trackerLowerBound_ * pixelSize, 3);
-		dlg.addNumericField("Confidence Threshold", errorThreshold_, 0);
+		//dlg.addNumericField("Min Displacement (nm)", (double)trackerLowerBound_ * pixelSize, 3);
+		dlg.addNumericField("Confidence Threshold", errorThreshold_, -1);
 
 		dlg.showDialog();
 		if (dlg.wasCanceled())
@@ -56,7 +56,7 @@ public class TrackingParameters {
 		
 		trackerMaxDsp_ = dlg.getNextNumber() / pixelSize;
 		trackerMaxBlinking_ = (int) dlg.getNextNumber();
-		trackerLowerBound_ = dlg.getNextNumber() / pixelSize;
+		// trackerLowerBound_ = dlg.getNextNumber() / pixelSize;
 		errorThreshold_ = dlg.getNextNumber();
 		
 		prefs_.putInt(MAX_BLINKING_KEY,trackerMaxBlinking_);
