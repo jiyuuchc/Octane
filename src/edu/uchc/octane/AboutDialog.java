@@ -21,10 +21,9 @@ package edu.uchc.octane;
 import javax.swing.JOptionPane;
 
 public class AboutDialog {
-	public static final String	VERSIONSTR_ = "1.4.1";
 
 	public static final String aboutMsg_ = 
-			"Octane " + VERSIONSTR_ + "\n" +
+			GlobalPrefs.PACKAGE_NAME + " v" + GlobalPrefs.VERSIONSTR + "\n" +
 			"\n" +
 			"Written by Ji Yu, jyu@uchc.edu\n" +
 			"Copyright (c) 2009-2013 by Ji Yu\n" +

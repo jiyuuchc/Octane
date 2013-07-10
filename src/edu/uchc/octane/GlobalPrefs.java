@@ -28,6 +28,7 @@ public class GlobalPrefs {
 	private static Preferences prefs_ = Preferences.userNodeForPackage(GlobalPrefs.class); 
 
 	final static String PACKAGE_NAME = "Octane";
+	final static String	VERSIONSTR = "1.5.0";
 	
 	final private static String NUM_THREAD_KEY = "numThread";
 	final private static String DEFAULT_PIXEL_SIZE_KEY = "DeaultPixelSize";
