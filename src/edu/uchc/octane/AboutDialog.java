@@ -21,7 +21,7 @@ package edu.uchc.octane;
 import javax.swing.JOptionPane;
 
 public class AboutDialog {
-	public static final String	VERSIONSTR_ = "1.4.1";
+	public static final String	VERSIONSTR_ = "1.5.0";
 
 	public static final String aboutMsg_ = 
 			"Octane " + VERSIONSTR_ + "\n" +

@@ -1,3 +1,11 @@
+Version 1.5
+
++ Improve the responsiveness of the particle analysis dialog
++ The content of the "Notes" field can be programmed by the user.
++ Changed the units of most input fields from "pixels" to "nm" 
++ Lots and lots of bug fixes
+
+
 Version 1.4
 
 + Implemented stage drift correction functions in PALM.
@@ -7,5 +15,3 @@ Version 1.4
 + Data import from text file should be a bit "smarter" now
 + Bug fixes
 
-
- 
