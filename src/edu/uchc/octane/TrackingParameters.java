@@ -17,8 +17,10 @@
 //
 package edu.uchc.octane;
 
+import java.awt.AWTEvent;
 import java.util.prefs.Preferences;
 
+import ij.gui.DialogListener;
 import ij.gui.GenericDialog;
 
 /**
@@ -41,23 +43,38 @@ public class TrackingParameters {
 	/**
 	 * Open dialog.
 	 */
-	static public boolean openDialog(double pixelSize) {
+	static public boolean openDialog(final double pixelSize) {
 	
 		GenericDialog dlg = new GenericDialog("Tracking Options");
+		
 		dlg.addMessage("- Tracking -");
 		dlg.addNumericField("Max Displacement (nm)", trackerMaxDsp_ * pixelSize, 1);
 		dlg.addNumericField("Max Blinking", (double)trackerMaxBlinking_, 0);
 		//dlg.addNumericField("Min Displacement (nm)", (double)trackerLowerBound_ * pixelSize, 3);
 		dlg.addNumericField("Confidence Threshold", errorThreshold_, -1);
 
+		dlg.addDialogListener(new DialogListener() {
+
+			@Override
+			public boolean dialogItemChanged(GenericDialog d, AWTEvent e) {
+				
+				trackerMaxDsp_ = d.getNextNumber() / pixelSize;
+				trackerMaxBlinking_ = (int) d.getNextNumber();
+				errorThreshold_ = d.getNextNumber();
+				
+				if (trackerMaxDsp_ < 0 || trackerMaxBlinking_ < 0) {
+					return false;
+				} else {
+					return true;
+				}
+			}
+			
+		});
+		
 		dlg.showDialog();
+		
 		if (dlg.wasCanceled())
 			return false;
-		
-		trackerMaxDsp_ = dlg.getNextNumber() / pixelSize;
-		trackerMaxBlinking_ = (int) dlg.getNextNumber();
-		// trackerLowerBound_ = dlg.getNextNumber() / pixelSize;
-		errorThreshold_ = dlg.getNextNumber();
 		
 		prefs_.putInt(MAX_BLINKING_KEY,trackerMaxBlinking_);
 		prefs_.putDouble(MAX_DISPLACEMENT_KEY, trackerMaxDsp_);
