@@ -538,21 +538,25 @@ public class OctaneWindowControl implements ClipboardOwner{
 			}
 			IJ.showProgress(i, selected.length);
 		}
-		double [] x = new double [stat.size() + 1];
-		double [] y = new double [stat.size() + 1];
-		double [] e = new double [stat.size() + 1];
-		x[0] = 0;
-		y[0] = 0;
+		double [] x = new double [stat.size()];
+		double [] y = new double [stat.size()];
+		double [] e = new double [stat.size()];
+
 		if ( stat.size()>0 ) {
+			
 			for (int i = 0 ; i < stat.size(); i++) {
-				x[i+1] = 1.0 + i;
-				y[i+1] = stat.get(i).getMean();
-				e[i+1] = stat.get(i).getStandardDeviation() / Math.sqrt(stat.get(i).getN());
+				x[i] = 1.0 + i;
+				if (stat.get(i).getN() > 1) {
+					y[i] = stat.get(i).getMean();
+					e[i] = stat.get(i).getStandardDeviation() / Math.sqrt(stat.get(i).getN());
+				}
 			}
+			
 			Plot plotWin = new Plot("MSD Plot", "T/T-frame", "MSD (pixel^2)", x, y);
 			plotWin.addPoints(x, y, Plot.BOX);
 			plotWin.addErrorBars(e);
 			plotWin.show();
+	
 		} 
 	}
 
