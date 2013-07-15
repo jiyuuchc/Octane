@@ -457,7 +457,7 @@ public class OctaneWindowControl implements ClipboardOwner{
 		}
 		double [] d = new double[dl.size()];
 		for (int i = 0; i < dl.size(); i ++) {
-			d[i] = dl.get(i).doubleValue();
+			d[i] = dl.get(i).doubleValue() * dataset_.getPixelSize();
 		}
 		if (d.length <= 1) {
 			IJ.error(GlobalPrefs.PACKAGE_NAME, "Not enough data point. Stepsize too large?");
@@ -544,15 +544,17 @@ public class OctaneWindowControl implements ClipboardOwner{
 
 		if ( stat.size()>0 ) {
 			
+			double ps = dataset_.getPixelSize() * dataset_.getPixelSize();
+			
 			for (int i = 0 ; i < stat.size(); i++) {
 				x[i] = 1.0 + i;
 				if (stat.get(i).getN() > 1) {
-					y[i] = stat.get(i).getMean();
-					e[i] = stat.get(i).getStandardDeviation() / Math.sqrt(stat.get(i).getN());
+					y[i] = stat.get(i).getMean() * ps;
+					e[i] = stat.get(i).getStandardDeviation() / Math.sqrt(stat.get(i).getN()) * ps;
 				}
 			}
 			
-			Plot plotWin = new Plot("MSD Plot", "T/T-frame", "MSD (pixel^2)", x, y);
+			Plot plotWin = new Plot("MSD Plot", "T/T-frame", "MSD (nm^2)", x, y);
 			plotWin.addPoints(x, y, Plot.BOX);
 			plotWin.addErrorBars(e);
 			plotWin.show();
@@ -591,16 +593,17 @@ public class OctaneWindowControl implements ClipboardOwner{
 		double [] e = new double [stat.size()];
 
 		if ( stat.size()>0 ) {
+			double ps = dataset_.getPixelSize() * dataset_.getPixelSize();
 			
 			for (int i = 0 ; i < stat.size(); i++) {
 				x[i] = 1.0 + i;
 				if (stat.get(i).getN() > 1) {
-					y[i] = stat.get(i).getMean();
-					e[i] = stat.get(i).getStandardDeviation() / Math.sqrt(stat.get(i).getN() - 1);
+					y[i] = stat.get(i).getMean() * ps;
+					e[i] = stat.get(i).getStandardDeviation() / Math.sqrt(stat.get(i).getN() - 1) * ps;
 				}
 			}
 			
-			Plot plotWin = new Plot("Ergodicity Test", "dt (frame)", "D^2 (pixel^2)", x, y);
+			Plot plotWin = new Plot("Ergodicity Test", "dt (frame)", "D^2 (nm^2)", x, y);
 			plotWin.addPoints(x, y, Plot.BOX);
 			plotWin.addErrorBars(e);
 			plotWin.show();

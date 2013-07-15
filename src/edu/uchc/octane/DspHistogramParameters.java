@@ -30,15 +30,15 @@ import ij.gui.GenericDialog;
 public class DspHistogramParameters {
 	final private static String STEPSIZE_KEY = "stepSize";
 	final private static String HISTOGRAM_BINS_KEY = "histogramBins";
-	final private static String HISTOGRAM_MIN_KEY = "histogramMin";
-	final private static String HISTOGRAM_MAX_KEY = "histogramMax";
+	final private static String HISTOGRAM_MIN_KEY = "histogramMinNM";
+	final private static String HISTOGRAM_MAX_KEY = "histogramMaxNM";
 	
 	static Preferences prefs_ = GlobalPrefs.getRoot().node(DspHistogramParameters.class.getName());
 	
 	public static int stepSize_ = prefs_.getInt(STEPSIZE_KEY, 1);
 	public static int histogramBins_ = prefs_.getInt(HISTOGRAM_BINS_KEY, 20);
 	public static double dspHistogramMin_ = prefs_.getDouble(HISTOGRAM_MIN_KEY, 0);
-	public static double dspHistogramMax_ = prefs_.getDouble(HISTOGRAM_MAX_KEY, 10);
+	public static double dspHistogramMax_ = prefs_.getDouble(HISTOGRAM_MAX_KEY, 200);
 	
 	/**
 	 * Display the dialog to input parameters
@@ -48,8 +48,8 @@ public class DspHistogramParameters {
 		GenericDialog gd = new GenericDialog("Step Size Input");
 		gd.addNumericField("Step Size: ", stepSize_, 0);
 		gd.addNumericField("Number of bins:", histogramBins_, 0);
-		gd.addNumericField("Minimal value:", dspHistogramMin_, 0);
-		gd.addNumericField("Maximal value:", dspHistogramMax_, 0);
+		gd.addNumericField("Minimal value (nm):", dspHistogramMin_, 0);
+		gd.addNumericField("Maximal value (nm):", dspHistogramMax_, 0);
 		gd.showDialog();
 		if (gd.wasCanceled())
 			return false;
