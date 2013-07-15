@@ -277,6 +277,26 @@ public class OctaneWindow extends JFrame {
 		});
 		mnAnalysis.add(mntmMsd);
 		
+		JMenuItem mntmErgodicity = new JMenuItem("Ergodicity Test");
+		mntmErgodicity.addActionListener(new ActionListener() {
+
+			public void actionPerformed(ActionEvent e) {
+				
+				GenericDialog gd = new GenericDialog("Ergodicity test parameters");
+				
+				gd.addNumericField("Maximum time delays", 30, 0);
+				gd.showDialog();
+				
+				if (gd.wasCanceled()) {
+					return;
+				}
+				
+				int maxSteps = (int) gd.getNextNumber();
+				ctr_.showErgodicityTest(maxSteps);
+			}
+		});
+		mnAnalysis.add(mntmErgodicity);
+
 		JMenuItem mntmResidueHistogram = new JMenuItem("Residue Histogram");
 		mntmResidueHistogram.addActionListener(new ActionListener() {
 

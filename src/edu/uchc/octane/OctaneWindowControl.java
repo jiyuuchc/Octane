@@ -557,6 +557,53 @@ public class OctaneWindowControl implements ClipboardOwner{
 	}
 
 	/**
+	 * Test Ergodicity 
+	 */
+	public void showErgodicityTest(int maxSteps) {
+		int [] selected = frame_.getTrajsTable().getSelectedTrajectoriesOrAll();
+		ArrayList<SummaryStatistics> stat = new ArrayList<SummaryStatistics>();
+		
+		for (int i = 0; i < maxSteps; i++) {
+			stat.add(new SummaryStatistics());
+		}
+		
+		for (int i = 0; i < selected.length; i ++) {
+			
+			Trajectory t = dataset_.getTrajectoryByIndex(selected[i]);
+			int firstFrame = t.get(0).frame;
+			
+			for (int j = 0; j < t.size() - 1; j++) {
+			
+				int frame = t.get(j).frame;
+				if (frame - firstFrame < maxSteps && t.get(j+1).frame - frame == 1) {
+					stat.get(frame - firstFrame).addValue(t.get(j+1).distance2(t.get(j)));
+				}
+			}
+			IJ.showProgress(i, selected.length);
+		}
+
+		double [] x = new double [stat.size()];
+		double [] y = new double [stat.size()];
+		double [] e = new double [stat.size()];
+
+		if ( stat.size()>0 ) {
+			
+			for (int i = 0 ; i < stat.size(); i++) {
+				x[i] = 1.0 + i;
+				if (stat.get(i).getN() > 1) {
+					y[i] = stat.get(i).getMean();
+					e[i] = stat.get(i).getStandardDeviation() / Math.sqrt(stat.get(i).getN() - 1);
+				}
+			}
+			
+			Plot plotWin = new Plot("Ergodicity Test", "dt (frame)", "D^2 (pixel^2)", x, y);
+			plotWin.addPoints(x, y, Plot.BOX);
+			plotWin.addErrorBars(e);
+			plotWin.show();
+		} 
+	}
+
+	/**
 	 * Animate the current trajectory.
 	 */
 	public void animate() {
