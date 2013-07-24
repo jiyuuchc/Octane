@@ -85,7 +85,7 @@ public class GaussianFit2D extends GaussianFitBase {
 				
 				//initParameters = point;
 				double bg = bZeroBg_ ? 0 : point[3]; 
-					
+
 				double v = 0;
 				
 				for (int xi = - windowSize_; xi < windowSize_; xi ++) {
