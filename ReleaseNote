@@ -1,4 +1,8 @@
-Version 1.5
+Version 1.5.1
+
++ Fix a bug in PALM plotting
+
+Version 1.5.0
 
 + Improve the responsiveness of the particle analysis dialog
 + The content of the "Notes" field can be programmed by the user.
