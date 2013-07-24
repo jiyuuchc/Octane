@@ -44,6 +44,7 @@ public class PalmParameters {
 	private static int palmType_ = prefs_.getInt(PALM_TYPE_KEY, 0);
 	private static boolean bRenderInColor_ = prefs_.getBoolean(RENDER_IN_COLOR_KEY, false);
 	
+	static double pixelSize_ = 0;
 	static double palmPixelSize_ = prefs_.getDouble(PALM_PIXEL_SIZE_KEY, 16);
 	static double palmResolution_ = prefs_.getDouble(PALM_RESOLUTION_KEY, 30);
 	static double lutMax_ = prefs_.getDouble(LUT_MAX_KEY, 3.0);
@@ -124,6 +125,7 @@ public class PalmParameters {
 		}
 
 		palmType_ = dlg.getNextChoiceIndex();
+		pixelSize_ = dlg.getNextNumber(); 
 		palmPixelSize_ = dlg.getNextNumber();
 		palmResolution_ = dlg.getNextNumber();
 		bRenderInColor_ = dlg.getNextBoolean();
