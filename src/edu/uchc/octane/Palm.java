@@ -380,7 +380,7 @@ public class Palm {
 				cp.set(j, rgb);
 			}
 
-			stack_.addSlice(cp);
+			stack_.addSlice("" + i, cp);
 		}
 	}
 
@@ -485,7 +485,7 @@ public class Palm {
 					processColor();
 				} else {
 					for (int i = 0 ; i < ips_.length; i++) {
-						stack_.addSlice(ips_[i]);
+						stack_.addSlice("" + i, ips_[i]);
 					}
 				}
 
