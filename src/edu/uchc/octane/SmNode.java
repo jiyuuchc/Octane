@@ -100,6 +100,10 @@ public class SmNode implements Serializable, Cloneable {
 		if (items.length > 3) {
 			z = Double.parseDouble(items[3]);
 		}
+
+		if (items.length > 4) {
+			height = (int) Double.parseDouble(items[4]);
+		}
 	}
 
 	/* (non-Javadoc)
@@ -119,7 +123,7 @@ public class SmNode implements Serializable, Cloneable {
 	 * Convert to comma separated text data.
 	 */
 	public String toString() {
-		return (frame + ", " + x + ", " + y + ", " + z);
+		return (frame + ", " + x + ", " + y + ", " + z + ", " + height);
 	}
 
 	/**

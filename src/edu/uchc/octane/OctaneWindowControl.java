@@ -721,7 +721,7 @@ public class OctaneWindowControl implements ClipboardOwner{
 
 	/**
 	 * Export selected trajectories to text.
-	 * Each molecule occupy one line: x, y, frame, height, trackIdx
+	 * Each molecule occupy one line: frame, x, y, z, height, trackIdx
 	 * 
 	 * @param file the file
 	 * @throws IOException Signals that an I/O exception has occurred.
@@ -730,6 +730,7 @@ public class OctaneWindowControl implements ClipboardOwner{
 		BufferedWriter bw = new BufferedWriter(new FileWriter(file));
 		int [] selected = frame_.getTrajsTable().getSelectedTrajectories();
 		Trajectory traj;
+		bw.append("# Frame, X, Y, Z, Intensity, TrackIDX\n");
 		for (int i = 0; i < selected.length; i++) {
 			traj = dataset_.getTrajectoryByIndex(selected[i]);
 			for (int j = 0; j < traj.size(); j++) {
