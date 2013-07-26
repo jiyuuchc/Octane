@@ -66,7 +66,8 @@ public class OctaneWindowControl implements ClipboardOwner{
 	final private static String MSD_DELAY_KEY = "MsdDelay";
 	final private static String NOTES_SCRIPT_KEY = "NotesScript";
 	final private static String COMPENSATE_DRIFT_KEY = "compensateDrift";
-	
+	final private static String DEFAULT_EXPORT_PATH = "DefaultExportPath";
+
 	public static Preferences prefs_ = GlobalPrefs.getRoot().node(OctaneWindowControl.class.getName());
 	
 	public static boolean compensateDrift_ = prefs_.getBoolean(COMPENSATE_DRIFT_KEY, false);
@@ -74,6 +75,7 @@ public class OctaneWindowControl implements ClipboardOwner{
 	public static int histogramBins_ = prefs_.getInt(HISTOGRAM_BINS_KEY , 20);
 	public static int msdDelay_ = prefs_.getInt(MSD_DELAY_KEY, 4);
 	public static String notesScript_ = prefs_.get(NOTES_SCRIPT_KEY, "");
+	public static String lastSelectedFile_ = prefs_.get(DEFAULT_EXPORT_PATH, null);
 
 	ImagePlus imp_ = null;
 	TrajDataset dataset_ = null;
@@ -794,6 +796,6 @@ public class OctaneWindowControl implements ClipboardOwner{
 		prefs_.putInt(HISTOGRAM_BINS_KEY, histogramBins_);
 		prefs_.putInt(MSD_DELAY_KEY, msdDelay_);
 		prefs_.put(NOTES_SCRIPT_KEY, notesScript_);
-
+		prefs_.put(DEFAULT_EXPORT_PATH, lastSelectedFile_);
 	}
 }

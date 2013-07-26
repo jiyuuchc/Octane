@@ -20,6 +20,7 @@ package edu.uchc.octane;
 import ij.IJ;
 import ij.gui.GenericDialog;
 
+import java.io.File;
 import java.io.IOException;
 
 import javax.swing.JFrame;
@@ -107,11 +108,13 @@ public class OctaneWindow extends JFrame {
 		
 		JMenuItem mntmExportNodes = new JMenuItem("Export Nodes");
 		mntmExportNodes.addActionListener(new ActionListener() {
+
 			public void actionPerformed(ActionEvent e) {
 				try {
-					JFileChooser fc = new JFileChooser();
+					JFileChooser fc = new JFileChooser(OctaneWindowControl.lastSelectedFile_);
 					if (fc.showSaveDialog(ctr_.getWindow()) == JFileChooser.APPROVE_OPTION) {
 						ctr_.exportTrajectories(fc.getSelectedFile());
+						OctaneWindowControl.lastSelectedFile_ = fc.getSelectedFile().getParent();
 					}
 				} catch (IOException err) {
 					IJ.error(GlobalPrefs.PACKAGE_NAME, "Can't save file! " + err.getMessage()); 
@@ -124,9 +127,10 @@ public class OctaneWindow extends JFrame {
 		mntmExportTrajectories.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				try {
-					JFileChooser fc = new JFileChooser();
+					JFileChooser fc = new JFileChooser(OctaneWindowControl.lastSelectedFile_);
 					if (fc.showSaveDialog(ctr_.getWindow()) == JFileChooser.APPROVE_OPTION) {
 						ctr_.exportNodes(fc.getSelectedFile());
+						OctaneWindowControl.lastSelectedFile_ = fc.getSelectedFile().getParent();
 					}
 				} catch (IOException err) {
 					IJ.error(GlobalPrefs.PACKAGE_NAME, "Can't save file! " + err.getMessage()); 
