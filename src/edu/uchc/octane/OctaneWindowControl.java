@@ -150,7 +150,13 @@ public class OctaneWindowControl implements ClipboardOwner{
 	 */
 	protected void createWindow() {
 		frame_ = new OctaneWindow();
+		
+		if (imp_ != null) { 
+			frame_.setTitle("Octane - " + imp_.getTitle());
+		}
+		
 		frame_.setController(this);
+		
 		frame_.setVisible(true);
 	}
 
