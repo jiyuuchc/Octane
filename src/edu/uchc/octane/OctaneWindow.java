@@ -20,7 +20,6 @@ package edu.uchc.octane;
 import ij.IJ;
 import ij.gui.GenericDialog;
 
-import java.io.File;
 import java.io.IOException;
 
 import javax.swing.JFrame;
@@ -446,10 +445,19 @@ public class OctaneWindow extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 			
 				GenericDialog dlg = new GenericDialog("Input Script");
+				String initText = OctaneWindowControl.notesScript_;
 				
-				dlg.addTextAreas(OctaneWindowControl.notesScript_, null, 10, 40);
+				if (initText == null || initText.replaceAll("\\s", "").isEmpty()) {
+					initText = "// Input :\n"
+							+  "//   t    - class Trajectory extends Vector<SmNode>\n"
+							+  "//   note - class String\n"
+							+  "// Output :\n"
+							+  "//   note - class String\n\n";
+				}
+
+				dlg.addTextAreas(initText, null, 10, 40);
 				dlg.showDialog();
-				
+
 				if (dlg.wasOKed()) {
 				
 					String script = dlg.getNextText();
