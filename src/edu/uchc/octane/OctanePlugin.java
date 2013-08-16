@@ -66,8 +66,35 @@ public class OctanePlugin implements PlugIn{
 	 * @param dataset The dataset 
 	 */
 	void openWindow(TrajDataset dataset) {
+		
 		ctl_ = new OctaneWindowControl(imp_);
 		
+		String filename = ctl_.defaultSaveFilename();
+		File file = new File(filename);
+		
+		if (file.exists()) {
+
+			int idx = 1;
+			File newFile;
+
+			do {
+
+				String backupName = filename + ".b" + idx;
+				newFile = new File(backupName);
+
+				idx ++ ;
+
+			} while (newFile.exists());
+
+			if (! file.renameTo(newFile)) {
+
+				IJ.error("Problem renaming old dataset file");
+				return;
+
+			}
+
+		}
+	
 		ctl_.setup(dataset);
 		dict_.put(imp_, this); // keep the reference to the plugin alive
 
@@ -77,19 +104,25 @@ public class OctanePlugin implements PlugIn{
 
 			@Override
 			public void windowIconified(WindowEvent e) {
+				
 				wasVisible = ctl_.getWindow().isVisible();
 				ctl_.getWindow().setVisible(false);
+			
 			}
 			
 			@Override
 			public void windowDeiconified(WindowEvent e) {
+			
 				ctl_.getWindow().setVisible(wasVisible);
+			
 			}
 			
 			@Override
 			public void windowClosed(WindowEvent e) {
+			
 				ctl_.getWindow().dispose();
 				dict_.remove(imp_);
+			
 			}
 		});
 	}
@@ -126,20 +159,28 @@ public class OctanePlugin implements PlugIn{
 			
 			@Override
 			public void windowIconified(WindowEvent e) {
+			
 				wasVisible = dlg_.isVisible();
 				dlg_.setVisible(false);
+			
 			}
 
 			@Override
 			public void windowDeiconified(WindowEvent e) {
+			
 				if (dlg_.isDisplayable()) {
+					
 					dlg_.setVisible(wasVisible);
+				
 				}
+			
 			}
 
 			@Override
 			public void windowClosed(WindowEvent e) {
+			
 				dlg_.dispose();
+			
 			}
 		});
 		
@@ -242,6 +283,7 @@ public class OctanePlugin implements PlugIn{
 
 					TrajDataset data = TrajDataset.createDatasetFromNodes(nodes);
 					data.setPixelSize(dlg_.pixelSize_);
+					
 					openWindow(data);
 					
 					return;

@@ -41,6 +41,7 @@ import java.util.Iterator;
 import java.util.prefs.Preferences;
 
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 
 import ij.IJ;
 import ij.ImagePlus;
@@ -94,16 +95,22 @@ public class OctaneWindowControl implements ClipboardOwner{
 		
 		path_ = null;
 		imp_ = imp;
+		
 		FileInfo fi = imp.getOriginalFileInfo();
 		if (fi != null) {
+			
 			path_ = fi.directory; 
+		
 		} 
 		
 		imp.getCanvas().addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
+				
 				if (e.getClickCount() == 2 ) {
+					
 					findMolecule();
+				
 				}
 			}
 		});
@@ -117,8 +124,11 @@ public class OctaneWindowControl implements ClipboardOwner{
 	 * @throws ClassNotFoundException the class not found exception
 	 */
 	public void setup() throws IOException, ClassNotFoundException {
+		
 		loadDataset();
+		
 		createWindow();
+
 	}
 
 	/**
@@ -127,9 +137,13 @@ public class OctaneWindowControl implements ClipboardOwner{
 	 * @param data the dataset
 	 */
 	public void setup(TrajDataset data) {
+		
 		dataset_ = data;
+		
 		saveDataset();
+	
 		createWindow();
+	
 	}
 
 	/**
@@ -140,7 +154,9 @@ public class OctaneWindowControl implements ClipboardOwner{
 	public void setup(SmNode[][] nodes) {
 		
 		dataset_ = TrajDataset.createDatasetFromNodes(nodes);
+		
 		saveDataset();
+		
 		createWindow();
 
 	}
@@ -216,15 +232,22 @@ public class OctaneWindowControl implements ClipboardOwner{
 	 * Copy selected trajectories to system clipboard
 	 */
 	protected void copySelectedTrajectories() {
+		
 		StringBuilder buf = new StringBuilder();
 		int [] selected = frame_.getTrajsTable().getSelectedTrajectories();
 		Trajectory traj;
+		
 		for (int i = 0; i < selected.length; i++) {
+		
 			traj = dataset_.getTrajectoryByIndex(selected[i]);
+			
 			for (int j = 0; j < traj.size(); j++) {
+			
 				buf.append(String.format("%10.4f, %10.4f, %10d, %5d%n", traj.get(j).x, traj.get(j).y, traj.get(j).frame, i));
+			
 			}
 		}
+		
 		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 		StringSelection contents = new StringSelection(buf.toString());
 		clipboard.setContents(contents, this);		
@@ -530,22 +553,33 @@ public class OctaneWindowControl implements ClipboardOwner{
 	public void showMSD(int maxSteps) {
 		int [] selected = frame_.getTrajsTable().getSelectedTrajectoriesOrAll();
 		ArrayList<SummaryStatistics> stat = new ArrayList<SummaryStatistics>();
+		
 		for (int i = 0; i < selected.length; i ++) {
+			
 			Trajectory t = dataset_.getTrajectoryByIndex(selected[i]);
+		
 			for (int j = 0; j < t.size()-1; j++) {
+			
 				int frame = t.get(j).frame;
 				for (int k = j + 1; k < t.size(); k++) {
+				
 					int deltaframe = t.get(k).frame - frame;
 					if (deltaframe <= maxSteps) {
+					
 						while (deltaframe > stat.size()) {
+						
 							stat.add(new SummaryStatistics());
 						}
+						
 						stat.get(deltaframe - 1).addValue(t.get(j).distance2(t.get(k)));
+					
 					}
 				}
 			}
+			
 			IJ.showProgress(i, selected.length);
 		}
+		
 		double [] x = new double [stat.size()];
 		double [] y = new double [stat.size()];
 		double [] e = new double [stat.size()];
@@ -555,10 +589,13 @@ public class OctaneWindowControl implements ClipboardOwner{
 			double ps = dataset_.getPixelSize() * dataset_.getPixelSize();
 			
 			for (int i = 0 ; i < stat.size(); i++) {
+				
 				x[i] = 1.0 + i;
 				if (stat.get(i).getN() > 1) {
+					
 					y[i] = stat.get(i).getMean() * ps;
 					e[i] = stat.get(i).getStandardDeviation() / Math.sqrt(stat.get(i).getN()) * ps;
+				
 				}
 			}
 			
@@ -622,14 +659,19 @@ public class OctaneWindowControl implements ClipboardOwner{
 	 * Animate the current trajectory.
 	 */
 	public void animate() {
+		
 		if (animator_ == null) {
+			
 			animator_ = new Animator(imp_);
 			animator_.setLoop(true);
+		
 		}
 		
 		int index= frame_.getTrajsTable().getSelectedTrajectoryIndex();
 		if (index >=0) {
+		
 			animator_.animate(dataset_.getTrajectoryByIndex(index));
+		
 		}
 		
 	}
@@ -659,9 +701,10 @@ public class OctaneWindowControl implements ClipboardOwner{
 	 *
 	 * @return the pathname
 	 */
-	protected String defaultSaveFilename() {
-		final String s = path_ + File.separator + imp_.getTitle() + ".dataset";
-		return s;
+	String defaultSaveFilename() {
+		
+		return path_ + File.separator + imp_.getTitle() + ".dataset";
+	
 	}
 
 	/**
@@ -671,9 +714,13 @@ public class OctaneWindowControl implements ClipboardOwner{
 	 */
 	public void saveDataset(String pathname) {
 		try {
+			
 			File file = new File(pathname);
+  			
 			dataset_.saveDataset(file);
+		
 		} catch (IOException e) {
+			
 			IJ.error(GlobalPrefs.PACKAGE_NAME, "IOError: Failed to save file.");
 		}
 		
@@ -683,7 +730,9 @@ public class OctaneWindowControl implements ClipboardOwner{
 	 * Save the dataset using the default pathname (imagetitle + .dataset).
 	 */
 	public void saveDataset() {
+		
 		saveDataset(defaultSaveFilename());
+	
 	}
 
 	/**
@@ -694,8 +743,10 @@ public class OctaneWindowControl implements ClipboardOwner{
 	 * @throws ClassNotFoundException the class not found exception
 	 */
 	public void loadDataset(String pathname) throws IOException, ClassNotFoundException {
+		
 		File file = new File(pathname);
 		dataset_ = TrajDataset.loadDataset(file);
+	
 	}
 
 	/**
@@ -705,7 +756,9 @@ public class OctaneWindowControl implements ClipboardOwner{
 	 * @throws ClassNotFoundException the class not found exception
 	 */
 	public void loadDataset() throws IOException, ClassNotFoundException {
+		
 		loadDataset(defaultSaveFilename());
+	
 	}
 	
 	/* (non-Javadoc)
@@ -724,7 +777,9 @@ public class OctaneWindowControl implements ClipboardOwner{
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	public void exportNodes(File file) throws IOException {
+		
 		dataset_.writePositionsToText(file);		
+	
 	}
 
 	/**
@@ -735,18 +790,25 @@ public class OctaneWindowControl implements ClipboardOwner{
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	public void exportTrajectories(File file) throws IOException {
+		
 		BufferedWriter bw = new BufferedWriter(new FileWriter(file));
 		int [] selected = frame_.getTrajsTable().getSelectedTrajectories();
 		Trajectory traj;
 		bw.append("# Frame, X, Y, Z, Intensity, TrackIDX\n");
+		
 		for (int i = 0; i < selected.length; i++) {
+			
 			traj = dataset_.getTrajectoryByIndex(selected[i]);
+			
 			for (int j = 0; j < traj.size(); j++) {
+			
 				SmNode n = traj.get(j);
 				bw.append(n.toString());
 				bw.append(", " + i + "\n");
+		
 			}
 		}
+
 		bw.close();
 	}
 
@@ -763,20 +825,26 @@ public class OctaneWindowControl implements ClipboardOwner{
 	 */
 	public void displayDrift() {
 		int [] selected = frame_.getTrajsTable().getSelectedTrajectories();
+		
 		dataset_.estimateDrift(selected);
+		
 		double [] dx = dataset_.getDriftX();
 		double [] dy = dataset_.getDriftY();
 		double [] dz = dataset_.getDriftZ();
 		double [] f = new double [dx.length];
+		
 		for (int i = 0; i < f.length; i++) {
 			f[i] = i;
 		}
+		
 		Plot plotWinX = new Plot("X-Drift", "T/T-frame", "Drift (pixel)", f, dx);
 		//plotWin.addPoints(x, y, Plot.BOX);
 		//plotWin.addErrorBars(e);
 		plotWinX.show();
+		
 		Plot plotWinY = new Plot("Y-Drift", "T/T-frame", "Drift (pixel)", f, dy);
 		plotWinY.show();
+		
 		Plot plotWinZ = new Plot("Z-Drift", "T/T-frame", "Drift (pixel)", f, dz);
 		plotWinZ.show();		
 	}
@@ -785,11 +853,16 @@ public class OctaneWindowControl implements ClipboardOwner{
 	 * Ask user to choose a file and import drift calibration data from the file 
 	 */
 	public void importDriftData() {
+
 		JFileChooser fc = new JFileChooser();
 		if (fc.showOpenDialog(IJ.getApplet()) == JFileChooser.APPROVE_OPTION) {
+		
 			try {
+			
 				dataset_.importDriftData(fc.getSelectedFile());
+			
 			} catch (IOException e) {
+			
 				IJ.error("An IO error occured reading file: " + fc.getSelectedFile().getName());
 			}
 		}
