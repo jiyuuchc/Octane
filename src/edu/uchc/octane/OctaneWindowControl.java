@@ -140,7 +140,7 @@ public class OctaneWindowControl implements ClipboardOwner{
 		
 		dataset_ = data;
 		
-		saveDataset();
+		// saveDataset();
 	
 		createWindow();
 	
@@ -155,7 +155,7 @@ public class OctaneWindowControl implements ClipboardOwner{
 		
 		dataset_ = TrajDataset.createDatasetFromNodes(nodes);
 		
-		saveDataset();
+		// saveDataset();
 		
 		createWindow();
 
@@ -191,7 +191,9 @@ public class OctaneWindowControl implements ClipboardOwner{
 	 * @return the data
 	 */
 	public TrajDataset getData() {
+		
 		return dataset_;
+	
 	}
 
 	/**
@@ -199,27 +201,44 @@ public class OctaneWindowControl implements ClipboardOwner{
 	 */
 	protected void selectTrajectoriesWithinRoi() {
 		Roi roi = imp_.getRoi();
+
 		if (roi == null) {
 			return;
 		}
+		
 		if (roi instanceof PointRoi && ((PointRoi) roi).getNCoordinates() == 1) {
+		
 			int frame = imp_.getFrame();
 			int x = ((PointRoi) roi).getXCoordinates() [0];
 			int y = ((PointRoi) roi).getYCoordinates() [0];
+			
 			findMolecule(x,y,frame);
+		
 		} else {
+			
 			boolean firstSel = true;
+			
 			for (int i = 0; i < dataset_.getSize(); i++) {
+			
 				Trajectory t = dataset_.getTrajectoryByIndex(i);
+				
 				if (!t.deleted) {
+				
 					for (int j = 0; j< t.size(); j++) {
+					
 						if (roi.contains( (int)t.get(j).x, (int)t.get(j).y)) {
+						
 							if (firstSel) {
+							
 								frame_.selectTrajectoryByIndex(i);
 								firstSel = false;
+							
 							} else {
+							
 								frame_.addTrajectoriesToSelection(i);
+							
 							}
+							
 							break;
 						}
 					}

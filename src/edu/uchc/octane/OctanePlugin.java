@@ -65,37 +65,10 @@ public class OctanePlugin implements PlugIn{
 	 * Opens the Octane window
 	 * @param dataset The dataset 
 	 */
-	void openWindow(TrajDataset dataset) {
-		
-		ctl_ = new OctaneWindowControl(imp_);
-		
-		String filename = ctl_.defaultSaveFilename();
-		File file = new File(filename);
-		
-		if (file.exists()) {
-
-			int idx = 1;
-			File newFile;
-
-			do {
-
-				String backupName = filename + ".b" + idx;
-				newFile = new File(backupName);
-
-				idx ++ ;
-
-			} while (newFile.exists());
-
-			if (! file.renameTo(newFile)) {
-
-				IJ.error("Problem renaming old dataset file");
-				return;
-
-			}
-
-		}
+	void openWindow(TrajDataset dataset) {		
 	
 		ctl_.setup(dataset);
+
 		dict_.put(imp_, this); // keep the reference to the plugin alive
 
 		imp_.getWindow().addWindowListener(new WindowAdapter() {
@@ -284,7 +257,37 @@ public class OctanePlugin implements PlugIn{
 					TrajDataset data = TrajDataset.createDatasetFromNodes(nodes);
 					data.setPixelSize(dlg_.pixelSize_);
 					
+					ctl_ = new OctaneWindowControl(imp_);
+					
+					String filename = ctl_.defaultSaveFilename();
+					File file = new File(filename);
+					
+					if (file.exists()) {
+
+						int idx = 1;
+						File newFile;
+
+						do {
+
+							String backupName = filename + ".b" + idx;
+							newFile = new File(backupName);
+
+							idx ++ ;
+
+						} while (newFile.exists());
+
+						if (! file.renameTo(newFile)) {
+
+							IJ.error("Problem renaming old dataset file");
+							return;
+
+						}
+
+					}
+					
 					openWindow(data);
+					
+					ctl_.saveDataset();
 					
 					return;
 				} 
@@ -309,7 +312,9 @@ public class OctanePlugin implements PlugIn{
 
 			if (file.exists()) { 
 
-				try { 
+				try {
+					
+					ctl_ = new OctaneWindowControl(imp_);
 					
 					openWindow(readDataset(file));
 
@@ -341,8 +346,12 @@ public class OctanePlugin implements PlugIn{
 			
 			if (fc.showOpenDialog(IJ.getApplet()) == JFileChooser.APPROVE_OPTION) {
 				try {
-			
+					
+					ctl_ = new OctaneWindowControl(imp_);
+					
 					openWindow(TrajDataset.importDatasetFromText(fc.getSelectedFile()));
+
+					ctl_.saveDataset();
 				
 				} catch (IOException e) {
 				
