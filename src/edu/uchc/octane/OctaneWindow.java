@@ -105,7 +105,7 @@ public class OctaneWindow extends JFrame {
 		
 		mnFile.addSeparator();
 		
-		JMenuItem mntmExportNodes = new JMenuItem("Export Nodes");
+		JMenuItem mntmExportNodes = new JMenuItem("Export Trajectories");
 		mntmExportNodes.addActionListener(new ActionListener() {
 
 			public void actionPerformed(ActionEvent e) {
@@ -122,7 +122,7 @@ public class OctaneWindow extends JFrame {
 		});
 		mnFile.add(mntmExportNodes);
 		
-		JMenuItem mntmExportTrajectories = new JMenuItem("Export Trajectories");
+		JMenuItem mntmExportTrajectories = new JMenuItem("Export Nodes");
 		mntmExportTrajectories.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				try {
