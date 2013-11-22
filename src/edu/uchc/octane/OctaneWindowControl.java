@@ -312,7 +312,7 @@ public class OctaneWindowControl implements ClipboardOwner{
 	protected void findMolecule() {
 		ImageCanvas canvas = imp_.getCanvas();
 		Point p = canvas.getCursorLoc();
-		int frame = imp_.getSlice();
+		int frame = imp_.getCurrentSlice();
 		
 		findMolecule(p.x, p.y, frame);
 	}
