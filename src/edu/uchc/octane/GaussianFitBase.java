@@ -273,7 +273,7 @@ public abstract class GaussianFitBase {
 				double v = pixelValue(xi, yi);
 				m += v;
 				m2 += v * v ;
-			} 
+ 			} 
 		}
 
 		int nPixels = (1 + 2 * windowSize_)*(1 + 2 * windowSize_);

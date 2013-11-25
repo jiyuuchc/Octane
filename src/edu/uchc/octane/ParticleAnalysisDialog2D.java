@@ -38,14 +38,18 @@ public class ParticleAnalysisDialog2D extends ParticleAnalysisDialogBase {
 	int kernelSize_;
 	double sigma_;
 	boolean preProcessBackground_;
-	int watershedThreshold_;
+	//int watershedThreshold_;
 	int watershedNoise_;
+	double heightMin_;
+	double fittingQualityMin_;
 	double resolution_;
 
 	final private static String IMAGE_RESOLUTION = "imageResolution";
 	final private static String ZERO_BACKGROUND_KEY = "zeroBackground";
-	final private static String WATERSHED_THRESHOLD_KEY = "threshold";
+	//final private static String WATERSHED_THRESHOLD_KEY = "threshold";
 	final private static String WATERSHED_NOISE_KEY = "noise";
+	final private static String HEIGHT_MIN_KEY = "minHeight";
+	final private static String FITTING_QUALITY_MIN_KEY = "minFittingQ";
 	
 	/**
 	 * Constructor
@@ -67,19 +71,23 @@ public class ParticleAnalysisDialog2D extends ParticleAnalysisDialogBase {
 
 		resolution_ =  prefs_.getDouble(IMAGE_RESOLUTION, 300);
 		preProcessBackground_ = prefs_.getBoolean(ZERO_BACKGROUND_KEY, false);
-		watershedThreshold_ = prefs_.getInt(WATERSHED_THRESHOLD_KEY, 100);
+		//watershedThreshold_ = prefs_.getInt(WATERSHED_THRESHOLD_KEY, 100);
 		watershedNoise_ = prefs_.getInt(WATERSHED_NOISE_KEY, 100);
+		heightMin_ = prefs_.getDouble(HEIGHT_MIN_KEY, -1);
+		fittingQualityMin_ = prefs_.getDouble(FITTING_QUALITY_MIN_KEY, -1);
 
 		addNumericField("Pixel Size (nm)", pixelSize_, 0);
 		addNumericField("Image Resolution (FWHM) (nm)", resolution_, 1);
 		addCheckbox("Preprocess background", preProcessBackground_);
 		
-		addSlider("Intensity Threshold", 20, 40000.0, watershedThreshold_);
+		//addSlider("Intensity Threshold", 1, 40000.0, watershedThreshold_);
 		addSlider("Noise Threshold", 1, 5000.0, watershedNoise_);
+		addSlider("Minimum Intensity", 0, 5000.0, heightMin_);
+		addSlider("Minimum Fitting Quality", 0, 100, fittingQualityMin_);
 		
 		Vector<Scrollbar> sliders = (Vector<Scrollbar>)getSliders();
 		sliders.get(0).setUnitIncrement(20); // default was 1
-		sliders.get(1).setUnitIncrement(20); // default was 1
+		sliders.get(1).setUnitIncrement(5); // default was 1
 	}
 
 	/**
@@ -93,8 +101,10 @@ public class ParticleAnalysisDialog2D extends ParticleAnalysisDialogBase {
 		
 		prefs_.putDouble(IMAGE_RESOLUTION, resolution_);
 		prefs_.putBoolean(ZERO_BACKGROUND_KEY, preProcessBackground_);
-		prefs_.putInt(WATERSHED_THRESHOLD_KEY, watershedThreshold_);
+		//prefs_.putInt(WATERSHED_THRESHOLD_KEY, watershedThreshold_);
 		prefs_.putInt(WATERSHED_NOISE_KEY, watershedNoise_);
+		prefs_.putDouble(HEIGHT_MIN_KEY, heightMin_);
+		prefs_.putDouble(FITTING_QUALITY_MIN_KEY, fittingQualityMin_);
 	}
 
 	/* (non-Javadoc)
@@ -128,7 +138,9 @@ public class ParticleAnalysisDialog2D extends ParticleAnalysisDialogBase {
 			module.setGaussianFitModule(null);
 		}
 
-		module.process(ip, rect_, watershedThreshold_, watershedNoise_);
+		module.setFittingQualityMin(fittingQualityMin_);
+		module.setHeightMin(heightMin_);
+		module.process(ip, rect_, watershedNoise_, watershedNoise_);
 
 	}
 
@@ -151,8 +163,10 @@ public class ParticleAnalysisDialog2D extends ParticleAnalysisDialogBase {
 		
 		preProcessBackground_ = (boolean) getNextBoolean();
 		
-		watershedThreshold_ = (int) getNextNumber();
+		//watershedThreshold_ = (int) getNextNumber();
 		watershedNoise_ = (int) getNextNumber();
+		heightMin_ = getNextNumber();
+		fittingQualityMin_ = getNextNumber();
 		
 		return true;
 	}

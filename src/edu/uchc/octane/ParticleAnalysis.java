@@ -43,6 +43,10 @@ public class ParticleAnalysis{
 	double [] h_;
 	int nParticles_;
 	
+	private double fittingQualityMin_ = -1;
+	private double heightMin_ = -1;
+	private double heightMax_ = Double.MAX_VALUE;
+	
 	GaussianFitBase g_ = null;
 	
 	class Pixel implements Comparable<Pixel> {
@@ -236,14 +240,26 @@ public class ParticleAnalysis{
 						
 						double [] result = g_.fit();
 						
-						if (result != null && g_.getH() > noise ) {
-							x_[nParticles_] = g_.getX();
-							y_[nParticles_] = g_.getY();
-							z_[nParticles_] = g_.getZ();
-							h_[nParticles_] = g_.getH();
-							e_[nParticles_] = g_.getE();
-							nParticles_++;
+						if (result == null) {
+							continue;
 						}
+						
+						double h = g_.getH();
+						if (h < noise || h < getHeightMin() || h > getHeightMax()) {
+							continue;
+						}
+						
+						double e = g_.getE();
+						if (e < getFittingQualityMin()) {
+							continue;
+						}
+						
+						x_[nParticles_] = g_.getX();
+						y_[nParticles_] = g_.getY();
+						z_[nParticles_] = g_.getZ();
+						h_[nParticles_] = h;
+						e_[nParticles_] = e;
+						nParticles_++;
 					} catch (MathIllegalStateException e) {
 						//failed fitting
 						continue;
@@ -343,4 +359,47 @@ public class ParticleAnalysis{
 		
 		return roi;
 	}
+	
+	/**
+	 * @return the fittingQualityMin_
+	 */
+	public double getFittingQualityMin() {
+		return fittingQualityMin_;
+	}
+
+	/**
+	 * @param fittingQualityMin the fittingQualityMin_ to set
+	 */
+	public void setFittingQualityMin(double fittingQualityMin) {
+		fittingQualityMin_ = fittingQualityMin;
+	}
+
+	/**
+	 * @return the heightMin_
+	 */
+	public double getHeightMin() {
+		return heightMin_;
+	}
+
+	/**
+	 * @param heightMin_ the heightMin_ to set
+	 */
+	public void setHeightMin(double heightMin) {
+		heightMin_ = heightMin;
+	}
+
+	/**
+	 * @return the heightMax_
+	 */
+	public double getHeightMax() {
+		return heightMax_;
+	}
+
+	/**
+	 * @param heightMax the heightMax_ to set
+	 */
+	public void setHeightMax(double heightMax) {
+		heightMax_ = heightMax;
+	}
+
 }
