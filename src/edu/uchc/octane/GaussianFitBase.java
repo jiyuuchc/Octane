@@ -37,8 +37,10 @@ public abstract class GaussianFitBase {
 	protected int x0_,y0_; 
 	protected int windowSize_;
 	protected double bg_ = 0;
-	protected boolean bZeroBg_ = false;
+	protected boolean bPreprocessBg_ = false;
 	protected boolean bDeflation_ = false;
+	
+	protected boolean bBgProcessed_ = false;
 	
 	PointValuePair pvp_;
 	
@@ -54,7 +56,7 @@ public abstract class GaussianFitBase {
 	
 	public double[] fit() {
 		
-		if (bZeroBg_) {
+		if (bPreprocessBg_) {
 			preProcessBackground();
 		}
 		
@@ -119,6 +121,8 @@ public abstract class GaussianFitBase {
 		}
 		
 		bg_ = ip.getAutoThreshold();
+		
+		bBgProcessed_ = false;
 	}
 	
 	
@@ -128,7 +132,7 @@ public abstract class GaussianFitBase {
 	 * @param bPreProcessBackground Whether the background should be pre-substracted using rolling ball method.
 	 */
 	public void setPreprocessBackground(boolean bPreProcessBackground) {
-		bZeroBg_ = bPreProcessBackground;
+		bPreprocessBg_ = bPreProcessBackground;
 		
 		if (bPreProcessBackground) {
 		
@@ -143,17 +147,21 @@ public abstract class GaussianFitBase {
 	 */
 	public void preProcessBackground() {
 
-		float[] backgroundData;
-		
-		backgroundData = Arrays.copyOf(imageData_, imageData_.length);
-		FloatProcessor fp = new FloatProcessor(width_, height_, backgroundData);
-		
-		BackgroundSubtracter bs = new BackgroundSubtracter();
-		bs.rollingBallBackground(fp, backgroundFilterSize_, true, fp.isInvertedLut(), false, false, true);
-		IJ.showProgress(1.0);
+		if (! bBgProcessed_ && bPreprocessBg_) {
+			float[] backgroundData;
 
-		for (int i = 0; i < imageData_.length; i++) {
-			imageData_[i] -= backgroundData[i];
+			backgroundData = Arrays.copyOf(imageData_, imageData_.length);
+			FloatProcessor fp = new FloatProcessor(width_, height_, backgroundData);
+
+			BackgroundSubtracter bs = new BackgroundSubtracter();
+			bs.rollingBallBackground(fp, backgroundFilterSize_, true, fp.isInvertedLut(), false, false, true);
+			IJ.showProgress(1.0);
+
+			for (int i = 0; i < imageData_.length; i++) {
+				imageData_[i] -= backgroundData[i];
+			}
+			
+			bBgProcessed_ = true;
 		}
 	}
 

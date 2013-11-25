@@ -57,7 +57,7 @@ public class GaussianFitAstigmatism extends GaussianFitBase {
 	public double[] doFit() {
 		double [] initParameters;
 
-		if (bZeroBg_) {
+		if (bPreprocessBg_) {
 			initParameters = new double[] {0, 0, pixelValue(0, 0) - bg_, sigma2_, sigma2_};
 		} else {
 			initParameters = new double[] {0, 0, pixelValue(0, 0) - bg_, sigma2_, sigma2_, bg_};
@@ -69,7 +69,7 @@ public class GaussianFitAstigmatism extends GaussianFitBase {
 			@Override
 			public double value(double[] point) {
 
-				double bg = bZeroBg_ ? 0 : point[3]; 
+				double bg = bPreprocessBg_ ? 0 : point[3]; 
 
 				double v = 0;
 

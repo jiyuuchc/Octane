@@ -64,13 +64,13 @@ public class GaussianFit2D extends GaussianFitBase {
 		double [] initParameters;
 		
 		if (floatingSigma_) {
-			if (bZeroBg_) {
+			if (bPreprocessBg_) {
 				initParameters = new double[] {0, 0, pixelValue(0, 0) - bg_, sigma2_};
 			} else {
 				initParameters = new double[] {0, 0, pixelValue(0, 0) - bg_, bg_, sigma2_};
 			}			
 		} else {
-			if (bZeroBg_) {
+			if (bPreprocessBg_) {
 				initParameters = new double[] {0, 0, pixelValue(0, 0) - bg_};
 			} else {
 				initParameters = new double[] {0, 0, pixelValue(0, 0) - bg_, bg_};
@@ -84,7 +84,7 @@ public class GaussianFit2D extends GaussianFitBase {
 			public double value(double[] point) {
 				
 				//initParameters = point;
-				double bg = bZeroBg_ ? 0 : point[3]; 
+				double bg = bPreprocessBg_ ? 0 : point[3]; 
 
 				double v = 0;
 				
