@@ -53,8 +53,8 @@ public class TestDataGenerator {
 				
 				double v = Math.exp( 
 						- square( xi - xOffset ) / sigmax2 
-						- square ( yi - yOffset) / sigmay2 ); 
-				v = ( v * height + bg);
+						- square( yi - yOffset ) / sigmay2 ); 
+				v = ( v * height / Math.sqrt(Math.sqrt(sigmax2 * sigmay2)) + bg);
 			
 				ip.set(xi + halfSize, yi + halfSize, (int) (v + 0.5) );
 			}
@@ -154,7 +154,7 @@ public class TestDataGenerator {
 						double v = Math.exp( -square(x1 - x) / sx  - square(y1 - y ) / sy );
 						v = (v * height);
 						
-						ip.set(x1, y1, ip.get(x1,y1) + (int) (v + 0.5) );
+						ip.set(x1, y1, ip.get(x1,y1) + (int) (v / Math.sqrt(Math.sqrt(sx * sy)) + 0.5) );
 					
 					}
 				}

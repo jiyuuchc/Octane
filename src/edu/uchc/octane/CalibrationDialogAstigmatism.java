@@ -46,7 +46,7 @@ public class CalibrationDialogAstigmatism extends ParticleAnalysisDialogBase {
 	 */
 	public CalibrationDialogAstigmatism(ImagePlus imp) {
 		
-		super(imp, "Astigmatism calibration parameters:" + imp.getTitle());
+		super(imp, "Astigmatism calibration:" + imp.getTitle());
 		
 		calibration_ = new double[6];
 	}
@@ -84,7 +84,7 @@ public class CalibrationDialogAstigmatism extends ParticleAnalysisDialogBase {
 	@Override
 	public void processCurrentFrame(ImageProcessor ip, ParticleAnalysis module) throws InterruptedException {
 		
-		module.process(ip, rect_, 0, watershedNoise_);
+		module.process(ip, rect_, watershedNoise_, watershedNoise_);
 
 	}
 
@@ -118,13 +118,13 @@ public class CalibrationDialogAstigmatism extends ParticleAnalysisDialogBase {
 		GaussianFitAstigmatism fittingModule = new GaussianFitAstigmatism();
 
 		double sigma = resolution_ / pixelSize_ / 2.355;		
-		int kernelSize = (int) Math.round(sigma * 2.5);
+		int kernelSize = (int) Math.round(sigma * 5);
 		
 		fittingModule.setWindowSize(kernelSize);
-		fittingModule.setPreprocessBackground(false);
+		fittingModule.setPreprocessBackground(true);
 		fittingModule.setDeflation(true);
 		fittingModule.setPreferredSigmaValue(sigma);
-		fittingModule.setCalibration(calibration_);
+		fittingModule.setCalibration(null);
 
 		double [] sigmax = new double[stack.getSize()];
 		double [] sigmay = new double[stack.getSize()];
@@ -140,7 +140,7 @@ public class CalibrationDialogAstigmatism extends ParticleAnalysisDialogBase {
 			ParticleAnalysis analysisModule = new ParticleAnalysis();
 
 			try {
-				analysisModule.process(ip, rect_, 0, watershedNoise_);
+				analysisModule.process(ip, rect_, watershedNoise_, watershedNoise_);
 			} catch(InterruptedException e) {
 				assert false;
 			}
@@ -189,7 +189,7 @@ public class CalibrationDialogAstigmatism extends ParticleAnalysisDialogBase {
 		}
 		
 		//fitting sigmaX and sigmaY to parabolic functions
-		
+	
 		double [] px;
 		double [] py;
 		
@@ -210,13 +210,6 @@ public class CalibrationDialogAstigmatism extends ParticleAnalysisDialogBase {
 		px[1] = - px[1] / 2 / px[2]; // - b/2c
 		py[1] = - py[1] / 2 / py[2];
 		
-		if (px[0] <= 0 || py[0] <= 0 || px[2] <= 0 || py[2] <= 0) {
-			
-			IJ.error("Parabolic fit resulting in illegal parameters");
-			return;
-
-		}
-		
 		//Display and save fitting results
 		double [] z = new double[sigmax.length];
 		double [] vx = new double[sigmax.length];
@@ -229,19 +222,26 @@ public class CalibrationDialogAstigmatism extends ParticleAnalysisDialogBase {
 			vy[i] = parabolicValue(py, z[i]);
 		}
 		
-		Plot plotWinX = new Plot("Astigmatism Calibration X", "Z (nm)", "Sigma", z, vx);
-		Plot plotWinY = new Plot("Astigmatism Calibration Y", "Z (nm)", "Sigma", z, vy);
+		Plot plotWinX = new Plot("Astigmatism Calibration X", "Z (nm)", "SigmaX", z, vx);
+		Plot plotWinY = new Plot("Astigmatism Calibration Y", "Z (nm)", "SigmaY", z, vy);
 		plotWinX.addPoints(z, sigmax, Plot.BOX);
 		plotWinY.addPoints(z, sigmay, Plot.BOX);
 
 		plotWinX.show();
 		plotWinY.show();		
-		
-		GlobalPrefs.calibrationStrX_ = String.format("%.3f, %.3f, %.3f", px[0], px[1], px[2]);
-		GlobalPrefs.calibrationStrY_ = String.format("%.3f, %.3f, %.3f", py[0], py[1], py[2]);
-		GlobalPrefs.savePrefs();
-		
-		IJ.log("Calibration results accepted.");
+
+		if (px[0] <= 0 || py[0] <= 0 || px[2] <= 0 || py[2] <= 0) {
+			
+			IJ.error("Parabolic fit resulting in illegal parameters\n Results discarded.");
+
+		} else {
+
+			GlobalPrefs.calibrationStrX_ = String.format("%.3f, %.3f, %.3f", px[0], px[1], px[2]);
+			GlobalPrefs.calibrationStrY_ = String.format("%.3f, %.3f, %.3f", py[0], py[1], py[2]);
+			GlobalPrefs.savePrefs();
+
+			IJ.log("Calibration results accepted.");
+		}
 	}
 	
 	double [] parabolicFit(double [] sigma) {

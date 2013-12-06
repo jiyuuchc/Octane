@@ -101,7 +101,7 @@ public class TrackingModule {
 	}
 
 	private void optimizeSubnetwork(Vector<Integer> headList, Vector<Integer> tailList) {
-		double bestDistanceSum = 1e20;
+		double bestDistanceSum = Double.MAX_VALUE;
 		int curBondIdx = -1;
 		double curDistanceSum = 0;
 		Stack<Integer> stack = new Stack<Integer>();
@@ -170,8 +170,8 @@ public class TrackingModule {
 					stack.pop();
 					break;
 				}
-			} 
-			
+			}
+
 			if (stack.size() > 0) {
 				curBondIdx = stack.pop();
 				occupiedTails = tailStack.pop();

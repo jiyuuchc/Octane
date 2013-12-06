@@ -134,6 +134,11 @@ public class GaussianFitAstigmatism extends GaussianFitBase {
 	 * calculate the Z coordinate based on astigmatism
 	 */
 	void calculateZ() {
+
+		if (calibration_ == null) {
+			z_ = 0;
+			return;
+		}
 		
 		UnivariateFunction func = new UnivariateFunction() {
 			@Override
@@ -224,10 +229,10 @@ public class GaussianFitAstigmatism extends GaussianFitBase {
 	}
 	
 	public double getSigmaX() {
-		return pvp_.getPoint()[3];
+		return Math.sqrt(pvp_.getPoint()[3] / 2);
 	}
 	
 	public double getSigmaY() {
-		return pvp_.getPoint()[4];
+		return Math.sqrt(pvp_.getPoint()[4] / 2);
 	}
 }

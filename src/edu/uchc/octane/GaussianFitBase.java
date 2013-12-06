@@ -78,7 +78,7 @@ public abstract class GaussianFitBase {
 	 */
 	public abstract double getValueExcludingBackground(int xi, int yi, double [] point);	
 	
-	private final static int backgroundFilterSize_ = 4;
+	private final static int backgroundFilterSize_ = 40;
 	
 	/**
 	 * Default constructor

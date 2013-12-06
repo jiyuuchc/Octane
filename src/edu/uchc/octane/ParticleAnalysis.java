@@ -43,8 +43,8 @@ public class ParticleAnalysis{
 	double [] h_;
 	int nParticles_;
 	
-	private double fittingQualityMin_ = -1;
-	private double heightMin_ = -1;
+	private double fittingQualityMin_ = 0;
+	private double heightMin_ = 0;
 	private double heightMax_ = Double.MAX_VALUE;
 	
 	GaussianFitBase g_ = null;
