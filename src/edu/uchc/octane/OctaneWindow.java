@@ -212,7 +212,7 @@ public class OctaneWindow extends JFrame {
 		});
 		mnView.add(chckbxmntmHideUnmarked);
 		
-		JCheckBoxMenuItem chckbxmntmShowOverlay = new JCheckBoxMenuItem("Show Overlay");
+		JCheckBoxMenuItem chckbxmntmShowOverlay = new JCheckBoxMenuItem("Show Overlay", OctaneWindowControl.showOverlay_);
 		chckbxmntmShowOverlay.addActionListener(new ActionListener() {
 			
 			public void actionPerformed(ActionEvent e) {
@@ -339,7 +339,7 @@ public class OctaneWindow extends JFrame {
 		});
 		mnImage.add(mntmImportDriftData);
 		
-		JCheckBoxMenuItem mntmApplyDriftCompensation = new JCheckBoxMenuItem("Apply Drift Compensation");
+		JCheckBoxMenuItem mntmApplyDriftCompensation = new JCheckBoxMenuItem("Apply Drift Compensation", OctaneWindowControl.compensateDrift_);
 		mntmApplyDriftCompensation.addActionListener(new ActionListener() {
 			
 			public void actionPerformed(ActionEvent e){
