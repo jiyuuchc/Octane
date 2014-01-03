@@ -75,6 +75,8 @@ public class OctaneWindowControl implements ClipboardOwner{
 	public static String notesScript_ = prefs_.get(NOTES_SCRIPT_KEY, "");
 	public static String lastSelectedFile_ = prefs_.get(DEFAULT_EXPORT_PATH, null);
 
+	//static Color [] colorPalette_ = {Color.yellow, Color.green, Color.orange, Color.cyan, Color.magenta, Color.red};
+	
 	ImagePlus imp_ = null;
 	TrajDataset dataset_ = null;
 	protected String path_;
@@ -191,6 +193,19 @@ public class OctaneWindowControl implements ClipboardOwner{
 		
 		return dataset_;
 	
+	}
+
+	protected Rectangle getCurrentROI() {
+		Rectangle rect;
+		Roi roi = imp_.getRoi();
+		if (roi!=null && roi.isArea()) {
+			rect = roi.getBounds();
+		} else {
+			imp_.killRoi();
+			rect = imp_.getProcessor().getRoi();
+			imp_.setRoi(roi);
+		}
+		return rect;
 	}
 
 	/**
@@ -367,6 +382,19 @@ public class OctaneWindowControl implements ClipboardOwner{
 		}
 	}
 
+	/**
+	 * Plot selected trajectories in a SVG file
+	 *  
+	 *  @param file The SVG file.
+	 */
+	protected void plotTrajectoryToSVG(File file) {
+		
+		int [] selected = frame_.getTrajsTable().getSelectedTrajectoriesOrAll();
+		
+		TrajectoryPlot tp = new TrajectoryPlot(dataset_);
+		tp.generateSVG(selected, getCurrentROI(), file);
+	}
+	
 	/**
 	 * Construct PALM image.
 	 * 

@@ -52,6 +52,7 @@ import java.awt.Rectangle;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
+//FIXME make this optional
 import bsh.Interpreter;
 
 /**
@@ -225,6 +226,23 @@ public class OctaneWindow extends JFrame {
 			}
 		});
 		mnView.add(chckbxmntmShowOverlay);
+		
+		JMenuItem mntmExportOverlay = new JMenuItem("Export Trajectory Overlay");
+		mntmExportOverlay.addActionListener(new ActionListener() {
+			
+			public void actionPerformed(ActionEvent e) {
+				
+				JFileChooser fc = new JFileChooser(OctaneWindowControl.lastSelectedFile_);
+				
+				if (fc.showSaveDialog(ctr_.getWindow()) == JFileChooser.APPROVE_OPTION) {
+
+					ctr_.plotTrajectoryToSVG(fc.getSelectedFile());
+					OctaneWindowControl.lastSelectedFile_ = fc.getSelectedFile().getParent();
+				
+				}
+			}
+		});
+		mnView.add(mntmExportTrajectories);
 		
 		// -- Analysis Menu --
 		
