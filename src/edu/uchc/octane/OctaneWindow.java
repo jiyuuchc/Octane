@@ -242,7 +242,7 @@ public class OctaneWindow extends JFrame {
 				}
 			}
 		});
-		mnView.add(mntmExportTrajectories);
+		mnView.add(mntmExportOverlay);
 		
 		// -- Analysis Menu --
 		

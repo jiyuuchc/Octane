@@ -42,6 +42,8 @@ import org.w3c.dom.Element;
 
 public class TrajectoryPlot {
 
+	final private static String [] colors_ = new String[] {"black", "#2A4BD7", "#AD2323", "#FF9233"};
+	
 	OctaneWindowControl ctr_;
 	
 	TrajDataset dataset_;
@@ -58,7 +60,7 @@ public class TrajectoryPlot {
 		dataset_ = data;
 	}
 	
-	private Element generatePathElement(Document doc, Trajectory t)
+	private Element generatePathElement(Document doc, Trajectory t, String color)
 	{
 		Element path = doc.createElement("path");
 		
@@ -67,14 +69,14 @@ public class TrajectoryPlot {
 		for (int i = 0; i < t.size(); i ++) {
 			
 			SmNode node = t.get(i);
-			d += String.format("%.3f %.3f ", node.x, node.y);
+			d += String.format("%.3f %.3f ", node.x - rect_.x, node.y - rect_.y);
 		}
-		
+
 		path.setAttribute("d", d);
 
 		
 		path.setAttribute("fill", "none");
-		path.setAttribute("stroke", "black");
+		path.setAttribute("stroke", color);
 		path.setAttribute("stroke-width", "0.2");
 		
 		return path;
@@ -94,11 +96,25 @@ public class TrajectoryPlot {
 	}
 	
 	/**
+	 * Generate svg with alternating color scheme.
+	 *
+	 * @param rect the selected ROI 
+	 * @param file the output file 
+	 */
+	public void generateSVG (Rectangle rect, File file) {
+		
+		generateSVG(rect, file, true);
+		
+	}
+
+	/**
 	 * Generate svg.
 	 *
-	 * @param selected the selected
+	 * @param rect the selected ROI 
+	 * @param file the output file
+	 * @param bAlternatingColor whether to alternate stroke color for different trajectories 
 	 */
-	public void generateSVG (int [] selected, Rectangle rect, File file) {
+	public void generateSVG (Rectangle rect, File file, boolean bAlternatingColor) {
 		
 		try {
 			DocumentBuilderFactory df = DocumentBuilderFactory.newInstance();
@@ -110,19 +126,36 @@ public class TrajectoryPlot {
 			
 			rect_ = rect;
 
-			root.setAttribute("viewbox", String.format("%i %i %i %i", 
-					rect_.x, rect_.y, rect_.width, rect_.height));
+			root.setAttribute("width", String.format("%d", rect_.width));
+			root.setAttribute("height", String.format("%d", rect_.height));
 			root.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-					
-			for (int i = 0; i < selected.length; i++) {
+			
+			int colorIdx = 0;
+
+			for (int i = 0; i < dataset_.getSize(); i ++) {
 				
-				Trajectory traj = dataset_.getTrajectoryByIndex(selected[i]);
+				Trajectory traj = dataset_.getTrajectoryByIndex(i);
 				
-				root.appendChild(generatePathElement(doc, traj));
+				if ( traj.marked ) {
+
+					root.appendChild(generatePathElement(doc, traj, colors_[colorIdx]));
+
+					if (bAlternatingColor) {
+
+						colorIdx ++;
+						if (colorIdx == colors_.length) {
+							colorIdx = 0;
+						}
+					}
+				}
+				
+				IJ.showProgress(i, dataset_.getSize());
 			}
 
 			writeSVGToFile(doc, file);
 
+			IJ.showProgress(1.0);
+			
 		} catch (ParserConfigurationException pce) {
 			IJ.error(pce.getLocalizedMessage());
 		} catch (TransformerException te) {

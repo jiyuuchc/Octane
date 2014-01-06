@@ -389,10 +389,9 @@ public class OctaneWindowControl implements ClipboardOwner{
 	 */
 	protected void plotTrajectoryToSVG(File file) {
 		
-		int [] selected = frame_.getTrajsTable().getSelectedTrajectoriesOrAll();
-		
 		TrajectoryPlot tp = new TrajectoryPlot(dataset_);
-		tp.generateSVG(selected, getCurrentROI(), file);
+		tp.generateSVG(getCurrentROI(), file);
+
 	}
 	
 	/**
