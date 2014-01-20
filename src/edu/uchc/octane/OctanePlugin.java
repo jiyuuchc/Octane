@@ -297,7 +297,7 @@ public class OctanePlugin implements PlugIn{
 		}
 
 
-		if (cmd.startsWith("Calibration")) {
+		if (cmd.startsWith("calibration")) {
 
 			startImageAnalysis(cmd);
 			dict_.remove(imp_);
