@@ -284,20 +284,27 @@ public class TrajDataset{
 			}
 			if (line.trim().isEmpty()) {
 				continue;
-			}			
-			int c = line.lastIndexOf(',');
-			int cnt = Integer.parseInt(line.substring(c + 1).trim());
-			if (cur_cnt == cnt - 1) {
-				oneTraj = new Trajectory();
-				dataset.trajectories_.add(oneTraj);
-				cur_cnt = cnt;
-			} 
-			if (cur_cnt == cnt) {
-				SmNode node = new SmNode(line.substring(0, c)); 
-				oneTraj.add(node);
-				//dataset.nodes_.add(node);
-			} else {
-				IJ.log("Can't find TraceID. All traces will be rebuilt");
+			}
+			try {
+				int c = line.lastIndexOf(',');
+				int cnt = Integer.parseInt(line.substring(c + 1).trim());
+				if (cur_cnt == cnt - 1) {
+					oneTraj = new Trajectory();
+					dataset.trajectories_.add(oneTraj);
+					cur_cnt = cnt;
+				} 
+				if (cur_cnt == cnt) {
+					SmNode node = new SmNode(line.substring(0, c)); 
+					oneTraj.add(node);
+					//dataset.nodes_.add(node);
+				} else {
+					IJ.log("TraceID not countinous. All traces will be rebuilt");
+					br.close();
+					return importDatasetFromPositionsText(file);
+				}
+			} catch (java.lang.NumberFormatException e) {
+				br.close();
+				IJ.log("No trace ID. Treating data as simple coordinates");
 				return importDatasetFromPositionsText(file);
 			}
 		}
